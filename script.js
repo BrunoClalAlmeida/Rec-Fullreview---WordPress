@@ -1,3 +1,7 @@
+// ===== OpenAI agora via BACKEND (/api/generate-article) =====
+// A chave real fica SOMENTE na variável de ambiente OPENAI_API_KEY no servidor (Vercel).
+// Este arquivo NÃO terá nenhuma chave sensível.
+
 // ===== Estado em memória =====
 let lastArticleJson = null;
 let lastArticleHtml = "";
@@ -113,6 +117,8 @@ function buildSystemPrompt(articleType, languageCode) {
     let languageInstruction = "português do Brasil";
     if (languageCode === "en-US") {
         languageInstruction = "inglês dos Estados Unidos (inglês americano)";
+    } else if (languageCode === "es-ES") {
+        languageInstruction = "espanhol padrão (internacional)";
     }
 
     const schema = JSON.stringify(
@@ -228,7 +234,6 @@ ${typeSpecific}
 `.trim();
 }
 
-
 // ===== Utilitários =====
 function stripHtml(html) {
     const div = document.createElement("div");
@@ -265,7 +270,7 @@ function generateRowId() {
     );
 }
 
-// labels PT/EN para FAQ / conclusão / passos
+// labels PT/EN/ES para FAQ / conclusão / passos
 function getLocalizedLabels(language) {
     const lang = (language || "").toLowerCase();
     const isEn =
@@ -273,11 +278,33 @@ function getLocalizedLabels(language) {
         lang === "en" ||
         lang.startsWith("en-") ||
         lang.startsWith("en_");
+    const isEs =
+        lang === "es-es" ||
+        lang === "es" ||
+        lang.startsWith("es-") ||
+        lang.startsWith("es_");
 
+    if (isEn) {
+        return {
+            faqTitle: "Frequently Asked Questions",
+            conclusionTitle: "Conclusion",
+            stepsTitle: "Step by Step",
+        };
+    }
+
+    if (isEs) {
+        return {
+            faqTitle: "Preguntas Frecuentes",
+            conclusionTitle: "Conclusión",
+            stepsTitle: "Paso a Paso",
+        };
+    }
+
+    // padrão pt-BR
     return {
-        faqTitle: isEn ? "Frequently Asked Questions" : "Perguntas Frequentes",
-        conclusionTitle: isEn ? "Conclusion" : "Conclusão",
-        stepsTitle: isEn ? "Step by Step" : "Passo a Passo",
+        faqTitle: "Perguntas Frequentes",
+        conclusionTitle: "Conclusão",
+        stepsTitle: "Passo a Passo",
     };
 }
 
@@ -756,9 +783,8 @@ function buildPreviewHtmlFromArticle(article) {
     return parts.join("\n\n");
 }
 
-// ===== Gerar artigo (OpenAI) =====
+// ===== Gerar artigo (via backend /api/generate-article) =====
 async function generateArticle() {
-    const apiKey = document.getElementById("openaiKey").value.trim();
     const model = document.getElementById("model").value.trim() || "gpt-5.1";
     const topic = document.getElementById("topic").value.trim();
     const language = document.getElementById("language").value;
@@ -766,13 +792,6 @@ async function generateArticle() {
 
     const statusEl = document.getElementById("statusGenerate");
     const btn = document.getElementById("btnGenerate");
-
-    if (!apiKey) {
-        statusEl.classList.add("error");
-        statusEl.innerHTML =
-            "<strong>Erro:</strong> informe a OpenAI API Key.";
-        return;
-    }
 
     if (!topic) {
         statusEl.classList.add("error");
@@ -788,34 +807,28 @@ async function generateArticle() {
     try {
         const systemPrompt = buildSystemPrompt(articleType, language);
 
-        const body = {
-            model,
-            messages: [
-                { role: "system", content: systemPrompt },
-                {
-                    role: "user",
-                    content: `Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o tópico (o texto do tópico pode estar em outro idioma, mas o conteúdo deve seguir o idioma solicitado): ${topic}.`,
-                },
-            ],
-            temperature: 0.7,
-        };
+        const userPrompt = `Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o tópico (o texto do tópico pode estar em outro idioma, mas o conteúdo deve seguir o idioma solicitado): ${topic}.`;
 
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        // Agora chamamos o BACKEND, não mais a OpenAI direto
+        const response = await fetch("/api/generate-article", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: "Bearer " + apiKey,
             },
-            body: JSON.stringify(body),
+            body: JSON.stringify({
+                model,
+                systemPrompt,
+                userPrompt,
+            }),
         });
 
         if (!response.ok) {
             const errText = await response.text();
-            throw new Error("Erro da API OpenAI: " + errText);
+            throw new Error("Erro da API interna (/api/generate-article): " + errText);
         }
 
         const data = await response.json();
-        let content = data.choices[0]?.message?.content || "";
+        let content = data.choices?.[0]?.message?.content || "";
 
         content = content.trim();
         if (content.startsWith("```")) {
@@ -1005,17 +1018,27 @@ async function publishToWordpress() {
 
 // ===== Listeners =====
 document.addEventListener("DOMContentLoaded", () => {
-    document
-        .getElementById("btnGenerate")
-        .addEventListener("click", (e) => {
+    // Campo de chave agora é só visual (se existir), sem chave real
+    const keyInput = document.getElementById("openaiKey");
+    if (keyInput) {
+        keyInput.value = "Configuração via servidor (Vercel)";
+        keyInput.readOnly = true;
+        keyInput.style.pointerEvents = "none";
+    }
+
+    const btnGenerate = document.getElementById("btnGenerate");
+    if (btnGenerate) {
+        btnGenerate.addEventListener("click", (e) => {
             e.preventDefault();
             generateArticle();
         });
+    }
 
-    document
-        .getElementById("btnPublish")
-        .addEventListener("click", (e) => {
+    const btnPublish = document.getElementById("btnPublish");
+    if (btnPublish) {
+        btnPublish.addEventListener("click", (e) => {
             e.preventDefault();
             publishToWordpress();
         });
+    }
 });
