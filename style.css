@@ -14,7 +14,8 @@ body {
 /* ===== Fundo / página ===== */
 body {
     min-height: 100vh;
-    padding: 32px 16px;
+    padding: 56px 16px 40px;
+    /* mais espaço no topo */
     background: radial-gradient(circle at top left, #e0f2fe 0, #eef2ff 40%, #e5e7eb 100%);
     color: #0f172a;
 }
@@ -27,7 +28,9 @@ body {
 
 /* ===== Cabeçalho ===== */
 .app-header {
-    margin-bottom: 24px;
+    margin-bottom: 28px;
+    text-align: center;
+    /* centraliza o bloco de header */
 }
 
 .app-title {
@@ -36,6 +39,8 @@ body {
     margin: 0 0 8px 0;
     display: flex;
     align-items: center;
+    justify-content: center;
+    /* centraliza título + chip */
     gap: 10px;
     color: #0f172a;
 }
@@ -44,6 +49,8 @@ body {
     margin: 0;
     color: #64748b;
     font-size: 0.94rem;
+    text-align: center;
+    /* centraliza subtítulo */
 }
 
 /* ===== Chips / etiqueta ===== */
@@ -193,7 +200,7 @@ textarea {
     margin-top: 3px;
 }
 
-/* ===== Select estilizado (dropdown mais moderno) ===== */
+/* ===== Select estilizado ===== */
 select {
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -281,7 +288,7 @@ button:not(:disabled):hover {
     color: #dc2626;
 }
 
-/* ===== Código / preview (colunas JSON + HTML) ===== */
+/* ===== Código / preview ===== */
 pre,
 .preview {
     background: #f9fafb;
@@ -297,7 +304,6 @@ pre,
     overflow: auto;
 }
 
-/* mobile: um pouco mais baixo */
 @media (max-width: 600px) {
 
     pre,
@@ -353,7 +359,7 @@ pre,
     text-decoration: underline;
 }
 
-/* ===== Estilo leve para FAQ / passo a passo no preview ===== */
+/* ===== Estilo leve FAQ / passo a passo ===== */
 .faq h2,
 .passo-a-passo h2 {
     margin-top: 16px;
@@ -365,7 +371,7 @@ pre,
     color: #0f172a;
 }
 
-/* CTA visual da REC (se usar) */
+/* CTA visual da REC */
 .cta-rec {
     margin: 12px 0;
     padding: 10px 12px;
