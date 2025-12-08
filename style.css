@@ -176,6 +176,37 @@ textarea {
     margin-top: 2px;
 }
 
+/* ===== Select estilizado (fechado + lista aberta) ===== */
+
+/* tira aparência padrão e coloca setinha custom */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: #f9fbff;
+    background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%230300ce' d='M5.5 7.5l4.5 4.5 4.5-4.5-1.4-1.4L10 9.2 6.9 6.1z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px 14px;
+    padding-right: 40px;
+    /* espaço pra setinha */
+}
+
+/* deixa a lista visualmente mais agradável */
+select option {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    background: #ffffff;
+    color: #0f172a;
+}
+
+/* cor de fundo quando seleciona ou passa o mouse (Chrome / Edge) */
+select option:checked,
+select option:hover {
+    background: #e0ecff;
+    color: #0f172a;
+}
+
 /* ===== Botões ===== */
 button {
     border: none;
