@@ -242,9 +242,12 @@ pre {
     border: 1px solid #0300ce;
     max-height: 340px;
     max-width: 100%;
-    /* não passa da coluna */
     box-sizing: border-box;
+
+    /* ADICIONA ISSO AQUI */
+    margin: 0;
 }
+
 
 /* Scrollbar leve */
 pre::-webkit-scrollbar,
