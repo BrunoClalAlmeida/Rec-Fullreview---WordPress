@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Gerador de REC / FULLREVIEW + WordPress</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js" defer></script>
+</head>
+
+<body>
+    <div class="app-wrapper">
+        <!-- Cabeçalho -->
+        <header class="app-header">
+            <h1 class="app-title">
+                🧠 Gerador de Artigos
+                <span class="chip">
+                    <span class="chip-dot"></span>
+                    REC / FULLREVIEW + WordPress
+                </span>
+            </h1>
+            <p class="app-subtitle">
+                Digite o tema, escolha o tipo de texto e publique direto no WordPress.
+            </p>
+        </header>
+
+        <!-- Card 1: Config da IA e tema -->
+        <section class="card">
+            <div class="card-header">
+                <h2 class="card-title">1. Configuração da IA & Tema</h2>
+            </div>
+
+            <p class="card-description">
+                Preencha sua chave da OpenAI, escolha o tipo de artigo e o tema.
+            </p>
+
+            <div class="row">
+                <div class="col-6">
+                    <label for="openaiKey">OpenAI API Key</label>
+                    <input type="password" id="openaiKey" placeholder="sk-..." />
+                    <p class="hint">Use uma chave válida da sua conta OpenAI.</p>
+                </div>
+
+                <div class="col-6">
+                    <label for="model">Modelo (OpenAI)</label>
+                    <input type="text" id="model" value="gpt-5.1" />
+                    <p class="hint">Ex: gpt-4.1, gpt-4.1-mini, gpt-5.1.</p>
+                </div>
+
+                <div class="col-12">
+                    <label for="topic">Tema / Palavra-chave do texto</label>
+                    <textarea id="topic" placeholder="Ex: Como Ganhar Robux no Roblox de Forma Segura"></textarea>
+                </div>
+
+                <div class="col-6">
+                    <label for="language">Idioma</label>
+                    <select id="language">
+                        <option value="pt-BR">Português (Brasil)</option>
+                        <option value="en-US">Inglês (EUA)</option>
+                        <option value="es-ES">Espanhol</option>
+                    </select>
+                </div>
+
+                <div class="col-6">
+                    <label for="articleType">Tipo de texto</label>
+                    <select id="articleType">
+                        <option value="REC">REC (Explica o tema)</option>
+                        <option value="FULLREVIEW">FULLREVIEW (Ensina com passo a passo)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="actions-row">
+                <button id="btnGenerate" class="primary">🚀 Gerar texto com IA</button>
+                <div id="statusGenerate" class="status"></div>
+            </div>
+        </section>
+
+        <!-- Card 2: Resultado JSON + HTML -->
+        <section class="card">
+            <div class="card-header">
+                <h2 class="card-title">2. Resultado da IA</h2>
+            </div>
+
+            <p class="card-description">
+                Aqui você vê o JSON estruturado e o HTML que será enviado para o WordPress.
+            </p>
+
+            <div class="row">
+                <div class="col-6">
+                    <label>JSON gerado (estrutura REC / FULLREVIEW)</label>
+                    <pre id="jsonOutput">{ /* gere um texto primeiro */ }</pre>
+                </div>
+
+                <div class="col-6">
+                    <label>Preview do HTML (como ficará no WordPress)</label>
+                    <div id="htmlPreview" class="preview">
+                        <em>O conteúdo aparecerá aqui após gerar com a IA.</em>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Card 3: Config WordPress + Publicar -->
+        <section class="card">
+            <div class="card-header">
+                <h2 class="card-title">3. Publicar no WordPress</h2>
+            </div>
+
+            <p class="card-description">
+                Informe o site WordPress e as credenciais para criar o post automaticamente.
+            </p>
+
+            <div class="row">
+                <div class="col-6">
+                    <label for="wpBaseUrl">URL base do WordPress (sem / no final)</label>
+                    <input type="text" id="wpBaseUrl" placeholder="https://seusite.com" />
+                </div>
+
+                <div class="col-3">
+                    <label for="wpUser">Usuário WordPress</label>
+                    <input type="text" id="wpUser" placeholder="admin" />
+                </div>
+
+                <div class="col-3">
+                    <label for="wpAppPassword">Application Password (WP)</label>
+                    <input type="password" id="wpAppPassword" placeholder="xxxx xxxx xxxx xxxx" />
+                </div>
+
+                <div class="col-3">
+                    <label for="wpCategoryId">Categoria ID</label>
+                    <input type="number" id="wpCategoryId" value="1" />
+                </div>
+
+                <div class="col-3">
+                    <label for="wpStatus">Status da publicação</label>
+                    <select id="wpStatus">
+                        <option value="draft">Rascunho</option>
+                        <option value="publish">Publicar imediatamente</option>
+                    </select>
+                </div>
+
+                <div class="col-3">
+                    <label for="useSeoTitle">Título do post</label>
+                    <select id="useSeoTitle">
+                        <option value="h1">Usar H1 gerado</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="actions-row">
+                <button id="btnPublish" class="secondary" disabled>
+                    📤 Publicar no WordPress
+                </button>
+                <div id="statusPublish" class="status"></div>
+                <div id="wpResult" class="status wp-result-link"></div>
+            </div>
+        </section>
+    </div>
+</body>
+
+</html>
