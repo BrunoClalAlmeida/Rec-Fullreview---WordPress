@@ -5,28 +5,35 @@
         sans-serif;
 }
 
+html,
 body {
     margin: 0;
-    padding: 24px;
-    background: #eef2ff;
-    /* fundo azul claro */
+    padding: 0;
+}
+
+/* ===== Fundo / página ===== */
+body {
+    min-height: 100vh;
+    padding: 32px 16px;
+    background: radial-gradient(circle at top left, #e0f2fe 0, #eef2ff 40%, #e5e7eb 100%);
     color: #0f172a;
 }
 
 /* ===== Layout principal ===== */
 .app-wrapper {
-    max-width: 1200px;
+    max-width: 1120px;
     margin: 0 auto;
 }
 
+/* ===== Cabeçalho ===== */
 .app-header {
     margin-bottom: 24px;
 }
 
 .app-title {
-    font-size: 1.9rem;
-    font-weight: 650;
-    margin: 0 0 6px 0;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 8px 0;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -36,7 +43,7 @@ body {
 .app-subtitle {
     margin: 0;
     color: #64748b;
-    font-size: 0.95rem;
+    font-size: 0.94rem;
 }
 
 /* ===== Chips / etiqueta ===== */
@@ -47,7 +54,7 @@ body {
     padding: 4px 12px;
     border-radius: 999px;
     border: 1px solid #4f46e5;
-    background: #eef2ff;
+    background: rgba(79, 70, 229, 0.06);
     font-size: 0.78rem;
     color: #4f46e5;
 }
@@ -62,11 +69,13 @@ body {
 /* ===== Cards ===== */
 .card {
     background: #ffffff;
-    border-radius: 18px;
-    padding: 20px;
-    margin-bottom: 18px;
-    border: 1px solid #e0e7ff;
-    box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
+    border-radius: 20px;
+    padding: 20px 22px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    box-shadow:
+        0 22px 45px rgba(15, 23, 42, 0.08),
+        0 0 0 1px rgba(148, 163, 184, 0.15);
 }
 
 .card-header {
@@ -75,18 +84,20 @@ body {
     align-items: center;
     gap: 10px;
     margin-bottom: 10px;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+    padding-bottom: 6px;
 }
 
 .card-title {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 600;
     color: #0f172a;
 }
 
 .card-description {
-    margin: 0 0 10px 0;
+    margin: 6px 0 14px 0;
     font-size: 0.86rem;
-    color: #64748b;
+    color: #6b7280;
 }
 
 /* ===== Grid responsivo ===== */
@@ -109,7 +120,6 @@ body {
 .col-6 {
     flex: 0 0 calc(50% - 7px);
     min-width: 0;
-    /* evita estourar horizontal quando conteúdo é largo */
 }
 
 .col-12 {
@@ -118,6 +128,9 @@ body {
 
 /* Responsivo */
 @media (max-width: 900px) {
+    .card {
+        padding: 18px 16px;
+    }
 
     .col-3,
     .col-4,
@@ -126,12 +139,13 @@ body {
     }
 }
 
-/* ===== Inputs / labels ===== */
+/* ===== Labels / inputs ===== */
 label {
     display: block;
     margin-bottom: 4px;
-    font-size: 0.84rem;
+    font-size: 0.83rem;
     color: #475569;
+    font-weight: 500;
 }
 
 input[type="text"],
@@ -140,15 +154,18 @@ input[type="number"],
 select,
 textarea {
     width: 100%;
-    padding: 8px 11px;
+    padding: 9px 12px;
     border-radius: 12px;
-    border: 1px solid #0300ce;
-    background: #f9fbff;
+    border: 1px solid #c7d2fe;
+    background: #f9fafb;
     color: #0f172a;
     font-size: 0.93rem;
     outline: none;
-    transition: border 0.15s ease, box-shadow 0.15s ease,
-        background 0.15s ease, transform 0.08s ease;
+    transition:
+        border 0.15s ease,
+        box-shadow 0.15s ease,
+        background 0.15s ease,
+        transform 0.08s ease;
 }
 
 input::placeholder,
@@ -160,7 +177,7 @@ input:focus,
 textarea:focus,
 select:focus {
     border-color: #4f46e5;
-    box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.28);
+    box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.32);
     background: #ffffff;
     transform: translateY(-1px);
 }
@@ -171,31 +188,27 @@ textarea {
 }
 
 .hint {
-    font-size: 0.75rem;
+    font-size: 0.74rem;
     color: #94a3b8;
-    margin-top: 2px;
+    margin-top: 3px;
 }
 
-/* ===== Select estilizado ===== */
-
-/* campo fechado com seta custom */
+/* ===== Select estilizado (dropdown mais moderno) ===== */
 select {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
 
-    background-color: #f9fbff;
-    background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%230300ce' d='M5.5 7.5l4.5 4.5 4.5-4.5-1.4-1.4L10 9.2 6.9 6.1z'/%3E%3C/svg%3E");
+    background-color: #f9fafb;
+    background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%234f46e5' d='M5.5 7.5l4.5 4.5 4.5-4.5-1.4-1.4L10 9.2 6.9 6.1z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 14px center;
     background-size: 14px 14px;
 
-    padding-right: 42px;
-    /* espaço pra setinha */
+    padding-right: 40px;
     cursor: pointer;
 }
 
-/* estilinho básico das opções (onde o navegador permitir) */
 select option {
     padding: 8px 10px;
     font-size: 0.9rem;
@@ -203,9 +216,8 @@ select option {
     color: #0f172a;
 }
 
-/* isso só afeta alguns navegadores, o azul forte é do sistema */
 select option:checked {
-    background: #e0ecff;
+    background: #e5edff;
     color: #0f172a;
 }
 
@@ -213,27 +225,31 @@ select option:checked {
 button {
     border: none;
     border-radius: 999px;
-    padding: 10px 20px;
+    padding: 10px 22px;
     font-size: 0.95rem;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease,
+    transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease,
+        background 0.12s ease,
         opacity 0.1s ease;
 }
 
 button.primary {
     background: linear-gradient(135deg, #4f46e5, #2563eb);
     color: #ffffff;
-    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.35);
     font-weight: 500;
 }
 
 button.secondary {
     background: #ffffff;
-    color: #1e293b;
-    border: 1px solid #cbd5f5;
+    color: #111827;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 8px 20px rgba(148, 163, 184, 0.18);
 }
 
 button:disabled {
@@ -245,14 +261,14 @@ button:disabled {
 
 button:not(:disabled):hover {
     transform: translateY(-1px);
-    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.15);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
 }
 
 /* ===== Status / mensagens ===== */
 .status {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     color: #6b7280;
-    margin-top: 8px;
+    margin-top: 6px;
     min-height: 18px;
     white-space: pre-line;
 }
@@ -268,10 +284,10 @@ button:not(:disabled):hover {
 /* ===== Código / preview (colunas JSON + HTML) ===== */
 pre,
 .preview {
-    background: #f5f7ff;
-    padding: 13px;
-    border-radius: 12px;
-    border: 1px solid #0300ce;
+    background: #f9fafb;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
     max-height: 340px;
     max-width: 100%;
     width: 100%;
@@ -279,7 +295,6 @@ pre,
     margin: 0;
     color: #0f172a;
     overflow: auto;
-    display: block;
 }
 
 /* mobile: um pouco mais baixo */
@@ -307,19 +322,15 @@ pre::-webkit-scrollbar-thumb,
 /* tira “bolinha” branca do canto */
 pre::-webkit-scrollbar-corner,
 .preview::-webkit-scrollbar-corner {
-    background: #f5f7ff;
-    border-bottom-right-radius: 12px;
+    background: #f9fafb;
+    border-bottom-right-radius: 14px;
 }
 
 /* Firefox */
-pre {
-    scrollbar-width: thin;
-    scrollbar-color: #c7d2fe #f5f7ff;
-}
-
+pre,
 .preview {
     scrollbar-width: thin;
-    scrollbar-color: #c7d2fe #f5f7ff;
+    scrollbar-color: #c7d2fe #f9fafb;
 }
 
 /* ===== Ações ===== */
@@ -335,13 +346,14 @@ pre {
 .wp-result-link a {
     color: #2563eb;
     text-decoration: none;
+    font-weight: 500;
 }
 
 .wp-result-link a:hover {
     text-decoration: underline;
 }
 
-/* ===== Estilinho leve para FAQ / passo a passo ===== */
+/* ===== Estilo leve para FAQ / passo a passo no preview ===== */
 .faq h2,
 .passo-a-passo h2 {
     margin-top: 16px;
@@ -353,7 +365,7 @@ pre {
     color: #0f172a;
 }
 
-/* CTA da REC */
+/* CTA visual da REC (se usar) */
 .cta-rec {
     margin: 12px 0;
     padding: 10px 12px;
@@ -364,4 +376,64 @@ pre {
 
 .cta-rec p {
     margin: 2px 0;
+}
+
+/* Lista de CTAs do preview */
+.cta-preview-list {
+    padding-left: 18px;
+    margin: 8px 0 12px;
+    font-size: 0.9rem;
+    color: #111827;
+}
+
+/* Bloco de content preview */
+.content-block-preview {
+    margin: 14px 0;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+}
+
+.content-block-preview .cb-tag {
+    font-size: 0.73rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #4f46e5;
+    margin-bottom: 4px;
+}
+
+.content-block-preview .cb-title {
+    font-size: 0.93rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.content-block-preview .cb-summary {
+    font-size: 0.86rem;
+    color: #6b7280;
+    margin: 0 0 6px;
+}
+
+.content-block-preview .cb-cta {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #2563eb;
+    margin-bottom: 4px;
+}
+
+.content-block-preview .cb-warning {
+    font-size: 0.74rem;
+    color: #9ca3af;
+}
+
+/* CTA preview do 7º título */
+.section-cta-preview {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    background: rgba(79, 70, 229, 0.06);
+    color: #4338ca;
+    font-size: 0.8rem;
+    display: inline-block;
 }
