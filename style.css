@@ -231,12 +231,11 @@ button:not(:disabled):hover {
     color: #dc2626;
 }
 
-/* ===== Código / preview (lado esquerdo e direito) ===== */
-pre,
-.preview {
+/* ===== Código / preview ===== */
+pre {
     background: #f5f7ff;
-    padding: 13px;
-    border-radius: 12px;
+    padding: 10px;
+    border-radius: 10px;
     font-size: 0.8rem;
     overflow-x: auto;
     overflow-y: auto;
@@ -244,15 +243,16 @@ pre,
     max-height: 340px;
     max-width: 100%;
     box-sizing: border-box;
+
+    /* ADICIONA ISSO AQUI */
     margin: 0;
-    color: #0f172a;
 }
+
 
 /* Scrollbar leve */
 pre::-webkit-scrollbar,
 .preview::-webkit-scrollbar {
     width: 6px;
-    height: 6px;
 }
 
 pre::-webkit-scrollbar-thumb,
@@ -261,10 +261,17 @@ pre::-webkit-scrollbar-thumb,
     border-radius: 999px;
 }
 
-/* Cantinho onde as barras se cruzam – some com a “bolinha” */
-pre::-webkit-scrollbar-corner,
-.preview::-webkit-scrollbar-corner {
+.preview {
     background: #f5f7ff;
+    padding: 13px;
+    border-radius: 10px;
+    border: 1px solid #0300ce;
+    max-height: 340px;
+    max-width: 100%;
+    overflow: auto;
+    font-size: 0.9rem;
+    color: #0f172a;
+    box-sizing: border-box;
 }
 
 /* ===== Ações ===== */
