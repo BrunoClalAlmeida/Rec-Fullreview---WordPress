@@ -3,11 +3,13 @@ let lastArticleJson = null;
 let lastArticleHtml = "";
 
 // ===== Schema por tipo (REC ou FULLREVIEW) =====
-function getArticleSchema(articleType) {
+function getArticleSchema(articleType, languageCode) {
+    const lang = languageCode || "pt-BR";
+
     if (articleType === "FULLREVIEW") {
         return {
             type: "FULLREVIEW",
-            language: "pt-BR",
+            language: lang,
             topic: "string",
             h1: "string",
             intro_html:
@@ -54,7 +56,7 @@ function getArticleSchema(articleType) {
     // REC
     return {
         type: "REC",
-        language: "pt-BR",
+        language: lang,
         topic: "string",
         h1: "string",
         subtitle_html:
@@ -106,11 +108,27 @@ function getArticleSchema(articleType) {
 }
 
 // ===== Prompt do sistema =====
-function buildSystemPrompt(articleType) {
-    const schema = JSON.stringify(getArticleSchema(articleType), null, 2);
+function buildSystemPrompt(articleType, languageCode) {
+    // descrição humana do idioma
+    let languageInstruction = "português do Brasil";
+    if (languageCode === "en-US") {
+        languageInstruction = "inglês dos Estados Unidos (inglês americano)";
+    }
+
+    const schema = JSON.stringify(
+        getArticleSchema(articleType, languageCode),
+        null,
+        2
+    );
 
     const baseRules = `
 Regras gerais (valem para REC e FULLREVIEW):
+
+- Idioma:
+  - Escreva TODO o conteúdo exclusivamente em ${languageInstruction}.
+  - Isso vale para títulos, parágrafos, listas, tabelas, CTAs, FAQs, avisos e qualquer outro texto.
+  - Não misture com outros idiomas, nem palavras soltas em outra língua.
+  - Se o usuário escrever o tema/tópico em outro idioma, você deve ADAPTAR e TRADUZIR o título (h1) e TODO o conteúdo para ${languageInstruction}, mantendo apenas o sentido do tema original.
 
 - Linguagem:
   - Natural, jornalística/editorial.
@@ -156,26 +174,29 @@ Regras gerais (valem para REC e FULLREVIEW):
 REC:
 
 - Explica o tema, não ensina passo a passo.
-- H1 (campo "h1") deve ser exatamente o tópico digitado pelo usuário.
+- H1 (campo "h1") deve ser um TÍTULO equivalente ao tópico digitado pelo usuário, escrito no MESMO IDIOMA do texto. Você pode adaptar e traduzir o texto do tópico, mantendo apenas o sentido.
 - Subtítulo (subtitle_html) e introdução (intro_html): até 4 linhas cada.
 - Corpo com 7 H2, cada um com 2 parágrafos.
 - Até 650 palavras no total.
-- section_cta_label: CTA em MAIÚSCULAS, até 6 palavras, relacionado ao tema.
+- section_cta_label: CTA em MAIÚSCULAS, até 6 palavras, relacionado ao tema e escrito NO MESMO IDIOMA do texto (por exemplo, em ${languageInstruction}). 
+  - NUNCA use palavras em português como "APROVEITE", "VEJA", "GANHE", "ROUPAS" quando o idioma solicitado não for português. 
+  - Todo o texto do CTA deve seguir exatamente o idioma pedido.
+
 - FAQ com exatamente 7 perguntas, cada uma com resposta de 1–2 linhas.
 
 - Para o BLOCO CONTENT (3º título) em REC:
   - Use a Tag para resumir em 1–4 palavras um subtema do assunto.
   - O Título deve chamar atenção e mencionar o tema (Robux, Shein, cartão, etc.).
   - O Resumo deve ser uma frase curta dizendo por que aquilo é importante para quem se interessou pelo tema.
-  - O Label do CTA deve ser curto (até 4 palavras) e específico sobre o tema, nunca genérico.
-  - O Aviso é obrigatório: use uma frase curta ligada ao tema, como 'Informações sujeitas às regras do Roblox' ou 'Conteúdo sujeito a mudanças na plataforma'.
+  - O Label do CTA deve ser curto (até 4 palavras) e específico sobre o tema, nunca genérico e SEMPRE no mesmo idioma do texto.
+  - O Aviso é obrigatório: use uma frase curta ligada ao tema, como 'Informações sujeitas às regras do Roblox' ou 'Conteúdo sujeito a mudanças na plataforma', também no mesmo idioma do texto.
 `.trim();
 
     const fullRules = `
 FULLREVIEW:
 
 - Ensina como fazer, com passo a passo.
-- H1 (campo "h1") deve ser exatamente o tópico digitado pelo usuário.
+- H1 (campo "h1") deve ser um TÍTULO equivalente ao tópico digitado pelo usuário, escrito no MESMO IDIOMA do texto. Você pode adaptar e traduzir o texto do tópico, mantendo apenas o sentido.
 - Corpo com 7–9 seções (H2/H3), cada título com 2 parágrafos.
 - steps_html: 7–10 passos numerados.
 - Até 1000 palavras no total.
@@ -183,6 +204,7 @@ FULLREVIEW:
 - Bloco CONTENT (3º título) segue as mesmas regras do REC:
   - Sempre conectado ao tema principal.
   - Nada genérico; use o nome da plataforma/marca ou benefício principal.
+  - Todos os textos do bloco devem estar no MESMO idioma do texto principal (${languageInstruction}).
   - O Aviso também é obrigatório e curto.
 `.trim();
 
@@ -205,6 +227,7 @@ Regras específicas do tipo "${articleType}":
 ${typeSpecific}
 `.trim();
 }
+
 
 // ===== Utilitários =====
 function stripHtml(html) {
@@ -240,6 +263,22 @@ function generateRowId() {
         Date.now().toString(16) +
         Math.floor(Math.random() * 999999).toString(16)
     );
+}
+
+// labels PT/EN para FAQ / conclusão / passos
+function getLocalizedLabels(language) {
+    const lang = (language || "").toLowerCase();
+    const isEn =
+        lang === "en-us" ||
+        lang === "en" ||
+        lang.startsWith("en-") ||
+        lang.startsWith("en_");
+
+    return {
+        faqTitle: isEn ? "Frequently Asked Questions" : "Perguntas Frequentes",
+        conclusionTitle: isEn ? "Conclusion" : "Conclusão",
+        stepsTitle: isEn ? "Step by Step" : "Passo a Passo",
+    };
 }
 
 // ===== HTML -> blocos Gutenberg =====
@@ -586,6 +625,10 @@ function buildHtmlFromArticle(article) {
     const type = article.type;
     const parts = [];
 
+    const { faqTitle, conclusionTitle, stepsTitle } = getLocalizedLabels(
+        article.language
+    );
+
     if (type === "REC") {
         if (article.subtitle_html) {
             parts.push(htmlToBlocks(article.subtitle_html));
@@ -607,7 +650,7 @@ function buildHtmlFromArticle(article) {
         }
 
         if (Array.isArray(article.faq) && article.faq.length > 0) {
-            let faqHtml = "<h2>Perguntas Frequentes</h2>";
+            let faqHtml = `<h2>${faqTitle}</h2>`;
             article.faq.forEach((item) => {
                 if (!item) return;
                 if (item.question) faqHtml += `<p><strong>${item.question}</strong></p>`;
@@ -617,7 +660,7 @@ function buildHtmlFromArticle(article) {
         }
 
         if (article.conclusion_html) {
-            const conclHtml = "<h2>Conclusão</h2>" + article.conclusion_html;
+            const conclHtml = `<h2>${conclusionTitle}</h2>` + article.conclusion_html;
             parts.push(htmlToBlocks(conclHtml));
         }
 
@@ -633,12 +676,12 @@ function buildHtmlFromArticle(article) {
     }
 
     if (article.steps_html) {
-        const stepsHtml = "<h2>Passo a Passo</h2>" + article.steps_html;
+        const stepsHtml = `<h2>${stepsTitle}</h2>` + article.steps_html;
         parts.push(htmlToBlocks(stepsHtml));
     }
 
     if (Array.isArray(article.faq) && article.faq.length > 0) {
-        let faqHtml = "<h2>Perguntas Frequentes</h2>";
+        let faqHtml = `<h2>${faqTitle}</h2>`;
         article.faq.forEach((item) => {
             if (!item) return;
             if (item.question) faqHtml += `<p><strong>${item.question}</strong></p>`;
@@ -648,7 +691,7 @@ function buildHtmlFromArticle(article) {
     }
 
     if (article.conclusion_html) {
-        const conclHtml = "<h2>Conclusão</h2>" + article.conclusion_html;
+        const conclHtml = `<h2>${conclusionTitle}</h2>` + article.conclusion_html;
         parts.push(htmlToBlocks(conclHtml));
     }
 
@@ -660,6 +703,8 @@ function buildPreviewHtmlFromArticle(article) {
     if (!article) return "";
     const type = article.type;
     const parts = [];
+
+    const { faqTitle, conclusionTitle } = getLocalizedLabels(article.language);
 
     if (type === "REC") {
         if (article.subtitle_html) {
@@ -695,7 +740,7 @@ function buildPreviewHtmlFromArticle(article) {
     }
 
     if (Array.isArray(article.faq) && article.faq.length > 0) {
-        let faqHtml = "<h2>Perguntas Frequentes</h2>";
+        let faqHtml = `<h2>${faqTitle}</h2>`;
         article.faq.forEach((item) => {
             if (!item) return;
             if (item.question) faqHtml += `<p><strong>${item.question}</strong></p>`;
@@ -705,7 +750,7 @@ function buildPreviewHtmlFromArticle(article) {
     }
 
     if (article.conclusion_html) {
-        parts.push("<h2>Conclusão</h2>" + article.conclusion_html);
+        parts.push(`<h2>${conclusionTitle}</h2>` + article.conclusion_html);
     }
 
     return parts.join("\n\n");
@@ -741,7 +786,7 @@ async function generateArticle() {
     btn.disabled = true;
 
     try {
-        const systemPrompt = buildSystemPrompt(articleType);
+        const systemPrompt = buildSystemPrompt(articleType, language);
 
         const body = {
             model,
@@ -749,7 +794,7 @@ async function generateArticle() {
                 { role: "system", content: systemPrompt },
                 {
                     role: "user",
-                    content: `Crie um texto do tipo "${articleType}" em "${language}" sobre o tópico: ${topic}.`,
+                    content: `Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o tópico (o texto do tópico pode estar em outro idioma, mas o conteúdo deve seguir o idioma solicitado): ${topic}.`,
                 },
             ],
             temperature: 0.7,
@@ -794,7 +839,11 @@ async function generateArticle() {
         articleJson.type = articleType;
         articleJson.language = language;
         articleJson.topic = topic;
-        articleJson.h1 = topic;
+
+        // H1: usar o que a IA devolver no idioma certo; se não vier, usar o tópico bruto como fallback.
+        if (!articleJson.h1 || !articleJson.h1.trim()) {
+            articleJson.h1 = topic;
+        }
 
         let totalWords = 0;
         if (articleJson.subtitle_html)
@@ -879,7 +928,14 @@ async function publishToWordpress() {
     }
 
     const title = lastArticleJson.h1 || "Texto IA";
-    const slug = slugify(title);
+
+    const baseSlug = slugify(title);
+    let typePrefix = (lastArticleJson.type || "").toString().toLowerCase();
+    if (typePrefix !== "rec" && typePrefix !== "fullreview") {
+        typePrefix = "";
+    }
+    const slug = typePrefix ? `${typePrefix}-${baseSlug}` : baseSlug;
+
     const introField =
         lastArticleJson.intro_html || lastArticleJson.subtitle_html || "";
     const metaDescription = stripHtml(introField).slice(0, 160);
