@@ -133,19 +133,6 @@ body {
     flex: 0 0 100%;
 }
 
-/* Responsivo */
-@media (max-width: 900px) {
-    .card {
-        padding: 18px 16px;
-    }
-
-    .col-3,
-    .col-4,
-    .col-6 {
-        flex: 0 0 100%;
-    }
-}
-
 /* ===== Labels / inputs ===== */
 label {
     display: block;
@@ -304,14 +291,6 @@ pre,
     overflow: auto;
 }
 
-@media (max-width: 600px) {
-
-    pre,
-    .preview {
-        max-height: 260px;
-    }
-}
-
 /* Scrollbar leve – Chrome / Edge */
 pre::-webkit-scrollbar,
 .preview::-webkit-scrollbar {
@@ -442,4 +421,40 @@ pre,
     color: #4338ca;
     font-size: 0.8rem;
     display: inline-block;
+}
+
+/* ===== MOBILE: centralizar tudo ===== */
+@media (max-width: 768px) {
+    body {
+        padding: 32px 12px 28px;
+    }
+
+    .app-header {
+        margin-bottom: 22px;
+    }
+
+    .card {
+        padding: 18px 16px;
+        margin-bottom: 16px;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .card-description {
+        text-align: center;
+    }
+
+    .actions-row {
+        justify-content: center;
+    }
+
+    .col-3,
+    .col-4,
+    .col-6 {
+        flex: 0 0 100%;
+    }
 }
