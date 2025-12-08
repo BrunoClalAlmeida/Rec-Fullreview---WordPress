@@ -116,6 +116,7 @@ body {
     flex: 0 0 100%;
 }
 
+/* Deixar responsivo no mobile */
 @media (max-width: 900px) {
 
     .col-3,
@@ -237,18 +238,29 @@ pre,
     background: #f5f7ff;
     padding: 13px;
     border-radius: 12px;
-    font-size: 0.8rem;
-    overflow-x: auto;
-    overflow-y: auto;
     border: 1px solid #0300ce;
     max-height: 340px;
     max-width: 100%;
+    width: 100%;
     box-sizing: border-box;
     margin: 0;
     color: #0f172a;
+    overflow: auto;
+
+    /* Faz o conteúdo respeitar o bloco */
+    display: block;
 }
 
-/* Scrollbar leve */
+/* No mobile, deixa um pouco mais baixo para não ficar pesado */
+@media (max-width: 600px) {
+
+    pre,
+    .preview {
+        max-height: 260px;
+    }
+}
+
+/* Scrollbar leve (Chrome / Edge / etc.) */
 pre::-webkit-scrollbar,
 .preview::-webkit-scrollbar {
     width: 6px;
@@ -261,10 +273,22 @@ pre::-webkit-scrollbar-thumb,
     border-radius: 999px;
 }
 
-/* Cantinho onde as barras se cruzam – some com a “bolinha” */
+/* some com a “bolinha” branca do canto */
 pre::-webkit-scrollbar-corner,
 .preview::-webkit-scrollbar-corner {
     background: #f5f7ff;
+    border-bottom-right-radius: 12px;
+}
+
+/* Firefox */
+pre {
+    scrollbar-width: thin;
+    scrollbar-color: #c7d2fe #f5f7ff;
+}
+
+.preview {
+    scrollbar-width: thin;
+    scrollbar-color: #c7d2fe #f5f7ff;
 }
 
 /* ===== Ações ===== */
