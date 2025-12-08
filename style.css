@@ -116,7 +116,7 @@ body {
     flex: 0 0 100%;
 }
 
-/* Deixar responsivo no mobile */
+/* Responsivo */
 @media (max-width: 900px) {
 
     .col-3,
@@ -176,23 +176,26 @@ textarea {
     margin-top: 2px;
 }
 
-/* ===== Select estilizado (fechado + lista aberta) ===== */
+/* ===== Select estilizado ===== */
 
-/* tira aparência padrão e coloca setinha custom */
+/* campo fechado com seta custom */
 select {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
+
     background-color: #f9fbff;
     background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%230300ce' d='M5.5 7.5l4.5 4.5 4.5-4.5-1.4-1.4L10 9.2 6.9 6.1z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 12px center;
+    background-position: right 14px center;
     background-size: 14px 14px;
-    padding-right: 40px;
+
+    padding-right: 42px;
     /* espaço pra setinha */
+    cursor: pointer;
 }
 
-/* deixa a lista visualmente mais agradável */
+/* estilinho básico das opções (onde o navegador permitir) */
 select option {
     padding: 8px 10px;
     font-size: 0.9rem;
@@ -200,9 +203,8 @@ select option {
     color: #0f172a;
 }
 
-/* cor de fundo quando seleciona ou passa o mouse (Chrome / Edge) */
-select option:checked,
-select option:hover {
+/* isso só afeta alguns navegadores, o azul forte é do sistema */
+select option:checked {
     background: #e0ecff;
     color: #0f172a;
 }
@@ -263,7 +265,7 @@ button:not(:disabled):hover {
     color: #dc2626;
 }
 
-/* ===== Código / preview (lado esquerdo e direito) ===== */
+/* ===== Código / preview (colunas JSON + HTML) ===== */
 pre,
 .preview {
     background: #f5f7ff;
@@ -277,12 +279,10 @@ pre,
     margin: 0;
     color: #0f172a;
     overflow: auto;
-
-    /* Faz o conteúdo respeitar o bloco */
     display: block;
 }
 
-/* No mobile, deixa um pouco mais baixo para não ficar pesado */
+/* mobile: um pouco mais baixo */
 @media (max-width: 600px) {
 
     pre,
@@ -291,7 +291,7 @@ pre,
     }
 }
 
-/* Scrollbar leve (Chrome / Edge / etc.) */
+/* Scrollbar leve – Chrome / Edge */
 pre::-webkit-scrollbar,
 .preview::-webkit-scrollbar {
     width: 6px;
@@ -304,7 +304,7 @@ pre::-webkit-scrollbar-thumb,
     border-radius: 999px;
 }
 
-/* some com a “bolinha” branca do canto */
+/* tira “bolinha” branca do canto */
 pre::-webkit-scrollbar-corner,
 .preview::-webkit-scrollbar-corner {
     background: #f5f7ff;
