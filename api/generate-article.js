@@ -24,7 +24,9 @@ module.exports = (req, res) => {
         res.statusCode = 500;
         res.setHeader("Content-Type", "application/json");
         res.end(
-          JSON.stringify({ error: "OPENAI_API_KEY não configurada no servidor" })
+          JSON.stringify({
+            error: "OPENAI_API_KEY não configurada no servidor",
+          })
         );
         return;
       }
