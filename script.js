@@ -907,14 +907,14 @@ async function generateArticle() {
     }
 }
 
-// ===== Lê as configs de meta (preloader, imagem, etc.) =====
+// ===== Lê as configs do artigo e monta config_artigo =====
 function readArticleSettingsFromForm() {
     const preloaderEnableEl = document.getElementById("cfgPreloaderEnable");
     const preloaderTimeEl = document.getElementById("cfgPreloaderTime");
 
     const enablePreloader = !!(preloaderEnableEl && preloaderEnableEl.checked);
 
-    let preloaderTime = "";
+    let preloaderTime = null;
     if (enablePreloader && preloaderTimeEl) {
         const val = parseInt(preloaderTimeEl.value || "0", 10);
         preloaderTime = isNaN(val) || val <= 0 ? 3500 : val;
@@ -929,18 +929,23 @@ function readArticleSettingsFromForm() {
     const hideFooter = !!document.getElementById("cfgHideFooter")?.checked;
     const persistParam = !!document.getElementById("cfgPersistParam")?.checked;
 
-    // Aqui você ajusta os nomes das meta keys conforme o seu WordPress/ACF
+    // Objeto que o snippet PHP espera em $request->get_param('config_artigo')
     return {
-        cf_enable_preloader: enablePreloader ? "1" : "0",
-        cf_preloader_time: enablePreloader ? String(preloaderTime) : "",
-        cf_enable_image: enableImage ? "1" : "0",
-        cf_hide_category: hideCategory ? "1" : "0",
-        cf_hide_author: hideAuthor ? "1" : "0",
-        cf_hide_date: hideDate ? "1" : "0",
-        cf_hide_menu: hideMenu ? "1" : "0",
-        cf_hide_social: hideSocial ? "1" : "0",
-        cf_hide_footer: hideFooter ? "1" : "0",
-        cf_persist_params: persistParam ? "1" : "0",
+        habilitar_preloader: enablePreloader,
+        personalizar_preloader: enablePreloader, // usamos o mesmo toggle
+        tempo_preloader: enablePreloader ? preloaderTime : null,
+
+        habilitar_imagem: enableImage,
+        ocultar_categoria: hideCategory,
+        ocultar_autor: hideAuthor,
+        ocultar_data: hideDate,
+        ocultar_menu: hideMenu,
+        ocultar_social: hideSocial,
+        ocultar_footer: hideFooter,
+        persistir_parametro: persistParam,
+
+        // por enquanto não tem campo de quiz na tela; deixamos nulo
+        artquiz_associado: null,
     };
 }
 
@@ -989,7 +994,8 @@ async function publishToWordpress() {
     const metaDescription = stripHtml(introField).slice(0, 160);
     const excerpt = stripHtml(introField).slice(0, 200);
 
-    const metaSettings = readArticleSettingsFromForm();
+    // Lê configurações da tela e monta objeto esperado pelo snippet
+    const articleConfig = readArticleSettingsFromForm();
 
     const body = {
         title,
@@ -1001,8 +1007,9 @@ async function publishToWordpress() {
         meta: {
             cf_article_type: lastArticleJson.type || "",
             cf_meta_description: metaDescription,
-            ...metaSettings,
         },
+        // Este objeto será lido pelo snippet PHP (rest_after_insert_post)
+        config_artigo: articleConfig,
     };
 
     statusEl.classList.remove("error");
