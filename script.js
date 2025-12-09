@@ -148,17 +148,22 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
     const baseRules = `
 Regras gerais (valem para REC e FULLREVIEW):
 
-- Controle de tamanho (MUITO IMPORTANTE):
-  - Considere que o LIMITE MÁXIMO ABSOLUTO de palavras para este texto é de ${resolvedApprox} palavras, somando todos os campos de texto (subtitle_html, intro_html, body_html, steps_html, faq, conclusion_html).
-  - NUNCA ultrapasse esse limite. É melhor ficar um pouco abaixo do que acima.
-  - Busque ficar aproximadamente entre 0,85 x ${resolvedApprox} e ${resolvedApprox} palavras.
-  - Se perceber que o conteúdo está ficando muito longo, reduza o tamanho dos parágrafos, use frases mais curtas e finalize as últimas seções de forma objetiva, em vez de continuar expandindo.
-
 - Idioma:
   - Escreva TODO o conteúdo exclusivamente em ${languageInstruction}.
   - Isso vale para títulos, parágrafos, listas, tabelas, CTAs, FAQs, avisos e qualquer outro texto.
   - Não misture com outros idiomas, nem palavras soltas em outra língua.
   - Se o usuário escrever o tema/tópico em outro idioma, você deve ADAPTAR e TRADUZIR o título (h1) e TODO o conteúdo para ${languageInstruction}, mantendo apenas o sentido do tema original.
+
+- Tema (topic) – REGRA MUITO IMPORTANTE:
+  - O campo "topic" representa exatamente o tema informado pelo usuário.
+  - Você NÃO pode trocar o assunto principal do texto. Não pode transformar um tema sobre "calçados Shein" em um texto genérico sobre "roupas Shein", por exemplo.
+  - Você pode apenas traduzir e adaptar o texto do topic para o idioma solicitado, mantendo SEMPRE a mesma intenção e foco.
+  - TODO o conteúdo (h1, intro, body_html, steps_html, FAQ, conclusão e blocos CONTENT) deve estar claramente conectado ao tema especificado no topic.
+
+- Quantidade de palavras (REGRA MUITO IMPORTANTE):
+  - Considere que o LIMITE MÁXIMO APROXIMADO de palavras para este texto é de ${resolvedApprox} palavras no total.
+  - Você NUNCA deve ultrapassar esse limite. Se for errar, erre para MENOS, nunca para mais.
+  - O alvo é ficar o mais próximo possível de ${resolvedApprox} palavras, sem ultrapassar esse número.
 
 - Linguagem:
   - Natural, jornalística/editorial.
@@ -195,13 +200,21 @@ Regras gerais (valem para REC e FULLREVIEW):
   - A posição da lista e da tabela NÃO deve ser fixa. Em cada novo texto, VARIE a posição em que a lista aparece (pode estar mais no início, mais no meio ou mais no final) e VARIE também a posição da tabela.
   - Evite criar sempre a lista ou a tabela na mesma altura do texto (por exemplo, não coloque sempre a lista no 2º subtítulo e a tabela no 5º). Pense como um redator humano que decide, a cada novo texto, onde faz mais sentido comparar em tabela e onde faz mais sentido listar.
 
-- BLOCO CONTENT (3º TÍTULO) – REGRAS CRÍTICAS:
+- BLOCO CONTENT (3º TÍTULO):
   - Todos os campos content_block_* DEVEM ser claramente relacionados ao tema principal do artigo (campo "topic").
-  - Esses campos (content_block_tag, content_block_title, content_block_summary, content_block_cta_label, content_block_warning) são EXCLUSIVOS do bloco especial.
-  - NUNCA repita essas frases, nem trechos idênticos, dentro de body_html, steps_html, faq ou conclusion_html.
-  - Não crie parágrafos, headings ou frases em body_html que comecem com ou sejam exatamente iguais a esses textos.
-  - Se quiser falar da mesma ideia (benefícios, cupons, avisos, etc.) dentro do texto principal, REESCREVA com palavras diferentes. NÃO copie.
-  - O bloco deve parecer um mini-card separado, não um parágrafo comum do texto.
+  - Se o topic fala de Robux, o bloco precisa falar de Robux, golpes, economia do Roblox, etc.
+  - Se o topic fala de roupas da Shein, o bloco precisa falar de roupas Shein, testes, cupons, avaliações, etc.
+  - Nunca use textos genéricos como "Veja mais detalhes", "Conteúdo importante", "Informações úteis".
+  - O bloco deve parecer um mini-card promocional diretamente ligado ao tema, como se fosse um destaque dentro do texto principal.
+
+- REGRA ABSOLUTA SOBRE O BLOCO CONTENT (NÃO QUEBRAR):
+  - Os textos dos campos content_block_tag, content_block_title, content_block_summary, content_block_cta_label e content_block_warning DEVEM existir APENAS nos campos content_block_*.
+  - É PROIBIDO copiar, repetir, reescrever, resumir, reformular, traduzir de novo ou criar variações muito parecidas desses textos dentro de:
+    - body_html
+    - steps_html
+    - qualquer resposta de FAQ (answer_html)
+    - conclusion_html
+  - Esses textos são exclusivos do BLOCO CONTENT. Eles NÃO podem aparecer como parágrafos normais no corpo do texto, nem como subtítulos, nem como perguntas ou respostas de FAQ.
 `.trim();
 
     const recRules = `
@@ -214,7 +227,7 @@ REC:
 - Dentro do body_html:
   - Use exatamente 1 lista (ul ou ol) e 1 tabela (<table>), em seções diferentes.
   - Em cada novo texto, escolha de forma diferente em qual H2 a lista será inserida e em qual H2 a tabela será inserida.
-- Em média, produza um texto que fique PRÓXIMO de ${resolvedApprox} palavras, sem ultrapassar esse limite. Se necessário, encurte parágrafos para respeitar o tamanho.
+- No total, produza ATÉ ${resolvedApprox} palavras, ficando o mais próximo possível desse valor, mas sem ultrapassar. Se for errar, prefira ficar um pouco abaixo.
 - section_cta_label: CTA em MAIÚSCULAS, até 6 palavras, relacionado ao tema e escrito NO MESMO IDIOMA do texto (por exemplo, em ${languageInstruction}). 
   - NUNCA use palavras em português como "APROVEITE", "VEJA", "GANHE", "ROUPAS" quando o idioma solicitado não for português. 
   - Todo o texto do CTA deve seguir exatamente o idioma pedido.
@@ -227,7 +240,6 @@ REC:
   - O Resumo deve ser uma frase curta dizendo por que aquilo é importante para quem se interessou pelo tema.
   - O Label do CTA deve ser curto (até 4 palavras) e específico sobre o tema, nunca genérico e SEMPRE no mesmo idioma do texto.
   - O Aviso é obrigatório: use uma frase curta ligada ao tema, como 'Informações sujeitas às regras do Roblox' ou 'Conteúdo sujeito a mudanças na plataforma', também no mesmo idioma do texto.
-  - Reforço: NÃO copie esses textos dentro de body_html; use-os APENAS no bloco especial.
 `.trim();
 
     const fullRules = `
@@ -240,14 +252,13 @@ FULLREVIEW:
   - Use exatamente 1 lista (ul ou ol) e 1 tabela (<table>), em seções diferentes.
   - Varie em qual seção a lista aparece e em qual seção a tabela aparece, para que os textos não fiquem sempre com a mesma estrutura.
 - steps_html: lista numerada com 7–10 passos.
-- Em média, produza um texto que fique PRÓXIMO de ${resolvedApprox} palavras, sem ultrapassar esse limite. Se estiver chegando no limite, faça passos e parágrafos mais curtos.
+- No total, produza ATÉ ${resolvedApprox} palavras, ficando o mais próximo possível desse valor, mas sem ultrapassar. Se for errar, prefira ficar um pouco abaixo.
 - FAQ com exatamente 7 perguntas, cada uma com resposta de 1–2 linhas.
 - Bloco CONTENT (3º título) segue as mesmas regras do REC:
   - Sempre conectado ao tema principal.
   - Nada genérico; use o nome da plataforma/marca ou benefício principal.
   - Todos os textos do bloco devem estar no MESMO idioma do texto principal (${languageInstruction}).
   - O Aviso também é obrigatório e curto.
-  - Reforço: NÃO copie esses textos dentro de body_html, steps_html, faq ou conclusion_html; use-os APENAS no bloco.
 `.trim();
 
     const typeSpecific = articleType === "REC" ? recRules : fullRules;
@@ -255,9 +266,8 @@ FULLREVIEW:
     return `
 Você é uma IA que escreve textos editoriais com qualidade de revista para blogs de finanças, games, benefícios e temas relacionados.
 
-O usuário escolheu uma quantidade aproximada de palavras para este texto (approx_word_count). 
-Trate esse valor como LIMITE MÁXIMO de tamanho: o texto inteiro não deve ultrapassar ${resolvedApprox} palavras somando todos os campos.
-É melhor ficar um pouco abaixo do que acima, mantendo fluidez e naturalidade.
+O usuário escolheu uma quantidade aproximada de palavras para este texto. Use esse valor como referência principal de tamanho (campo "approx_word_count" no schema e instruções abaixo).
+Você DEVE manter o texto em até ${resolvedApprox} palavras no total, ficando o mais próximo possível desse valor, mas sem ultrapassar. Se for necessário, fique um pouco abaixo do limite, nunca acima.
 
 Sua resposta DEVE ser SEMPRE um JSON VÁLIDO, seguindo EXATAMENTE o schema abaixo.
 NUNCA escreva nada fora do JSON.
@@ -308,58 +318,6 @@ function generateRowId() {
         Date.now().toString(16) +
         Math.floor(Math.random() * 999999).toString(16)
     );
-}
-
-// Escapar para regex
-function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-// Remove do HTML qualquer <p>, <h2> ou <h3> que seja igual aos textos do bloco CONTENT
-function cleanContentBlockEchoes(article) {
-    if (!article) return;
-
-    const victims = [
-        article.content_block_tag,
-        article.content_block_title,
-        article.content_block_summary,
-        article.content_block_cta_label,
-        article.content_block_warning,
-    ].filter((v) => typeof v === "string" && v.trim().length > 0);
-
-    if (victims.length === 0) return;
-
-    function cleanHtml(html) {
-        if (!html) return html;
-        let result = html;
-        victims.forEach((txt) => {
-            const esc = escapeRegExp(txt.trim());
-            if (!esc) return;
-
-            // <p>Texto</p>
-            const pRegex = new RegExp(`<p>\\s*${esc}\\s*</p>`, "gi");
-            result = result.replace(pRegex, "");
-
-            // <h2>Texto</h2> e <h3>Texto</h3>
-            const h2Regex = new RegExp(`<h2[^>]*>\\s*${esc}\\s*</h2>`, "gi");
-            const h3Regex = new RegExp(`<h3[^>]*>\\s*${esc}\\s*</h3>`, "gi");
-            result = result.replace(h2Regex, "");
-            result = result.replace(h3Regex, "");
-        });
-        return result;
-    }
-
-    article.body_html = cleanHtml(article.body_html);
-    article.steps_html = cleanHtml(article.steps_html);
-    article.conclusion_html = cleanHtml(article.conclusion_html);
-
-    if (Array.isArray(article.faq)) {
-        article.faq.forEach((f) => {
-            if (f && f.answer_html) {
-                f.answer_html = cleanHtml(f.answer_html);
-            }
-        });
-    }
 }
 
 // labels PT/EN/ES para FAQ / conclusão / passos
@@ -905,7 +863,16 @@ async function generateArticle() {
     try {
         const systemPrompt = buildSystemPrompt(articleType, language, approxWordCount);
 
-        const userPrompt = `Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o tópico (o texto do tópico pode estar em outro idioma, mas o conteúdo deve seguir o idioma solicitado): ${topic}. O texto deve respeitar o limite máximo de ${approxWordCount} palavras no total, ficando de preferência um pouco abaixo desse número.`;
+        const userPrompt = `
+Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o seguinte tópico EXATO informado pelo usuário:
+
+"${topic}"
+
+Regras adicionais:
+- Você NÃO pode mudar o assunto central desse tópico. Apenas traduza/adapte para o idioma pedido, mantendo a mesma intenção.
+- Todo o conteúdo (títulos, parágrafos, exemplos, comparações e FAQs) deve falar diretamente sobre esse tema e variações naturais dele, sem mudar para outro assunto.
+- O texto deve ter aproximadamente ${approxWordCount} palavras, RESPEITANDO ESSE VALOR COMO LIMITE MÁXIMO. Se for errar, erre para menos e nunca para mais.
+`.trim();
 
         const response = await fetch("/api/generate-article", {
             method: "POST",
@@ -955,10 +922,6 @@ async function generateArticle() {
             articleJson.h1 = topic;
         }
 
-        // LIMPA repetições dos textos do BLOCO CONTENT no restante do texto
-        cleanContentBlockEchoes(articleJson);
-
-        // Conta palavras estimadas
         let totalWords = 0;
         if (articleJson.subtitle_html)
             totalWords += countWordsFromHtml(articleJson.subtitle_html);
@@ -999,7 +962,7 @@ async function generateArticle() {
         statusEl.innerHTML =
             "<strong>Sucesso:</strong> texto gerado. Revise abaixo antes de publicar. (Estimativa de palavras: " +
             totalWords +
-            " | Limite configurado: " + approxWordCount + ")";
+            " | Alvo: " + approxWordCount + ")";
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
