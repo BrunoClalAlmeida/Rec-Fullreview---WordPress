@@ -161,12 +161,15 @@ Regras gerais (valem para REC e FULLREVIEW):
   - Criar textos 100% originais.
   - Respeitar os campos do schema.
 
-- Listas e comparações:
+- Listas e comparações (body_html):
   - Em TODO texto (REC ou FULLREVIEW), o body_html deve conter:
     - Exatamente 1 lista comum (ul ou ol).
     - Exatamente 1 bloco de comparação em formato de tabela (<table>).
-  - Não crie mais de uma lista no body_html.
-  - Não crie mais de uma tabela no body_html.
+  - A lista e a tabela DEVEM estar em seções diferentes do body_html (não coloque a lista e a tabela uma imediatamente depois da outra).
+  - NÃO crie mais de uma lista no body_html.
+  - NÃO crie mais de uma tabela no body_html.
+  - A posição da lista e da tabela NÃO deve ser fixa. Em cada novo texto, VARIE a posição em que a lista aparece (pode estar mais no início, mais no meio ou mais no final) e VARIE também a posição da tabela.
+  - Evite criar sempre a lista ou a tabela na mesma altura do texto (por exemplo, não coloque sempre a lista no 2º subtítulo e a tabela no 5º). Pense como um redator humano que decide, a cada novo texto, onde faz mais sentido comparar em tabela e onde faz mais sentido listar.
 
 - BLOCO CONTENT (3º TÍTULO):
   - Todos os campos content_block_* DEVEM ser claramente relacionados ao tema principal do artigo (campo "topic").
@@ -182,7 +185,10 @@ REC:
 - Explica o tema, não ensina passo a passo.
 - H1 (campo "h1") deve ser um TÍTULO equivalente ao tópico digitado pelo usuário, escrito no MESMO IDIOMA do texto. Você pode adaptar e traduzir o texto do tópico, mantendo apenas o sentido.
 - Subtítulo (subtitle_html) e introdução (intro_html): até 4 linhas cada.
-- Corpo com 7 H2, cada um com 2 parágrafos.
+- Corpo com exatamente 7 H2, cada um com 2 parágrafos.
+- Dentro do body_html:
+  - Use exatamente 1 lista (ul ou ol) e 1 tabela (<table>), em seções diferentes.
+  - Em cada novo texto, escolha de forma diferente em qual H2 a lista será inserida e em qual H2 a tabela será inserida.
 - Até 650 palavras no total.
 - section_cta_label: CTA em MAIÚSCULAS, até 6 palavras, relacionado ao tema e escrito NO MESMO IDIOMA do texto (por exemplo, em ${languageInstruction}). 
   - NUNCA use palavras em português como "APROVEITE", "VEJA", "GANHE", "ROUPAS" quando o idioma solicitado não for português. 
@@ -204,7 +210,10 @@ FULLREVIEW:
 - Ensina como fazer, com passo a passo.
 - H1 (campo "h1") deve ser um TÍTULO equivalente ao tópico digitado pelo usuário, escrito no MESMO IDIOMA do texto. Você pode adaptar e traduzir o texto do tópico, mantendo apenas o sentido.
 - Corpo com 7–9 seções (H2/H3), cada título com 2 parágrafos.
-- steps_html: 7–10 passos numerados.
+- Dentro do body_html:
+  - Use exatamente 1 lista (ul ou ol) e 1 tabela (<table>), em seções diferentes.
+  - Varie em qual seção a lista aparece e em qual seção a tabela aparece, para que os textos não fiquem sempre com a mesma estrutura.
+- steps_html: lista numerada com 7–10 passos.
 - Até 1000 palavras no total.
 - FAQ com exatamente 7 perguntas, cada uma com resposta de 1–2 linhas.
 - Bloco CONTENT (3º título) segue as mesmas regras do REC:
