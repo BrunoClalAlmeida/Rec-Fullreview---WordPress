@@ -167,6 +167,8 @@ Regras gerais (valem para REC e FULLREVIEW):
     - Exatamente 1 bloco de comparação em formato de tabela (<table>).
   - Não crie mais de uma lista no body_html.
   - Não crie mais de uma tabela no body_html.
+  - A lista e a tabela NÃO precisam aparecer sempre na mesma posição ou no mesmo título em todos os textos. 
+    Dentro de cada texto, posicione a lista e a tabela nas seções (H2/H3) que fizerem mais sentido lógico e narrativo (às vezes mais cedo, às vezes no meio, às vezes mais perto do final), para dar variação natural entre diferentes conteúdos.
 
 - BLOCO CONTENT (3º TÍTULO):
   - Todos os campos content_block_* DEVEM ser claramente relacionados ao tema principal do artigo (campo "topic").
