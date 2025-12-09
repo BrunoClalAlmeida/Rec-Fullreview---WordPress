@@ -148,6 +148,12 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
     const baseRules = `
 Regras gerais (valem para REC e FULLREVIEW):
 
+- Controle de tamanho (MUITO IMPORTANTE):
+  - Considere que o LIMITE MÁXIMO ABSOLUTO de palavras para este texto é de ${resolvedApprox} palavras, somando todos os campos de texto (subtitle_html, intro_html, body_html, steps_html, faq, conclusion_html).
+  - NUNCA ultrapasse esse limite. É melhor ficar um pouco abaixo do que acima.
+  - Busque ficar aproximadamente entre 0,85 x ${resolvedApprox} e ${resolvedApprox} palavras.
+  - Se perceber que o conteúdo está ficando muito longo, reduza o tamanho dos parágrafos, use frases mais curtas e finalize as últimas seções de forma objetiva, em vez de continuar expandindo.
+
 - Idioma:
   - Escreva TODO o conteúdo exclusivamente em ${languageInstruction}.
   - Isso vale para títulos, parágrafos, listas, tabelas, CTAs, FAQs, avisos e qualquer outro texto.
@@ -211,7 +217,7 @@ REC:
 - Dentro do body_html:
   - Use exatamente 1 lista (ul ou ol) e 1 tabela (<table>), em seções diferentes.
   - Em cada novo texto, escolha de forma diferente em qual H2 a lista será inserida e em qual H2 a tabela será inserida.
-- Em média, produza cerca de ${resolvedApprox} palavras no total (o número não precisa ser exato, mas o texto deve se aproximar desse tamanho).
+- Em média, produza um texto que fique PRÓXIMO de ${resolvedApprox} palavras, sem ultrapassar esse limite. Se necessário, encurte parágrafos para respeitar o tamanho.
 - section_cta_label: CTA em MAIÚSCULAS, até 6 palavras, relacionado ao tema e escrito NO MESMO IDIOMA do texto (por exemplo, em ${languageInstruction}). 
   - NUNCA use palavras em português como "APROVEITE", "VEJA", "GANHE", "ROUPAS" quando o idioma solicitado não for português. 
   - Todo o texto do CTA deve seguir exatamente o idioma pedido.
@@ -236,8 +242,7 @@ FULLREVIEW:
   - Use exatamente 1 lista (ul ou ol) e 1 tabela (<table>), em seções diferentes.
   - Varie em qual seção a lista aparece e em qual seção a tabela aparece, para que os textos não fiquem sempre com a mesma estrutura.
 - steps_html: lista numerada com 7–10 passos.
-- Em média, produza cerca de ${resolvedApprox} palavras no total (o número não precisa ser exato, mas o texto deve se aproximar desse tamanho).
-- Até 1000 palavras não é mais um limite fixo; o foco é ficar próximo da quantidade pedida.
+- Em média, produza um texto que fique PRÓXIMO de ${resolvedApprox} palavras, sem ultrapassar esse limite. Se estiver chegando no limite, faça passos e parágrafos mais curtos.
 - FAQ com exatamente 7 perguntas, cada uma com resposta de 1–2 linhas.
 - Bloco CONTENT (3º título) segue as mesmas regras do REC:
   - Sempre conectado ao tema principal.
@@ -251,7 +256,9 @@ FULLREVIEW:
     return `
 Você é uma IA que escreve textos editoriais com qualidade de revista para blogs de finanças, games, benefícios e temas relacionados.
 
-O usuário escolheu uma quantidade aproximada de palavras para este texto. Use esse valor como referência principal de tamanho (campo "approx_word_count" no schema e instruções abaixo). O texto NÃO precisa bater exatamente o número de palavras, mas deve ficar o mais próximo possível, preservando fluidez e naturalidade.
+O usuário escolheu uma quantidade aproximada de palavras para este texto (approx_word_count). 
+Trate esse valor como LIMITE MÁXIMO de tamanho: o texto inteiro não deve ultrapassar ${resolvedApprox} palavras somando todos os campos.
+É melhor ficar um pouco abaixo do que acima, mantendo fluidez e naturalidade.
 
 Sua resposta DEVE ser SEMPRE um JSON VÁLIDO, seguindo EXATAMENTE o schema abaixo.
 NUNCA escreva nada fora do JSON.
@@ -847,7 +854,7 @@ async function generateArticle() {
     try {
         const systemPrompt = buildSystemPrompt(articleType, language, approxWordCount);
 
-        const userPrompt = `Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o tópico (o texto do tópico pode estar em outro idioma, mas o conteúdo deve seguir o idioma solicitado): ${topic}. O texto deve ter aproximadamente ${approxWordCount} palavras, podendo variar um pouco para manter fluidez.`;
+        const userPrompt = `Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o tópico (o texto do tópico pode estar em outro idioma, mas o conteúdo deve seguir o idioma solicitado): ${topic}. O texto deve respeitar o limite máximo de ${approxWordCount} palavras no total, ficando de preferência um pouco abaixo desse número.`;
 
         const response = await fetch("/api/generate-article", {
             method: "POST",
@@ -937,7 +944,7 @@ async function generateArticle() {
         statusEl.innerHTML =
             "<strong>Sucesso:</strong> texto gerado. Revise abaixo antes de publicar. (Estimativa de palavras: " +
             totalWords +
-            " | Alvo: " + approxWordCount + ")";
+            " | Limite configurado: " + approxWordCount + ")";
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
