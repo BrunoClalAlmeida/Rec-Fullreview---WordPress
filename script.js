@@ -167,6 +167,8 @@ Regras gerais (valem para REC e FULLREVIEW):
     - Exatamente 1 bloco de comparação em formato de tabela (<table>).
   - Não crie mais de uma lista no body_html.
   - Não crie mais de uma tabela no body_html.
+  - A lista e a tabela NÃO precisam aparecer sempre na mesma posição ou no mesmo título em todos os textos. 
+    Dentro de cada texto, posicione a lista e a tabela nas seções (H2/H3) que fizerem mais sentido lógico e narrativo (às vezes mais cedo, às vezes no meio, às vezes mais perto do final), para dar variação natural entre diferentes conteúdos.
 
 - BLOCO CONTENT (3º TÍTULO):
   - Todos os campos content_block_* DEVEM ser claramente relacionados ao tema principal do artigo (campo "topic").
@@ -174,6 +176,9 @@ Regras gerais (valem para REC e FULLREVIEW):
   - Se o topic fala de roupas da Shein, o bloco precisa falar de roupas Shein, testes, cupons, avaliações, etc.
   - Nunca use textos genéricos como "Veja mais detalhes", "Conteúdo importante", "Informações úteis".
   - O bloco deve parecer um mini-card promocional diretamente ligado ao tema, como se fosse um destaque dentro do texto principal.
+  - MUITO IMPORTANTE: não descreva o bloco especial dentro do body_html. 
+    Não escreva frases como "Bloco Destaque", "ao acessar este bloco", "no card acima", "no destaque acima" ou similares.
+    O body_html deve seguir o fluxo normal do tema, como se o bloco fosse apenas um destaque visual inserido automaticamente, sem ser mencionado explicitamente no texto.
 `.trim();
 
     const recRules = `
