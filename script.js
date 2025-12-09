@@ -7,8 +7,17 @@ let lastArticleJson = null;
 let lastArticleHtml = "";
 
 // ===== Schema por tipo (REC ou FULLREVIEW) =====
-function getArticleSchema(articleType, languageCode) {
+function getArticleSchema(articleType, languageCode, approxWordCount) {
     const lang = languageCode || "pt-BR";
+    const defaultRec = 650;
+    const defaultFull = 1000;
+
+    const targetWords =
+        typeof approxWordCount === "number" && approxWordCount > 0
+            ? approxWordCount
+            : articleType === "FULLREVIEW"
+                ? defaultFull
+                : defaultRec;
 
     if (articleType === "FULLREVIEW") {
         return {
@@ -53,7 +62,7 @@ function getArticleSchema(articleType, languageCode) {
             content_block_custom_color:
                 "string: '0' ou '1' indicando se é necessário personalizar a cor (use '0' por padrão).",
 
-            approx_word_count: 1000,
+            approx_word_count: targetWords,
         };
     }
 
@@ -107,12 +116,12 @@ function getArticleSchema(articleType, languageCode) {
         ],
         conclusion_html:
             "HTML string com exatamente 3 parágrafos, cada um com no máximo 6 linhas (~até 450–500 caracteres), tom inspirador, sem CTA visual.",
-        approx_word_count: 650,
+        approx_word_count: targetWords,
     };
 }
 
 // ===== Prompt do sistema =====
-function buildSystemPrompt(articleType, languageCode) {
+function buildSystemPrompt(articleType, languageCode, approxWordCount) {
     // descrição humana do idioma
     let languageInstruction = "português do Brasil";
     if (languageCode === "en-US") {
@@ -121,8 +130,17 @@ function buildSystemPrompt(articleType, languageCode) {
         languageInstruction = "espanhol padrão (internacional)";
     }
 
+    const defaultRec = 650;
+    const defaultFull = 1000;
+    const resolvedApprox =
+        typeof approxWordCount === "number" && approxWordCount > 0
+            ? approxWordCount
+            : articleType === "FULLREVIEW"
+                ? defaultFull
+                : defaultRec;
+
     const schema = JSON.stringify(
-        getArticleSchema(articleType, languageCode),
+        getArticleSchema(articleType, languageCode, resolvedApprox),
         null,
         2
     );
@@ -177,6 +195,10 @@ Regras gerais (valem para REC e FULLREVIEW):
   - Se o topic fala de roupas da Shein, o bloco precisa falar de roupas Shein, testes, cupons, avaliações, etc.
   - Nunca use textos genéricos como "Veja mais detalhes", "Conteúdo importante", "Informações úteis".
   - O bloco deve parecer um mini-card promocional diretamente ligado ao tema, como se fosse um destaque dentro do texto principal.
+  - Os textos de content_block_tag, content_block_title, content_block_summary, content_block_cta_label e content_block_warning são EXCLUSIVOS desse bloco especial.
+  - NUNCA repita esses textos (nem trechos idênticos) dentro de body_html, steps_html, faq ou conclusion_html.
+  - Não escreva parágrafos em body_html que sejam iguais ou praticamente iguais ao conteúdo desses campos.
+  - Se quiser falar de benefícios, cupons, avisos ou pontos no corpo do texto, use frases diferentes, não copie o que já foi colocado em content_block_*.
 `.trim();
 
     const recRules = `
@@ -189,7 +211,7 @@ REC:
 - Dentro do body_html:
   - Use exatamente 1 lista (ul ou ol) e 1 tabela (<table>), em seções diferentes.
   - Em cada novo texto, escolha de forma diferente em qual H2 a lista será inserida e em qual H2 a tabela será inserida.
-- Até 650 palavras no total.
+- Em média, produza cerca de ${resolvedApprox} palavras no total (o número não precisa ser exato, mas o texto deve se aproximar desse tamanho).
 - section_cta_label: CTA em MAIÚSCULAS, até 6 palavras, relacionado ao tema e escrito NO MESMO IDIOMA do texto (por exemplo, em ${languageInstruction}). 
   - NUNCA use palavras em português como "APROVEITE", "VEJA", "GANHE", "ROUPAS" quando o idioma solicitado não for português. 
   - Todo o texto do CTA deve seguir exatamente o idioma pedido.
@@ -214,7 +236,8 @@ FULLREVIEW:
   - Use exatamente 1 lista (ul ou ol) e 1 tabela (<table>), em seções diferentes.
   - Varie em qual seção a lista aparece e em qual seção a tabela aparece, para que os textos não fiquem sempre com a mesma estrutura.
 - steps_html: lista numerada com 7–10 passos.
-- Até 1000 palavras no total.
+- Em média, produza cerca de ${resolvedApprox} palavras no total (o número não precisa ser exato, mas o texto deve se aproximar desse tamanho).
+- Até 1000 palavras não é mais um limite fixo; o foco é ficar próximo da quantidade pedida.
 - FAQ com exatamente 7 perguntas, cada uma com resposta de 1–2 linhas.
 - Bloco CONTENT (3º título) segue as mesmas regras do REC:
   - Sempre conectado ao tema principal.
@@ -227,6 +250,8 @@ FULLREVIEW:
 
     return `
 Você é uma IA que escreve textos editoriais com qualidade de revista para blogs de finanças, games, benefícios e temas relacionados.
+
+O usuário escolheu uma quantidade aproximada de palavras para este texto. Use esse valor como referência principal de tamanho (campo "approx_word_count" no schema e instruções abaixo). O texto NÃO precisa bater exatamente o número de palavras, mas deve ficar o mais próximo possível, preservando fluidez e naturalidade.
 
 Sua resposta DEVE ser SEMPRE um JSON VÁLIDO, seguindo EXATAMENTE o schema abaixo.
 NUNCA escreva nada fora do JSON.
@@ -799,6 +824,12 @@ async function generateArticle() {
     const language = document.getElementById("language").value;
     const articleType = document.getElementById("articleType").value;
 
+    const wordCountRaw = document.getElementById("wordCount")?.value || "";
+    let approxWordCount = parseInt(wordCountRaw, 10);
+    if (isNaN(approxWordCount) || approxWordCount <= 0) {
+        approxWordCount = articleType === "FULLREVIEW" ? 1000 : 650;
+    }
+
     const statusEl = document.getElementById("statusGenerate");
     const btn = document.getElementById("btnGenerate");
 
@@ -814,9 +845,9 @@ async function generateArticle() {
     btn.disabled = true;
 
     try {
-        const systemPrompt = buildSystemPrompt(articleType, language);
+        const systemPrompt = buildSystemPrompt(articleType, language, approxWordCount);
 
-        const userPrompt = `Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o tópico (o texto do tópico pode estar em outro idioma, mas o conteúdo deve seguir o idioma solicitado): ${topic}.`;
+        const userPrompt = `Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o tópico (o texto do tópico pode estar em outro idioma, mas o conteúdo deve seguir o idioma solicitado): ${topic}. O texto deve ter aproximadamente ${approxWordCount} palavras, podendo variar um pouco para manter fluidez.`;
 
         const response = await fetch("/api/generate-article", {
             method: "POST",
@@ -860,6 +891,7 @@ async function generateArticle() {
         articleJson.type = articleType;
         articleJson.language = language;
         articleJson.topic = topic;
+        articleJson.word_count_target = approxWordCount;
 
         if (!articleJson.h1 || !articleJson.h1.trim()) {
             articleJson.h1 = topic;
@@ -905,7 +937,7 @@ async function generateArticle() {
         statusEl.innerHTML =
             "<strong>Sucesso:</strong> texto gerado. Revise abaixo antes de publicar. (Estimativa de palavras: " +
             totalWords +
-            ")";
+            " | Alvo: " + approxWordCount + ")";
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
