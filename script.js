@@ -809,7 +809,6 @@ async function generateArticle() {
 
         const userPrompt = `Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o tópico (o texto do tópico pode estar em outro idioma, mas o conteúdo deve seguir o idioma solicitado): ${topic}.`;
 
-        // Agora chamamos o BACKEND, não mais a OpenAI direto
         const response = await fetch("/api/generate-article", {
             method: "POST",
             headers: {
@@ -853,7 +852,6 @@ async function generateArticle() {
         articleJson.language = language;
         articleJson.topic = topic;
 
-        // H1: usar o que a IA devolver no idioma certo; se não vier, usar o tópico bruto como fallback.
         if (!articleJson.h1 || !articleJson.h1.trim()) {
             articleJson.h1 = topic;
         }
@@ -909,6 +907,43 @@ async function generateArticle() {
     }
 }
 
+// ===== Lê as configs de meta (preloader, imagem, etc.) =====
+function readArticleSettingsFromForm() {
+    const preloaderEnableEl = document.getElementById("cfgPreloaderEnable");
+    const preloaderTimeEl = document.getElementById("cfgPreloaderTime");
+
+    const enablePreloader = !!(preloaderEnableEl && preloaderEnableEl.checked);
+
+    let preloaderTime = "";
+    if (enablePreloader && preloaderTimeEl) {
+        const val = parseInt(preloaderTimeEl.value || "0", 10);
+        preloaderTime = isNaN(val) || val <= 0 ? 3500 : val;
+    }
+
+    const enableImage = !!document.getElementById("cfgEnableImage")?.checked;
+    const hideCategory = !!document.getElementById("cfgHideCategory")?.checked;
+    const hideAuthor = !!document.getElementById("cfgHideAuthor")?.checked;
+    const hideDate = !!document.getElementById("cfgHideDate")?.checked;
+    const hideMenu = !!document.getElementById("cfgHideMenu")?.checked;
+    const hideSocial = !!document.getElementById("cfgHideSocial")?.checked;
+    const hideFooter = !!document.getElementById("cfgHideFooter")?.checked;
+    const persistParam = !!document.getElementById("cfgPersistParam")?.checked;
+
+    // Aqui você ajusta os nomes das meta keys conforme o seu WordPress/ACF
+    return {
+        cf_enable_preloader: enablePreloader ? "1" : "0",
+        cf_preloader_time: enablePreloader ? String(preloaderTime) : "",
+        cf_enable_image: enableImage ? "1" : "0",
+        cf_hide_category: hideCategory ? "1" : "0",
+        cf_hide_author: hideAuthor ? "1" : "0",
+        cf_hide_date: hideDate ? "1" : "0",
+        cf_hide_menu: hideMenu ? "1" : "0",
+        cf_hide_social: hideSocial ? "1" : "0",
+        cf_hide_footer: hideFooter ? "1" : "0",
+        cf_persist_params: persistParam ? "1" : "0",
+    };
+}
+
 // ===== Publicar no WordPress =====
 async function publishToWordpress() {
     const statusEl = document.getElementById("statusPublish");
@@ -954,6 +989,8 @@ async function publishToWordpress() {
     const metaDescription = stripHtml(introField).slice(0, 160);
     const excerpt = stripHtml(introField).slice(0, 200);
 
+    const metaSettings = readArticleSettingsFromForm();
+
     const body = {
         title,
         content: lastArticleHtml,
@@ -964,6 +1001,7 @@ async function publishToWordpress() {
         meta: {
             cf_article_type: lastArticleJson.type || "",
             cf_meta_description: metaDescription,
+            ...metaSettings,
         },
     };
 
@@ -1016,6 +1054,19 @@ async function publishToWordpress() {
     }
 }
 
+// ===== Habilita/desabilita campo tempo do preloader =====
+function syncPreloaderTimeField() {
+    const checkbox = document.getElementById("cfgPreloaderEnable");
+    const input = document.getElementById("cfgPreloaderTime");
+    if (!checkbox || !input) return;
+
+    if (checkbox.checked) {
+        input.disabled = false;
+    } else {
+        input.disabled = true;
+    }
+}
+
 // ===== Listeners =====
 document.addEventListener("DOMContentLoaded", () => {
     // Campo de chave agora é só visual (se existir), sem chave real
@@ -1041,4 +1092,11 @@ document.addEventListener("DOMContentLoaded", () => {
             publishToWordpress();
         });
     }
+
+    // Preloader: linkar toggle com input de tempo
+    const preloaderCheckbox = document.getElementById("cfgPreloaderEnable");
+    if (preloaderCheckbox) {
+        preloaderCheckbox.addEventListener("change", syncPreloaderTimeField);
+    }
+    syncPreloaderTimeField();
 });

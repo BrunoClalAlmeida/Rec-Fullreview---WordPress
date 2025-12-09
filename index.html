@@ -153,6 +153,135 @@
                 </div>
             </div>
 
+            <!-- BLOCO ESPECÍFICO: Configurações do artigo (estilo meta box WP) -->
+            <div class="article-settings-card">
+                <div class="article-settings-header">
+                    <h3 class="article-settings-title">Configurações do artigo</h3>
+                    <p class="article-settings-subtitle">
+                        Defina como este artigo será exibido no site (preloader, imagem, cabeçalho, rodapé, etc.).
+                    </p>
+                </div>
+
+                <div class="wp-toggles-grid">
+                    <!-- Preloader -->
+                    <div class="wp-toggle-row">
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Habilitar preloader</span>
+                            <span class="wp-toggle-description">Mostra uma tela de carregamento antes do
+                                conteúdo.</span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgPreloaderEnable" checked />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="wp-toggle-row wp-toggle-row-nested">
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Tempo do preloader (ms)</span>
+                            <span class="wp-toggle-description">Só é usado quando o preloader está habilitado.</span>
+                        </div>
+                        <input type="number" id="cfgPreloaderTime" class="wp-small-input" value="3500" min="0"
+                            step="100" />
+                    </div>
+
+                    <!-- Imagem -->
+                    <div class="wp-toggle-row">
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Habilitar imagem</span>
+                            <span class="wp-toggle-description">Controla a exibição da imagem principal do
+                                artigo.</span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgEnableImage" />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Categoria / Autor / Data -->
+                    <div class="wp-toggle-row">
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Ocultar categoria</span>
+                            <span class="wp-toggle-description">Esconde a categoria no cabeçalho do artigo.</span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgHideCategory" />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="wp-toggle-row">
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Ocultar autor</span>
+                            <span class="wp-toggle-description">Esconde o nome do autor no cabeçalho.</span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgHideAuthor" />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="wp-toggle-row">
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Ocultar data</span>
+                            <span class="wp-toggle-description">Esconde a data de publicação do artigo.</span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgHideDate" />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Menu / Social / Rodapé -->
+                    <div class="wp-toggle-row">
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Ocultar menu</span>
+                            <span class="wp-toggle-description">Esconde o menu principal nesse artigo.</span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgHideMenu" />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="wp-toggle-row">
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Ocultar redes sociais</span>
+                            <span class="wp-toggle-description">Esconde os botões de compartilhamento.</span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgHideSocial" />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="wp-toggle-row">
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Ocultar rodapé</span>
+                            <span class="wp-toggle-description">Esconde o rodapé completo nesse artigo.</span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgHideFooter" />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Persistir parâmetros -->
+                    <div class="wp-toggle-row">
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Persistir parâmetros de URL</span>
+                            <span class="wp-toggle-description">
+                                Mantém parâmetros (utm, id, etc.) ativos durante a navegação.
+                            </span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgPersistParam" />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             <div class="actions-row">
                 <button id="btnPublish" class="secondary" disabled>
                     📤 Publicar no WordPress

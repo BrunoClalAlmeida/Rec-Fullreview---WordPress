@@ -15,7 +15,6 @@ body {
 body {
     min-height: 100vh;
     padding: 56px 16px 40px;
-    /* mais espaço no topo */
     background: radial-gradient(circle at top left, #e0f2fe 0, #eef2ff 40%, #e5e7eb 100%);
     color: #0f172a;
 }
@@ -30,7 +29,6 @@ body {
 .app-header {
     margin-bottom: 28px;
     text-align: center;
-    /* centraliza o bloco de header */
 }
 
 .app-title {
@@ -40,7 +38,6 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* centraliza título + chip */
     gap: 10px;
     color: #0f172a;
 }
@@ -50,7 +47,6 @@ body {
     color: #64748b;
     font-size: 0.94rem;
     text-align: center;
-    /* centraliza subtítulo */
 }
 
 /* ===== Chips / etiqueta ===== */
@@ -372,26 +368,21 @@ pre,
     flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
-    /* deixa o grupo centralizado */
 }
 
 .cta-preview-list li {
     padding: 6px 16px;
     border-radius: 999px;
     background: #f5f4ff;
-    /* fundo roxinho bem claro */
     border: 1px solid #c7d2fe;
     font-size: 0.78rem;
     font-weight: 500;
     color: #3730a3;
-    /* texto roxo/azul */
     letter-spacing: 0.03em;
     text-transform: uppercase;
     box-shadow: 0 6px 14px rgba(79, 70, 229, 0.12);
     white-space: nowrap;
-    /* não quebra no meio da pill */
 }
-
 
 /* Bloco de content preview */
 .content-block-preview {
@@ -445,7 +436,143 @@ pre,
     display: inline-block;
 }
 
-/* ===== MOBILE: centralizar tudo ===== */
+/* ===== BLOCO ESPECÍFICO: Configurações do artigo (estilo meta box WP) ===== */
+.article-settings-card {
+    margin-top: 20px;
+    padding: 16px 16px 14px;
+    border-radius: 14px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+}
+
+.article-settings-header {
+    margin-bottom: 10px;
+}
+
+.article-settings-title {
+    margin: 0 0 4px;
+    font-size: 0.96rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.article-settings-subtitle {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #6b7280;
+}
+
+/* grid dos toggles */
+.wp-toggles-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.wp-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 6px;
+    border-radius: 10px;
+}
+
+.wp-toggle-row:nth-child(odd) {
+    background: rgba(249, 250, 251, 0.9);
+}
+
+.wp-toggle-row:nth-child(even) {
+    background: rgba(243, 244, 246, 0.9);
+}
+
+/* linha filha (tempo preloader) */
+.wp-toggle-row-nested {
+    padding-left: 18px;
+}
+
+/* textos do toggle */
+.wp-toggle-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.wp-toggle-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #111827;
+}
+
+.wp-toggle-description {
+    font-size: 0.76rem;
+    color: #6b7280;
+}
+
+/* input pequeno (tempo) */
+.wp-small-input {
+    max-width: 120px;
+    font-size: 0.82rem;
+}
+
+/* desabilitado */
+.wp-small-input:disabled {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* ===== Toggle estilo switch ===== */
+.wp-toggle {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 22px;
+}
+
+.wp-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.wp-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #d1d5db;
+    transition: 0.2s;
+    border-radius: 999px;
+}
+
+.wp-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    top: 2px;
+    background-color: #ffffff;
+    transition: 0.2s;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3);
+}
+
+.wp-toggle input:checked+.wp-toggle-slider {
+    background-color: #4f46e5;
+}
+
+.wp-toggle input:checked+.wp-toggle-slider:before {
+    transform: translateX(20px);
+}
+
+/* ===== MOBILE ===== */
 @media (max-width: 768px) {
     body {
         padding: 32px 12px 28px;
@@ -478,5 +605,9 @@ pre,
     .col-4,
     .col-6 {
         flex: 0 0 100%;
+    }
+
+    .article-settings-card {
+        padding: 14px 12px;
     }
 }
