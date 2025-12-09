@@ -195,16 +195,13 @@ Regras gerais (valem para REC e FULLREVIEW):
   - A posição da lista e da tabela NÃO deve ser fixa. Em cada novo texto, VARIE a posição em que a lista aparece (pode estar mais no início, mais no meio ou mais no final) e VARIE também a posição da tabela.
   - Evite criar sempre a lista ou a tabela na mesma altura do texto (por exemplo, não coloque sempre a lista no 2º subtítulo e a tabela no 5º). Pense como um redator humano que decide, a cada novo texto, onde faz mais sentido comparar em tabela e onde faz mais sentido listar.
 
-- BLOCO CONTENT (3º TÍTULO):
+- BLOCO CONTENT (3º TÍTULO) – REGRAS CRÍTICAS:
   - Todos os campos content_block_* DEVEM ser claramente relacionados ao tema principal do artigo (campo "topic").
-  - Se o topic fala de Robux, o bloco precisa falar de Robux, golpes, economia do Roblox, etc.
-  - Se o topic fala de roupas da Shein, o bloco precisa falar de roupas Shein, testes, cupons, avaliações, etc.
-  - Nunca use textos genéricos como "Veja mais detalhes", "Conteúdo importante", "Informações úteis".
-  - O bloco deve parecer um mini-card promocional diretamente ligado ao tema, como se fosse um destaque dentro do texto principal.
-  - Os textos de content_block_tag, content_block_title, content_block_summary, content_block_cta_label e content_block_warning são EXCLUSIVOS desse bloco especial.
-  - NUNCA repita esses textos (nem trechos idênticos) dentro de body_html, steps_html, faq ou conclusion_html.
-  - Não escreva parágrafos em body_html que sejam iguais ou praticamente iguais ao conteúdo desses campos.
-  - Se quiser falar de benefícios, cupons, avisos ou pontos no corpo do texto, use frases diferentes, não copie o que já foi colocado em content_block_*.
+  - Esses campos (content_block_tag, content_block_title, content_block_summary, content_block_cta_label, content_block_warning) são EXCLUSIVOS do bloco especial.
+  - NUNCA repita essas frases, nem trechos idênticos, dentro de body_html, steps_html, faq ou conclusion_html.
+  - Não crie parágrafos, headings ou frases em body_html que comecem com ou sejam exatamente iguais a esses textos.
+  - Se quiser falar da mesma ideia (benefícios, cupons, avisos, etc.) dentro do texto principal, REESCREVA com palavras diferentes. NÃO copie.
+  - O bloco deve parecer um mini-card separado, não um parágrafo comum do texto.
 `.trim();
 
     const recRules = `
@@ -230,6 +227,7 @@ REC:
   - O Resumo deve ser uma frase curta dizendo por que aquilo é importante para quem se interessou pelo tema.
   - O Label do CTA deve ser curto (até 4 palavras) e específico sobre o tema, nunca genérico e SEMPRE no mesmo idioma do texto.
   - O Aviso é obrigatório: use uma frase curta ligada ao tema, como 'Informações sujeitas às regras do Roblox' ou 'Conteúdo sujeito a mudanças na plataforma', também no mesmo idioma do texto.
+  - Reforço: NÃO copie esses textos dentro de body_html; use-os APENAS no bloco especial.
 `.trim();
 
     const fullRules = `
@@ -249,6 +247,7 @@ FULLREVIEW:
   - Nada genérico; use o nome da plataforma/marca ou benefício principal.
   - Todos os textos do bloco devem estar no MESMO idioma do texto principal (${languageInstruction}).
   - O Aviso também é obrigatório e curto.
+  - Reforço: NÃO copie esses textos dentro de body_html, steps_html, faq ou conclusion_html; use-os APENAS no bloco.
 `.trim();
 
     const typeSpecific = articleType === "REC" ? recRules : fullRules;
@@ -309,6 +308,58 @@ function generateRowId() {
         Date.now().toString(16) +
         Math.floor(Math.random() * 999999).toString(16)
     );
+}
+
+// Escapar para regex
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Remove do HTML qualquer <p>, <h2> ou <h3> que seja igual aos textos do bloco CONTENT
+function cleanContentBlockEchoes(article) {
+    if (!article) return;
+
+    const victims = [
+        article.content_block_tag,
+        article.content_block_title,
+        article.content_block_summary,
+        article.content_block_cta_label,
+        article.content_block_warning,
+    ].filter((v) => typeof v === "string" && v.trim().length > 0);
+
+    if (victims.length === 0) return;
+
+    function cleanHtml(html) {
+        if (!html) return html;
+        let result = html;
+        victims.forEach((txt) => {
+            const esc = escapeRegExp(txt.trim());
+            if (!esc) return;
+
+            // <p>Texto</p>
+            const pRegex = new RegExp(`<p>\\s*${esc}\\s*</p>`, "gi");
+            result = result.replace(pRegex, "");
+
+            // <h2>Texto</h2> e <h3>Texto</h3>
+            const h2Regex = new RegExp(`<h2[^>]*>\\s*${esc}\\s*</h2>`, "gi");
+            const h3Regex = new RegExp(`<h3[^>]*>\\s*${esc}\\s*</h3>`, "gi");
+            result = result.replace(h2Regex, "");
+            result = result.replace(h3Regex, "");
+        });
+        return result;
+    }
+
+    article.body_html = cleanHtml(article.body_html);
+    article.steps_html = cleanHtml(article.steps_html);
+    article.conclusion_html = cleanHtml(article.conclusion_html);
+
+    if (Array.isArray(article.faq)) {
+        article.faq.forEach((f) => {
+            if (f && f.answer_html) {
+                f.answer_html = cleanHtml(f.answer_html);
+            }
+        });
+    }
 }
 
 // labels PT/EN/ES para FAQ / conclusão / passos
@@ -904,6 +955,10 @@ async function generateArticle() {
             articleJson.h1 = topic;
         }
 
+        // LIMPA repetições dos textos do BLOCO CONTENT no restante do texto
+        cleanContentBlockEchoes(articleJson);
+
+        // Conta palavras estimadas
         let totalWords = 0;
         if (articleJson.subtitle_html)
             totalWords += countWordsFromHtml(articleJson.subtitle_html);
