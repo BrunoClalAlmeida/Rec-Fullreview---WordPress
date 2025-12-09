@@ -1,8 +1,6 @@
-// ===== OpenAI agora via BACKEND (/api/generate-article) =====
+// ===== OpenAI via BACKEND (/api/generate-article) =====
 // A chave real fica SOMENTE na variável de ambiente OPENAI_API_KEY no servidor (Vercel).
-// Este arquivo NÃO terá nenhuma chave sensível.
 
-// ===== Estado em memória =====
 let lastArticleJson = null;
 let lastArticleHtml = "";
 
@@ -42,7 +40,7 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
             conclusion_html:
                 "HTML string com exatamente 3 parágrafos, cada um com no máximo 6 linhas (~até 450–500 caracteres), tom motivador, sem CTA visual.",
 
-            // BLOCO CONTENT (3º título) – SEMPRE RELACIONADO AO TEMA
+            // BLOCO CONTENT (3º título)
             content_block_tag:
                 "string muito curta (até 4 palavras) usada como Tag dentro de um bloco especial que ficará na seção do 3º H2. DEVE estar diretamente relacionada ao tema principal do artigo (topic). Ex.: para Robux: 'Economia do Robux'; para roupas Shein: 'Testes Shein'.",
             content_block_title:
@@ -86,7 +84,7 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
         section_cta_label:
             "string: CTA em MAIÚSCULAS, até 6 palavras, chamativo e diretamente ligado ao tema do artigo (topic). Ex.: para Robux: 'APROVEITE AGORA DICAS SOBRE ROBUX'; para Shein: 'VEJA COMO GANHAR ROUPAS SHEIN'.",
 
-        // BLOCO CONTENT (3º título) – SEMPRE RELACIONADO AO TEMA
+        // BLOCO CONTENT (3º título)
         content_block_tag:
             "string muito curta (até 4 palavras) usada como Tag dentro de um bloco especial que ficará na seção do 3º H2. DEVE resumir um subtema ligado ao assunto principal. Ex.: 'Economia do Robux', 'Testes Shein', 'Benefícios do cartão'.",
         content_block_title:
@@ -122,7 +120,6 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
 
 // ===== Prompt do sistema =====
 function buildSystemPrompt(articleType, languageCode, approxWordCount) {
-    // descrição humana do idioma
     let languageInstruction = "português do Brasil";
     if (languageCode === "en-US") {
         languageInstruction = "inglês dos Estados Unidos (inglês americano)";
@@ -198,7 +195,6 @@ Regras gerais (valem para REC e FULLREVIEW):
   - NÃO crie mais de uma lista no body_html.
   - NÃO crie mais de uma tabela no body_html.
   - A posição da lista e da tabela NÃO deve ser fixa. Em cada novo texto, VARIE a posição em que a lista aparece (pode estar mais no início, mais no meio ou mais no final) e VARIE também a posição da tabela.
-  - Evite criar sempre a lista ou a tabela na mesma altura do texto (por exemplo, não coloque sempre a lista no 2º subtítulo e a tabela no 5º). Pense como um redator humano que decide, a cada novo texto, onde faz mais sentido comparar em tabela e onde faz mais sentido listar.
 
 - BLOCO CONTENT (3º TÍTULO):
   - Todos os campos content_block_* DEVEM ser claramente relacionados ao tema principal do artigo (campo "topic").
@@ -215,6 +211,7 @@ Regras gerais (valem para REC e FULLREVIEW):
     - qualquer resposta de FAQ (answer_html)
     - conclusion_html
   - Esses textos são exclusivos do BLOCO CONTENT. Eles NÃO podem aparecer como parágrafos normais no corpo do texto, nem como subtítulos, nem como perguntas ou respostas de FAQ.
+  - NÃO crie parágrafos que pareçam um "bloco especial" dentro do body_html, como textos que comecem com expressões do tipo "Bloco Especial", "Card Especial", "Destaque", "Economia Shein" ou similares. Esses rótulos visuais pertencem apenas ao bloco CONTENT e não ao texto editorial normal.
 `.trim();
 
     const recRules = `
@@ -350,7 +347,6 @@ function getLocalizedLabels(language) {
         };
     }
 
-    // padrão pt-BR
     return {
         faqTitle: "Perguntas Frequentes",
         conclusionTitle: "Conclusão",
@@ -871,6 +867,7 @@ Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o seguinte 
 Regras adicionais:
 - Você NÃO pode mudar o assunto central desse tópico. Apenas traduza/adapte para o idioma pedido, mantendo a mesma intenção.
 - Todo o conteúdo (títulos, parágrafos, exemplos, comparações e FAQs) deve falar diretamente sobre esse tema e variações naturais dele, sem mudar para outro assunto.
+- Não crie parágrafos que pareçam um "bloco especial" (por exemplo começando com "Bloco Especial", "Card Especial", "Economia Shein", etc.). Esses textos devem existir apenas nos campos content_block_* e nunca como parágrafos normais do body_html.
 - O texto deve ter aproximadamente ${approxWordCount} palavras, RESPEITANDO ESSE VALOR COMO LIMITE MÁXIMO. Se for errar, erre para menos e nunca para mais.
 `.trim();
 
@@ -962,7 +959,7 @@ Regras adicionais:
         statusEl.innerHTML =
             "<strong>Sucesso:</strong> texto gerado. Revise abaixo antes de publicar. (Estimativa de palavras: " +
             totalWords +
-            " | Alvo: " + approxWordCount + ")";
+            " | Alvo (máx): " + approxWordCount + ")";
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
@@ -995,10 +992,9 @@ function readArticleSettingsFromForm() {
     const hideFooter = !!document.getElementById("cfgHideFooter")?.checked;
     const persistParam = !!document.getElementById("cfgPersistParam")?.checked;
 
-    // Objeto que o snippet PHP espera em $request->get_param('config_artigo')
     return {
         habilitar_preloader: enablePreloader,
-        personalizar_preloader: enablePreloader, // usamos o mesmo toggle
+        personalizar_preloader: enablePreloader,
         tempo_preloader: enablePreloader ? preloaderTime : null,
 
         habilitar_imagem: enableImage,
@@ -1010,7 +1006,6 @@ function readArticleSettingsFromForm() {
         ocultar_footer: hideFooter,
         persistir_parametro: persistParam,
 
-        // por enquanto não tem campo de quiz na tela; deixamos nulo
         artquiz_associado: null,
     };
 }
@@ -1060,7 +1055,6 @@ async function publishToWordpress() {
     const metaDescription = stripHtml(introField).slice(0, 160);
     const excerpt = stripHtml(introField).slice(0, 200);
 
-    // Lê configurações da tela e monta objeto esperado pelo snippet
     const articleConfig = readArticleSettingsFromForm();
 
     const body = {
@@ -1074,7 +1068,6 @@ async function publishToWordpress() {
             cf_article_type: lastArticleJson.type || "",
             cf_meta_description: metaDescription,
         },
-        // Este objeto será lido pelo snippet PHP (rest_after_insert_post)
         config_artigo: articleConfig,
     };
 
@@ -1142,7 +1135,6 @@ function syncPreloaderTimeField() {
 
 // ===== Listeners =====
 document.addEventListener("DOMContentLoaded", () => {
-    // Campo de chave agora é só visual (se existir), sem chave real
     const keyInput = document.getElementById("openaiKey");
     if (keyInput) {
         keyInput.value = "Configuração via servidor (Vercel)";
@@ -1166,7 +1158,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Preloader: linkar toggle com input de tempo
     const preloaderCheckbox = document.getElementById("cfgPreloaderEnable");
     if (preloaderCheckbox) {
         preloaderCheckbox.addEventListener("change", syncPreloaderTimeField);

@@ -564,11 +564,11 @@ pre,
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3);
 }
 
-.wp-toggle input:checked+.wp-toggle-slider {
+.wp-toggle input:checked + .wp-toggle-slider {
     background-color: #4f46e5;
 }
 
-.wp-toggle input:checked+.wp-toggle-slider:before {
+.wp-toggle input:checked + .wp-toggle-slider:before {
     transform: translateX(20px);
 }
 
