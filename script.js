@@ -222,16 +222,20 @@ REC:
   - Deve ser um título equivalente ao topic, no idioma indicado em "language", mantendo o MESMO assunto.
 
 - Subtítulo e introdução:
-  - subtitle_html: 1 parágrafo curto apresentando o tema.
-  - intro_html: 1 parágrafo com contexto e motivação.
+  - subtitle_html:
+    - 1 bloco curto apresentando o tema.
+    - Use até 3 linhas/frases curtas (no máximo).
+    - Não exagere no tamanho para não consumir muitas palavras do limite.
+  - intro_html:
+    - 1 parágrafo com contexto e motivação.
 
 ${hasLimit
             ? `- Corpo (quando existe limite de palavras):
-  - Use subtítulos e parágrafos de forma FLEXÍVEL.
-  - A quantidade de subtítulos e o número de parágrafos por subtítulo NÃO são fixos.
+  - Use subtítulos com <h2> e parágrafos de forma FLEXÍVEL.
+  - A quantidade de subtítulos (h2) e o número de parágrafos por subtítulo NÃO são fixos.
   - Você pode ajustar qualquer coisa na estrutura (número de H2, quantidade de parágrafos, tamanho das respostas de FAQ, conclusão mais curta, etc.) para caber dentro do limite de palavras.`
             : `- Corpo (sem limite de palavras definido):
-  - Use vários subtítulos para organizar o conteúdo.
+  - Use vários subtítulos com <h2> para organizar o conteúdo.
   - Em geral, use 2 parágrafos por subtítulo, mas você pode ajustar se fizer sentido.`
         }
 
@@ -281,11 +285,11 @@ FULLREVIEW:
 
 ${hasLimit
             ? `- Corpo (quando existe limite de palavras):
-  - Use seções e parágrafos de forma FLEXÍVEL.
+  - Use seções com <h2>/<h3> e parágrafos de forma FLEXÍVEL.
   - A quantidade de seções e o número de parágrafos por seção NÃO são fixos.
   - Você pode ajustar qualquer coisa na estrutura para caber no limite de palavras (inclusive encurtar ou resumir partes do passo a passo).`
             : `- Corpo (sem limite de palavras definido):
-  - Use várias seções para organizar o conteúdo.
+  - Use várias seções com <h2>/<h3> para organizar o conteúdo.
   - Em geral, use 2 parágrafos por seção, mas você pode ajustar se fizer sentido.`
         }
 
@@ -485,7 +489,7 @@ function buildCtaAcfBlock(ctasArray) {
     )},"mode":"edit"} /-->`;
 }
 
-// ===== CTA do 7º título (ou último se tiver menos de 7) =====
+// ===== CTA do 7º título (ou último / fim do body) =====
 function buildSectionCtaLabel(article) {
     const raw =
         (article && (article.section_cta_label || article.section_cta)) || "";
@@ -516,6 +520,8 @@ function injectSeventhHeadingCta(blocks, article) {
     const label = buildSectionCtaLabel(article);
     if (!label) return blocks;
 
+    const ctaBlock = "\n" + buildMiddleSectionCtaBlock(label) + "\n";
+
     const markerH2 = '<!-- wp:heading {"level":2}';
     const h2Positions = [];
     let from = 0;
@@ -527,24 +533,37 @@ function injectSeventhHeadingCta(blocks, article) {
         from = pos + markerH2.length;
     }
 
-    if (h2Positions.length === 0) return blocks;
-
-    // 7º H2 se existir, senão o último H2
-    const targetIndexPos =
-        h2Positions.length >= 7 ? h2Positions[6] : h2Positions[h2Positions.length - 1];
-
     const paraStartMarker = "<!-- wp:paragraph -->";
     const paraEndMarker = "<!-- /wp:paragraph -->";
 
-    const firstParaStart = blocks.indexOf(paraStartMarker, targetIndexPos);
-    if (firstParaStart === -1) return blocks;
+    // Se tiver H2: usa o último (ou o 7º, se tiver 7+)
+    if (h2Positions.length > 0) {
+        const targetPos =
+            h2Positions.length >= 7 ? h2Positions[6] : h2Positions[h2Positions.length - 1];
 
-    const firstParaEnd = blocks.indexOf(paraEndMarker, firstParaStart);
-    if (firstParaEnd === -1) return blocks;
+        const firstParaStart = blocks.indexOf(paraStartMarker, targetPos);
+        if (firstParaStart === -1) return blocks;
 
-    const insertPos = firstParaEnd + paraEndMarker.length;
-    const ctaBlock = "\n" + buildMiddleSectionCtaBlock(label) + "\n";
+        const firstParaEnd = blocks.indexOf(paraEndMarker, firstParaStart);
+        if (firstParaEnd === -1) return blocks;
 
+        const insertPos = firstParaEnd + paraEndMarker.length;
+        return blocks.slice(0, insertPos) + ctaBlock + blocks.slice(insertPos);
+    }
+
+    // Se NÃO tiver H2 nenhum: injeta depois do último parágrafo do body_html
+    let lastParaStart = blocks.lastIndexOf(paraStartMarker);
+    if (lastParaStart === -1) {
+        // Se nem parágrafo achar, joga o CTA no final mesmo
+        return blocks + ctaBlock;
+    }
+
+    const lastParaEnd = blocks.indexOf(paraEndMarker, lastParaStart);
+    if (lastParaEnd === -1) {
+        return blocks + ctaBlock;
+    }
+
+    const insertPos = lastParaEnd + paraEndMarker.length;
     return blocks.slice(0, insertPos) + ctaBlock + blocks.slice(insertPos);
 }
 
@@ -558,30 +577,39 @@ function injectPreviewSeventhCtaIntoBodyHtml(bodyHtml, article) {
     wrapper.innerHTML = bodyHtml;
 
     const headings = wrapper.querySelectorAll("h2");
-    if (headings.length === 0) return bodyHtml;
-
-    // 7º H2 se existir, senão o último H2
-    const targetHeading =
-        headings.length >= 7 ? headings[6] : headings[headings.length - 1];
-
-    let node = targetHeading.nextSibling;
     let firstPara = null;
 
-    while (node) {
-        if (node.nodeType === 1 && node.tagName.toLowerCase() === "p") {
-            firstPara = node;
-            break;
-        }
-        node = node.nextSibling;
-    }
+    if (headings.length > 0) {
+        // Usa o 7º h2 se existir, senão o último h2
+        const targetHeading =
+            headings.length >= 7 ? headings[6] : headings[headings.length - 1];
 
-    if (!firstPara || !firstPara.parentNode) return bodyHtml;
+        let node = targetHeading.nextSibling;
+        while (node) {
+            if (node.nodeType === 1 && node.tagName.toLowerCase() === "p") {
+                firstPara = node;
+                break;
+            }
+            node = node.nextSibling;
+        }
+    } else {
+        // Sem h2: pega o último parágrafo do body_html
+        const allParas = wrapper.querySelectorAll("p");
+        if (allParas.length > 0) {
+            firstPara = allParas[allParas.length - 1];
+        }
+    }
 
     const ctaEl = document.createElement("p");
     ctaEl.className = "section-cta-preview";
     ctaEl.textContent = label;
 
-    firstPara.parentNode.insertBefore(ctaEl, firstPara.nextSibling);
+    if (firstPara && firstPara.parentNode) {
+        firstPara.parentNode.insertBefore(ctaEl, firstPara.nextSibling);
+    } else {
+        // fallback: adiciona no final do body
+        wrapper.appendChild(ctaEl);
+    }
 
     return wrapper.innerHTML;
 }
