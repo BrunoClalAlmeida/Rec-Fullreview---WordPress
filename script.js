@@ -111,15 +111,15 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
         ? `
 - Limite de palavras (REGRA PRINCIPAL):
   - Considere ${resolvedApprox} como LIMITE MÁXIMO ABSOLUTO de palavras para todo o texto (somando todos os campos de conteúdo).
-  - O texto deve ficar SEMPRE menor ou igual a ${resolvedApprox} palavras.
+  - O texto DEVE ficar SEMPRE menor ou igual a ${resolvedApprox} palavras.
   - Você pode produzir menos palavras se for necessário. Se tiver dúvida, erre para MENOS, nunca para MAIS.
-  - Se perceber que o texto ficou maior, RESUMA e CORTE mentalmente antes de responder.
-  - Se qualquer outra regra (número de parágrafos, seções, perguntas etc.) entrar em conflito com o limite de palavras, SEMPRE priorize o limite de palavras.
+  - Se perceber que o texto ficou maior, RESUMA e CORTE mentalmente ANTES de responder.
+  - Se QUALQUER outra regra de estrutura (número de títulos, parágrafos por título, tamanho de conclusão etc.) conflitar com o limite de palavras, ignore a estrutura e PRIORIZE o limite de palavras.
 `
         : `
 - Limite de palavras:
   - O usuário não definiu um número exato de palavras.
-  - Escolha um tamanho natural e completo, sem exagerar no volume.
+  - Escreva um texto completo, natural e equilibrado, sem exagerar no volume.
 `;
 
     const recWordRule = hasLimit
@@ -130,11 +130,11 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
             resolvedApprox - 150
         )} e ${resolvedApprox} palavras.
   - Nunca ultrapasse ${resolvedApprox} palavras.
-  - Ajuste livremente a quantidade de subtítulos, parágrafos e detalhes para respeitar o limite.`
+  - Você pode ajustar livremente a quantidade de subtítulos H2, o tamanho dos parágrafos e o nível de detalhe para caber no limite.`
         : `
 - Tamanho do texto (REC):
   - Não há limite fixo.
-  - Escreva um texto completo e equilibrado, sem ser excessivamente longo.`;
+  - Escreva um texto completo e equilibrado.`;
 
     const fullWordRule = hasLimit
         ? `
@@ -144,7 +144,7 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
             resolvedApprox - 200
         )} e ${resolvedApprox} palavras.
   - Nunca ultrapasse ${resolvedApprox} palavras.
-  - Ajuste livremente a quantidade de seções, parágrafos e detalhes do passo a passo para respeitar o limite.`
+  - Você pode ajustar livremente a quantidade de seções, o tamanho dos parágrafos e o nível de detalhe do passo a passo para caber no limite.`
         : `
 - Tamanho do texto (FULLREVIEW):
   - Não há limite fixo.
@@ -158,17 +158,17 @@ Regras gerais (valem para REC e FULLREVIEW):
   - Títulos, parágrafos, listas, tabelas, CTAs, FAQ, avisos e qualquer outro texto devem estar nesse mesmo idioma.
   - Se o topic vier em outro idioma, adapte o texto para o idioma indicado em "language", mantendo o mesmo assunto.
 
-- Tema (topic) – MUITO IMPORTANTE:
-  - O campo "topic" representa exatamente o tema informado pelo usuário.
+- Tema (topic) – REGRA MUITO FORTE:
+  - O campo "topic" é o tema exato que o usuário quer.
   - Você NÃO pode trocar o assunto principal por outro parecido ou mais genérico.
-  - Não mude de categoria: se o topic fala de calçados, continue falando de calçados; se fala de roupas esportivas femininas, continue nisso.
-  - Você pode apenas ajustar o texto do título (h1) para ficar natural no idioma, SEM mudar o assunto.
-  - TODO o conteúdo (h1, intro, body_html, steps_html, FAQ, conclusão e blocos content_block_*) deve estar claramente ligado ao tema.
+  - NÃO generalize o topic. Exemplo de erro: transformar "vestidos gratuitos" em "roupas gratuitas".
+  - Use o topic como base do título (h1) e do conteúdo. Você pode reescrever o título para ficar natural no idioma, mas SEM mudar o foco.
+  - TODO o conteúdo (h1, intro, body_html, steps_html, FAQ, conclusão e blocos content_block_*) deve estar claramente ligado ao topic.
 
 ${wordLimitGeneral}
 
 - Linguagem:
-  - Use tom natural, claro e fluido, com estilo editorial.
+  - Use tom natural, claro e fluido, em estilo editorial.
   - Evite repetições desnecessárias e frases artificiais.
   - Não se refira ao próprio texto como “artigo”, “post”, “guia”, etc.
 
@@ -198,8 +198,8 @@ REC:
 - Objetivo:
   - Explicar o tema de forma clara e completa, sem passo a passo detalhado.
 
-- Título:
-  - O campo "h1" deve ser um título equivalente ao topic, no mesmo idioma indicado em "language", mantendo o mesmo assunto.
+- Título (h1):
+  - Deve ser um título equivalente ao topic, no idioma indicado em "language", mantendo o MESMO assunto.
 
 - Subtítulo e introdução:
   - subtitle_html: 1 parágrafo curto apresentando o tema.
@@ -208,11 +208,11 @@ REC:
 ${hasLimit
             ? `- Corpo (quando existe limite de palavras):
   - Use subtítulos H2 e parágrafos de forma FLEXÍVEL.
-  - Você pode usar a quantidade de H2 que fizer sentido (por exemplo, entre 5 e 7), ajustando conforme o limite de palavras.
-  - Se precisar, reduza a quantidade de subtítulos ou encurte parágrafos para caber no limite.`
-            : `- Corpo (sem limite definido):
+  - A quantidade de H2 e o número de parágrafos em cada H2 NÃO são fixos. Ajuste como for melhor para caber no limite de palavras.
+  - Ignore qualquer regra rígida de “exatamente 2 parágrafos por título” se isso for atrapalhar o limite de palavras.`
+            : `- Corpo (sem limite de palavras definido):
   - Use vários subtítulos H2 para organizar o conteúdo.
-  - Cada seção deve ter parágrafos bem desenvolvidos e coerentes.`
+  - Em geral, use 2 parágrafos por H2, mas você pode ajustar se fizer sentido.`
         }
 
 - Dentro do body_html (REC):
@@ -233,8 +233,8 @@ ${recWordRule}
 - Conclusão (REC):
   - conclusion_title: escolha um título natural de conclusão no mesmo idioma (sem citar o tema).
 ${hasLimit
-            ? `  - Use 1 ou 2 parágrafos curtos, ajustando para respeitar o limite de palavras.`
-            : `  - Use alguns parágrafos curtos para encerrar o assunto de forma clara.`
+            ? `  - Use 1 ou 2 parágrafos curtos, ajustando o tamanho para respeitar o limite de palavras.`
+            : `  - Use alguns parágrafos curtos para fechar o assunto de forma clara.`
         }
 
 - Bloco CONTENT (3º título) em REC:
@@ -249,10 +249,10 @@ ${hasLimit
 FULLREVIEW:
 
 - Objetivo:
-  - Ensinar como fazer algo ligado ao tema, com passo a passo.
+  - Ensinar como fazer algo ligado ao tema, com passo a passo prático.
 
-- Título:
-  - O campo "h1" deve ser um título equivalente ao topic, no mesmo idioma indicado em "language", mantendo o mesmo assunto.
+- Título (h1):
+  - Deve ser um título equivalente ao topic, no idioma indicado em "language", mantendo o MESMO assunto.
 
 - Introdução:
   - intro_html: 1 parágrafo apresentando o que a pessoa vai aprender e por que isso é útil.
@@ -260,11 +260,11 @@ FULLREVIEW:
 ${hasLimit
             ? `- Corpo (quando existe limite de palavras):
   - Use seções H2/H3 e parágrafos de forma FLEXÍVEL.
-  - Ajuste a quantidade de seções conforme o limite de palavras.
-  - Reduza seções ou encurte parágrafos se for necessário para caber no limite.`
-            : `- Corpo (sem limite definido):
+  - A quantidade de seções e o número de parágrafos por seção NÃO são fixos. Ajuste para caber no limite de palavras.
+  - Ignore qualquer regra rígida de “2 parágrafos por seção” se isso for atrapalhar o limite de palavras.`
+            : `- Corpo (sem limite de palavras definido):
   - Use várias seções H2/H3 para organizar o conteúdo.
-  - Cada seção deve ter parágrafos bem desenvolvidos e coerentes.`
+  - Em geral, use 2 parágrafos por seção, mas você pode ajustar se fizer sentido.`
         }
 
 - Dentro do body_html (FULLREVIEW):
@@ -287,7 +287,7 @@ ${fullWordRule}
   - conclusion_title: escolha um título natural de conclusão no mesmo idioma (sem citar o tema).
 ${hasLimit
             ? `  - Use 1 ou 2 parágrafos curtos, respeitando o limite total de palavras.`
-            : `  - Use alguns parágrafos curtos para encerrar o assunto de forma clara.`
+            : `  - Use alguns parágrafos curtos para fechar o assunto de forma clara.`
         }
 
 - Bloco CONTENT (3º título) em FULLREVIEW:
@@ -307,15 +307,16 @@ O sistema cliente apenas envia:
 - e, opcionalmente, um limite máximo de palavras.
 
 VOCÊ é totalmente responsável por:
-- Respeitar o tema EXATO informado (sem trocar por outro assunto).
+- Respeitar o tema EXATO informado (sem trocar por outro assunto, nem generalizar).
 - Escrever todo o conteúdo no idioma especificado em "language".
 - Respeitar o limite máximo de palavras, quando fornecido.
+- Ajustar livremente a estrutura (quantidade de títulos, parágrafos, tamanho de seções) para cumprir o limite de palavras.
 - Preencher corretamente todos os campos do JSON.
 
 Regras sobre limite de palavras:
 - Quando o usuário informar uma quantidade de palavras:
   - Esse valor é o limite máximo absoluto.
-  - A estrutura (número de H2, H3, parágrafos, tamanho de conclusão, etc.) passa a ser FLEXÍVEL.
+  - Qualquer instrução de quantidade exata de parágrafos ou títulos é apenas uma referência, NÃO uma obrigação.
   - Se precisar escolher entre manter uma estrutura fixa ou respeitar o limite, SEMPRE respeite o limite de palavras.
 - Quando não houver quantidade de palavras definida:
   - Use uma estrutura natural para o tipo de texto (REC ou FULLREVIEW), sem exagero no tamanho.
@@ -335,6 +336,7 @@ Regras específicas do tipo "${articleType}":
 ${typeSpecific}
 `.trim();
 }
+
 
 // ===== Utilitários =====
 function stripHtml(html) {
