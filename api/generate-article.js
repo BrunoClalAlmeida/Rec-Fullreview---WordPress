@@ -17,7 +17,7 @@ module.exports = (req, res) => {
   req.on("end", async () => {
     try {
       const parsed = body ? JSON.parse(body) : {};
-      const { model, systemPrompt, userPrompt, maxTokens } = parsed;
+      const { model, systemPrompt, userPrompt } = parsed;
 
       const apiKey = process.env.OPENAI_API_KEY;
       if (!apiKey) {
@@ -39,11 +39,6 @@ module.exports = (req, res) => {
         ],
         temperature: 0.7,
       };
-
-      // >>> IMPORTANTE: usar max_completion_tokens (API nova)
-      if (typeof maxTokens === "number" && maxTokens > 0) {
-        openaiBody.max_completion_tokens = maxTokens;
-      }
 
       const openaiResponse = await fetch(
         "https://api.openai.com/v1/chat/completions",
