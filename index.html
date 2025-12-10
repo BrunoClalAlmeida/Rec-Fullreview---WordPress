@@ -7,6 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <link rel="stylesheet" href="style.css" />
+    <!-- NOVO: presets de sites WP -->
+    <script src="wp-sites-presets.js" defer></script>
+    <!-- Seu script principal -->
     <script src="script.js" defer></script>
 </head>
 
@@ -126,6 +129,19 @@
             </p>
 
             <div class="row">
+                <!-- NOVO: Select de sites pré-configurados -->
+                <div class="col-6">
+                    <label for="wpSitePreset">Selecionar site WordPress</label>
+                    <select id="wpSitePreset">
+                        <option value="">Carregando sites...</option>
+                    </select>
+                    <p class="hint">
+                        Escolha um site para preencher automaticamente URL, usuário e Application Password.
+                    </p>
+                </div>
+
+                <div class="col-6"></div>
+
                 <div class="col-6">
                     <label for="wpBaseUrl">URL base do WordPress (sem / no final)</label>
                     <input type="text" id="wpBaseUrl" placeholder="https://seusite.com" />
