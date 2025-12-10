@@ -9,20 +9,39 @@ let lastArticleHtml = "";
 // ===== Schema por tipo (REC ou FULLREVIEW) =====
 function getArticleSchema(articleType, languageCode, approxWordCount) {
     const lang = languageCode || "pt-BR";
-    const targetWords = approxWordCount; // sempre o que o usuário digitou
+
+    // Se approxWordCount <= 0, não forçamos limite no schema
+    const targetWords =
+        typeof approxWordCount === "number" && approxWordCount > 0
+            ? approxWordCount
+            : 0;
 
     if (articleType === "FULLREVIEW") {
         return {
             type: "FULLREVIEW",
             language: lang,
             topic: "string",
+
+            // H1: título principal, SEM <h1> no HTML, só o texto
             h1: "string",
+
+            // Introdução
             intro_html:
                 "HTML string (1 parágrafo, 3–4 linhas, pode ter emoji, explicando o objetivo sem instruir).",
+
+            // Corpo
             body_html:
                 "HTML string com 7–9 seções, alternando H2/H3. Cada título com exatamente 2 parágrafos. Dentro do body_html deve existir exatamente 1 lista (ul ou ol) e exatamente 1 tabela (<table>) usada como comparação.",
+
+            // PASSO A PASSO
+            steps_title:
+                "string: título em formato de heading (sem <h1>) para a seção de passo a passo (por exemplo, 'Passo a passo', 'How it works', etc.), no MESMO idioma do texto.",
             steps_html:
                 "HTML string com lista numerada (7 a 10 passos: 1. 2. 3. ...), cada passo com explicação curta e natural.",
+
+            // FAQ
+            faq_title:
+                "string: título em formato de heading para a seção de perguntas frequentes (por exemplo, 'Perguntas frequentes', 'FAQ'), no mesmo idioma do texto.",
             faq: [
                 {
                     question:
@@ -31,6 +50,10 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
                         "HTML string (1–2 linhas por resposta, linguagem natural).",
                 },
             ],
+
+            // Conclusão
+            conclusion_title:
+                "string: título em formato de heading para a seção de conclusão, no mesmo idioma do texto (por exemplo, 'Conclusão', 'Final thoughts').",
             conclusion_html:
                 "HTML string com exatamente 3 parágrafos, cada um com no máximo 6 linhas (~até 450–500 caracteres), tom motivador, sem CTA visual.",
 
@@ -64,13 +87,17 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
         language: lang,
         topic: "string",
         h1: "string",
+
         subtitle_html:
             "HTML string (1 parágrafo, até 4 linhas, aproximadamente 180–320 caracteres, explicação leve, sem negrito/CTA).",
+
         ctas: [
             "array de 3 strings; cada uma deve começar com ✅ e ter exatamente 7 palavras.",
         ],
+
         intro_html:
             "HTML string (1 parágrafo, até 4 linhas, aproximadamente 220–380 caracteres, contexto do tema, sem instrução nem passo a passo).",
+
         body_html:
             "HTML string com exatamente 7 H2, cada um com 2 parágrafos. Dentro do body_html deve existir exatamente 1 lista (ul ou ol) e exatamente 1 tabela (<table>) usada como comparação.",
 
@@ -98,6 +125,9 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
         content_block_custom_color:
             "string: '0' ou '1' indicando se é necessário personalizar a cor (use '0' por padrão).",
 
+        // FAQ + conclusão – com títulos definidos pelo GPT
+        faq_title:
+            "string: título em formato de heading para a seção de perguntas frequentes, no mesmo idioma do texto.",
         faq: [
             {
                 question:
@@ -106,8 +136,11 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
                     "HTML string (1–2 linhas por resposta, linguagem natural).",
             },
         ],
+        conclusion_title:
+            "string: título em formato de heading para a seção de conclusão, no mesmo idioma do texto.",
         conclusion_html:
             "HTML string com exatamente 3 parágrafos, cada um com no máximo 6 linhas (~até 450–500 caracteres), tom inspirador, sem CTA visual.",
+
         approx_word_count: targetWords,
     };
 }
@@ -122,7 +155,9 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
         languageInstruction = "espanhol padrão (internacional)";
     }
 
-    const resolvedApprox = approxWordCount; // SEM default escondido
+    const hasLimit =
+        typeof approxWordCount === "number" && approxWordCount > 0;
+    const resolvedApprox = hasLimit ? approxWordCount : 0;
 
     const schema = JSON.stringify(
         getArticleSchema(articleType, languageCode, resolvedApprox),
@@ -130,12 +165,50 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
         2
     );
 
+    // Bloco de regra de quantidade de palavras (apenas se o usuário definiu)
+    const wordLimitGeneral = hasLimit
+        ? `
+- Quantidade de palavras (REGRA MUITO IMPORTANTE):
+  - Considere que o LIMITE MÁXIMO ABSOLUTO de palavras para este texto é de ${resolvedApprox} palavras no total.
+  - Você NUNCA deve ultrapassar esse limite. Se o texto ficar maior que ${resolvedApprox} palavras, APAGUE frases até ficar dentro do limite.
+  - O objetivo é ficar o mais próximo possível de ${resolvedApprox} palavras, mas sempre MENOS OU IGUAL a ${resolvedApprox}. Se precisar errar, erre para MENOS, nunca para mais.
+`
+        : `
+- Quantidade de palavras:
+  - O usuário não definiu um número exato de palavras.
+  - Escolha um tamanho natural para um texto editorial completo, sem exagerar no volume.
+`;
+
+    const recWordRule = hasLimit
+        ? `
+- No total, produza ENTRE ${Math.max(
+            Math.round(resolvedApprox * 0.8),
+            resolvedApprox - 150
+        )} e ${resolvedApprox} palavras, mas NUNCA ultrapasse ${resolvedApprox}.
+- Se perceber que está se aproximando demais do limite, comece a encurtar os parágrafos finais e respostas de FAQ para não estourar o máximo.
+`
+        : `
+- Não há limite fixo de palavras, mas mantenha um tamanho equilibrado, sem exagerar.
+`;
+
+    const fullWordRule = hasLimit
+        ? `
+- No total, produza ENTRE ${Math.max(
+            Math.round(resolvedApprox * 0.8),
+            resolvedApprox - 200
+        )} e ${resolvedApprox} palavras, mas NUNCA ultrapasse ${resolvedApprox}.
+- Se perceber que está se aproximando demais do limite, resuma os passos e encurte a conclusão para ficar dentro do máximo.
+`
+        : `
+- Não há limite fixo de palavras, mas mantenha um tamanho equilibrado e objetivo.
+`;
+
     const baseRules = `
 Regras gerais (valem para REC e FULLREVIEW):
 
 - Idioma:
   - Escreva TODO o conteúdo exclusivamente em ${languageInstruction}.
-  - Isso vale para títulos, parágrafos, listas, tabelas, CTAs, FAQs, avisos e qualquer outro texto.
+  - Isso vale para títulos, parágrafos, listas, tabelas, CTAs, FAQs, avisos, headings de seções (FAQ, Conclusão, Passo a passo) e qualquer outro texto.
   - Não misture com outros idiomas, nem palavras soltas em outra língua.
   - Se o usuário escrever o tema/tópico em outro idioma, você deve ADAPTAR e TRADUZIR o título (h1) e TODO o conteúdo para ${languageInstruction}, mantendo apenas o sentido do tema original.
 
@@ -145,10 +218,7 @@ Regras gerais (valem para REC e FULLREVIEW):
   - Você pode apenas traduzir e adaptar o texto do topic para o idioma solicitado, mantendo SEMPRE a mesma intenção e foco.
   - TODO o conteúdo (h1, intro, body_html, steps_html, FAQ, conclusão e blocos CONTENT) deve estar claramente conectado ao tema especificado no topic.
 
-- Quantidade de palavras (REGRA MUITO IMPORTANTE):
-  - O texto deve ter EXATAMENTE ${resolvedApprox} palavras no total.
-  - Ele NÃO pode ultrapassar nem ficar abaixo desse número.
-  - Ajuste o tamanho dos parágrafos, quantidade de exemplos e o tamanho das respostas de FAQ para manter o total o mais próximo possível de ${resolvedApprox}, priorizando NÃO ultrapassar.
+${wordLimitGeneral}
 
 - Linguagem:
   - Natural, jornalística/editorial.
@@ -160,8 +230,8 @@ Regras gerais (valem para REC e FULLREVIEW):
   - Conteúdo totalmente pronto para WordPress.
   - Use apenas HTML simples: <h2>, <h3>, <p>, <ul>, <ol>, <li>, <table>, <thead>, <tbody>, <tr>, <td>, <strong>, <em>, <a>, <span>.
   - NÃO use barras, separadores ou linhas como "---" ou "###".
-  - NÃO use negrito em títulos; usar <strong> apenas em perguntas do FAQ se desejar.
-  - O título principal (H1) será usado apenas fora do HTML (como título do post), então NÃO inserir <h1> dentro de nenhum campo HTML.
+  - NÃO use <h1> dentro de nenhum campo HTML. <h1> será usado apenas no campo de texto "h1".
+  - As seções de FAQ, Conclusão e (no FULLREVIEW) Passo a passo DEVEM ter títulos definidos por você nos campos apropriados do JSON (faq_title, conclusion_title, steps_title). O sistema NÃO vai inventar ou traduzir esses títulos.
 
 - Proibições:
   - Nunca usar as palavras "REC" ou "FULLREVIEW" dentro do texto.
@@ -212,12 +282,18 @@ REC:
 - Dentro do body_html:
   - Use exatamente 1 lista (ul ou ol) e 1 tabela (<table>), em seções diferentes.
   - Em cada novo texto, escolha de forma diferente em qual H2 a lista será inserida e em qual H2 a tabela será inserida.
-- No total, produza EXATAMENTE ${resolvedApprox} palavras, ficando o mais próximo possível desse valor, sem ultrapassar e sem ficar abaixo.
+${recWordRule}
 - section_cta_label: CTA em MAIÚSCULAS, até 6 palavras, relacionado ao tema e escrito NO MESMO IDIOMA do texto (por exemplo, em ${languageInstruction}). 
   - NUNCA use palavras em português como "APROVEITE", "VEJA", "GANHE", "ROUPAS" quando o idioma solicitado não for português. 
   - Todo o texto do CTA deve seguir exatamente o idioma pedido.
 
-- FAQ com exatamente 7 perguntas, cada uma com resposta de 1–2 linhas.
+- FAQ:
+  - Preencha o campo "faq_title" com um título de seção coerente (por exemplo, "Perguntas frequentes", "FAQ", etc.), sempre no mesmo idioma do texto.
+  - Crie exatamente 7 perguntas, cada uma com resposta de 1–2 linhas.
+
+- Conclusão:
+  - Preencha o campo "conclusion_title" com um título de seção coerente (por exemplo, "Conclusão", "Considerações finais", etc.), sempre no mesmo idioma do texto.
+  - A conclusão deve ter exatamente 3 parágrafos.
 
 - Para o BLOCO CONTENT (3º título) em REC:
   - Use a Tag para resumir em 1–4 palavras um subtema do assunto.
@@ -236,9 +312,21 @@ FULLREVIEW:
 - Dentro do body_html:
   - Use exatamente 1 lista (ul ou ol) e 1 tabela (<table>), em seções diferentes.
   - Varie em qual seção a lista aparece e em qual seção a tabela aparece, para que os textos não fiquem sempre com a mesma estrutura.
-- steps_html: lista numerada com 7–10 passos.
-- No total, produza EXATAMENTE ${resolvedApprox} palavras, ficando o mais próximo possível desse valor, sem ultrapassar e sem ficar abaixo.
-- FAQ com exatamente 7 perguntas, cada uma com resposta de 1–2 linhas.
+
+${fullWordRule}
+
+- Passo a passo:
+  - Preencha o campo "steps_title" com um título de seção coerente (por exemplo, "Passo a passo", "Step by step"), no mesmo idioma do texto.
+  - Preencha "steps_html" com uma lista numerada de 7 a 10 passos, cada um com explicação curta e clara.
+
+- FAQ:
+  - Preencha o campo "faq_title" com um título de seção coerente, no mesmo idioma do texto.
+  - Crie exatamente 7 perguntas, cada uma com resposta de 1–2 linhas.
+
+- Conclusão:
+  - Preencha o campo "conclusion_title" com um título de seção coerente, no mesmo idioma do texto.
+  - Conclusão com 3 parágrafos, cada um com até 6 linhas.
+
 - Bloco CONTENT (3º título) segue as mesmas regras do REC:
   - Sempre conectado ao tema principal.
   - Nada genérico; use o nome da plataforma/marca ou benefício principal.
@@ -251,8 +339,14 @@ FULLREVIEW:
     return `
 Você é uma IA que escreve textos editoriais com qualidade de revista para blogs de finanças, games, benefícios e temas relacionados.
 
-O usuário escolheu uma quantidade EXATA de palavras para este texto. Use esse valor como referência OBRIGATÓRIA de tamanho (campo "approx_word_count" no schema e instruções abaixo).
-Você DEVE produzir um texto com EXATAMENTE ${resolvedApprox} palavras no total. Ele NÃO pode ultrapassar nem ficar abaixo desse valor. Ajuste o tamanho dos parágrafos, exemplos, lista, tabela e respostas de FAQ para manter esse limite.
+O sistema cliente NÃO vai tomar decisões de conteúdo. Ele apenas envia o tema, o idioma, o tipo de texto (REC ou FULLREVIEW) e, opcionalmente, um limite máximo de palavras.
+VOCÊ é o responsável por:
+- Respeitar o tema EXATO (topic) informado.
+- Respeitar o idioma solicitado.
+- Respeitar o limite máximo de palavras (quando fornecido).
+- Preencher corretamente todos os campos do JSON, incluindo títulos de seções (faq_title, conclusion_title, steps_title).
+
+Se o usuário informar uma quantidade de palavras, você DEVE tratar esse valor como limite máximo absoluto, nunca ultrapassando. Se perceber que o texto excedeu, reduza até ficar dentro do limite antes de finalizar a resposta.
 
 Sua resposta DEVE ser SEMPRE um JSON VÁLIDO, seguindo EXATAMENTE o schema abaixo.
 NUNCA escreva nada fora do JSON.
@@ -670,17 +764,28 @@ function buildHtmlFromArticle(article) {
         }
 
         if (Array.isArray(article.faq) && article.faq.length > 0) {
-            let faqHtml = "";
+            const faqTitleText =
+                (article.faq_title && article.faq_title.trim()) || "";
+            let faqHtml = faqTitleText
+                ? `<h2>${faqTitleText}</h2>`
+                : "";
             article.faq.forEach((item) => {
                 if (!item) return;
-                if (item.question) faqHtml += `<p><strong>${item.question}</strong></p>`;
+                if (item.question)
+                    faqHtml += `<p><strong>${item.question}</strong></p>`;
                 if (item.answer_html) faqHtml += item.answer_html;
             });
-            parts.push(htmlToBlocks(faqHtml));
+            if (faqHtml) parts.push(htmlToBlocks(faqHtml));
         }
 
         if (article.conclusion_html) {
-            const conclHtml = article.conclusion_html;
+            const conclusionTitleText =
+                (article.conclusion_title && article.conclusion_title.trim()) ||
+                "";
+            const conclHtml =
+                (conclusionTitleText
+                    ? `<h2>${conclusionTitleText}</h2>`
+                    : "") + article.conclusion_html;
             parts.push(htmlToBlocks(conclHtml));
         }
 
@@ -696,22 +801,34 @@ function buildHtmlFromArticle(article) {
     }
 
     if (article.steps_html) {
-        const stepsHtml = article.steps_html;
+        const stepsTitleText =
+            (article.steps_title && article.steps_title.trim()) || "";
+        const stepsHtml =
+            (stepsTitleText ? `<h2>${stepsTitleText}</h2>` : "") +
+            article.steps_html;
         parts.push(htmlToBlocks(stepsHtml));
     }
 
     if (Array.isArray(article.faq) && article.faq.length > 0) {
-        let faqHtml = "";
+        const faqTitleText =
+            (article.faq_title && article.faq_title.trim()) || "";
+        let faqHtml = faqTitleText ? `<h2>${faqTitleText}</h2>` : "";
         article.faq.forEach((item) => {
             if (!item) return;
-            if (item.question) faqHtml += `<p><strong>${item.question}</strong></p>`;
+            if (item.question)
+                faqHtml += `<p><strong>${item.question}</strong></p>`;
             if (item.answer_html) faqHtml += item.answer_html;
         });
-        parts.push(htmlToBlocks(faqHtml));
+        if (faqHtml) parts.push(htmlToBlocks(faqHtml));
     }
 
     if (article.conclusion_html) {
-        const conclHtml = article.conclusion_html;
+        const conclusionTitleText =
+            (article.conclusion_title && article.conclusion_title.trim()) ||
+            "";
+        const conclHtml =
+            (conclusionTitleText ? `<h2>${conclusionTitleText}</h2>` : "") +
+            article.conclusion_html;
         parts.push(htmlToBlocks(conclHtml));
     }
 
@@ -758,17 +875,26 @@ function buildPreviewHtmlFromArticle(article) {
     }
 
     if (Array.isArray(article.faq) && article.faq.length > 0) {
-        let faqHtml = "";
+        const faqTitleText =
+            (article.faq_title && article.faq_title.trim()) || "";
+        let faqHtml = faqTitleText ? `<h2>${faqTitleText}</h2>` : "";
         article.faq.forEach((item) => {
             if (!item) return;
-            if (item.question) faqHtml += `<p><strong>${item.question}</strong></p>`;
+            if (item.question)
+                faqHtml += `<p><strong>${item.question}</strong></p>`;
             if (item.answer_html) faqHtml += item.answer_html;
         });
         parts.push(faqHtml);
     }
 
     if (article.conclusion_html) {
-        parts.push(article.conclusion_html);
+        const conclusionTitleText =
+            (article.conclusion_title && article.conclusion_title.trim()) ||
+            "";
+        parts.push(
+            (conclusionTitleText ? `<h2>${conclusionTitleText}</h2>` : "") +
+            article.conclusion_html
+        );
     }
 
     return parts.join("\n\n");
@@ -782,7 +908,11 @@ async function generateArticle() {
     const articleType = document.getElementById("articleType").value;
 
     const wordCountRaw = document.getElementById("wordCount")?.value || "";
-    const approxWordCount = parseInt(wordCountRaw, 10);
+    let approxWordCount = parseInt(wordCountRaw, 10);
+    if (isNaN(approxWordCount) || approxWordCount <= 0) {
+        // Sem gambiarra de 650/1000: se o usuário não definir, não forçamos nada
+        approxWordCount = 0;
+    }
 
     const statusEl = document.getElementById("statusGenerate");
     const btn = document.getElementById("btnGenerate");
@@ -794,19 +924,21 @@ async function generateArticle() {
         return;
     }
 
-    if (isNaN(approxWordCount) || approxWordCount <= 0) {
-        statusEl.classList.add("error");
-        statusEl.innerHTML =
-            "<strong>Erro:</strong> informe a quantidade de palavras desejada (somente números).";
-        return;
-    }
-
     statusEl.classList.remove("error");
     statusEl.innerHTML = "Gerando texto com a IA...";
     btn.disabled = true;
 
     try {
-        const systemPrompt = buildSystemPrompt(articleType, language, approxWordCount);
+        const systemPrompt = buildSystemPrompt(
+            articleType,
+            language,
+            approxWordCount
+        );
+
+        const hasLimit = approxWordCount > 0;
+        const wordInstruction = hasLimit
+            ? `O texto deve respeitar um LIMITE MÁXIMO de ${approxWordCount} palavras no total. Nunca ultrapasse esse número. Se necessário, reduza parágrafos e respostas para ficar dentro do limite.`
+            : `O usuário não definiu um limite exato de palavras. Escolha um tamanho natural, sem exagero.`;
 
         const userPrompt = `
 Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o seguinte tópico EXATO informado pelo usuário:
@@ -815,8 +947,8 @@ Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o seguinte 
 
 Regras adicionais:
 - Você NÃO pode mudar o assunto central desse tópico. Apenas traduza/adapte para o idioma pedido, mantendo a mesma intenção.
-- Todo o conteúdo (títulos, parágrafos, exemplos, comparações, blocos CONTENT e FAQs) deve falar diretamente sobre esse tema e variações naturais dele, sem mudar para outro assunto.
-- O texto deve ter EXATAMENTE ${approxWordCount} palavras, RESPEITANDO ESSE VALOR COMO LIMITE EXATO. Ele não pode ultrapassar nem ficar abaixo.
+- Todo o conteúdo (títulos, parágrafos, exemplos, comparações, blocos CONTENT, passo a passo, FAQ e conclusão) deve falar diretamente sobre esse tema e variações naturais dele, sem mudar para outro assunto.
+- ${wordInstruction}
 `.trim();
 
         const response = await fetch("/api/generate-article", {
@@ -833,7 +965,9 @@ Regras adicionais:
 
         if (!response.ok) {
             const errText = await response.text();
-            throw new Error("Erro da API interna (/api/generate-article): " + errText);
+            throw new Error(
+                "Erro da API interna (/api/generate-article): " + errText
+            );
         }
 
         const data = await response.json();
@@ -867,6 +1001,7 @@ Regras adicionais:
             articleJson.h1 = topic;
         }
 
+        // Contagem de palavras (apenas para diagnóstico)
         let totalWords = 0;
         if (articleJson.subtitle_html)
             totalWords += countWordsFromHtml(articleJson.subtitle_html);
@@ -878,8 +1013,10 @@ Regras adicionais:
             totalWords += countWordsFromHtml(articleJson.steps_html);
         if (Array.isArray(articleJson.faq)) {
             articleJson.faq.forEach((f) => {
-                if (f.question) totalWords += countWordsFromHtml(f.question);
-                if (f.answer_html) totalWords += countWordsFromHtml(f.answer_html);
+                if (f.question)
+                    totalWords += countWordsFromHtml(f.question);
+                if (f.answer_html)
+                    totalWords += countWordsFromHtml(f.answer_html);
             });
         }
         if (articleJson.conclusion_html) {
@@ -903,11 +1040,14 @@ Regras adicionais:
 
         document.getElementById("btnPublish").disabled = false;
 
+        const targetLabel = approxWordCount > 0 ? approxWordCount : "livre";
         statusEl.classList.remove("error");
         statusEl.innerHTML =
             "<strong>Sucesso:</strong> texto gerado. Revise abaixo antes de publicar. (Estimativa de palavras: " +
             totalWords +
-            " | Alvo: " + approxWordCount + ")";
+            " | Alvo: " +
+            targetLabel +
+            ")";
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
@@ -1046,7 +1186,11 @@ async function publishToWordpress() {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error("Erro da API WordPress: " + JSON.stringify(data));
+            // Se a API retornar erro, NÃO consideramos como publicado
+            throw new Error(
+                (data && data.message) ||
+                "Erro da API WordPress (status " + response.status + ")"
+            );
         }
 
         statusEl.classList.remove("error");
