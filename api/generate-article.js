@@ -40,8 +40,9 @@ module.exports = (req, res) => {
         temperature: 0.7,
       };
 
+      // >>> IMPORTANTE: usar max_completion_tokens (API nova)
       if (typeof maxTokens === "number" && maxTokens > 0) {
-        openaiBody.max_tokens = maxTokens;
+        openaiBody.max_completion_tokens = maxTokens;
       }
 
       const openaiResponse = await fetch(
