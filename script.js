@@ -9,15 +9,7 @@ let lastArticleHtml = "";
 // ===== Schema por tipo (REC ou FULLREVIEW) =====
 function getArticleSchema(articleType, languageCode, approxWordCount) {
     const lang = languageCode || "pt-BR";
-    const defaultRec = 650;
-    const defaultFull = 1000;
-
-    const targetWords =
-        typeof approxWordCount === "number" && approxWordCount > 0
-            ? approxWordCount
-            : articleType === "FULLREVIEW"
-                ? defaultFull
-                : defaultRec;
+    const targetWords = approxWordCount; // sempre o que o usuário digitou
 
     if (articleType === "FULLREVIEW") {
         return {
@@ -130,14 +122,7 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
         languageInstruction = "espanhol padrão (internacional)";
     }
 
-    const defaultRec = 650;
-    const defaultFull = 1000;
-    const resolvedApprox =
-        typeof approxWordCount === "number" && approxWordCount > 0
-            ? approxWordCount
-            : articleType === "FULLREVIEW"
-                ? defaultFull
-                : defaultRec;
+    const resolvedApprox = approxWordCount; // SEM default escondido
 
     const schema = JSON.stringify(
         getArticleSchema(articleType, languageCode, resolvedApprox),
@@ -161,9 +146,9 @@ Regras gerais (valem para REC e FULLREVIEW):
   - TODO o conteúdo (h1, intro, body_html, steps_html, FAQ, conclusão e blocos CONTENT) deve estar claramente conectado ao tema especificado no topic.
 
 - Quantidade de palavras (REGRA MUITO IMPORTANTE):
-  - O texto COMPLETO (somando todos os campos de conteúdo) DEVE conter EXATAMENTE ${resolvedApprox} palavras.
-  - Você é responsável por controlar a contagem de palavras enquanto escreve.
-  - Não ultrapasse e não fique abaixo desse número: produza um texto com exatamente ${resolvedApprox} palavras.
+  - O texto deve ter EXATAMENTE ${resolvedApprox} palavras no total.
+  - Ele NÃO pode ultrapassar nem ficar abaixo desse número.
+  - Ajuste o tamanho dos parágrafos, quantidade de exemplos e o tamanho das respostas de FAQ para manter o total o mais próximo possível de ${resolvedApprox}, priorizando NÃO ultrapassar.
 
 - Linguagem:
   - Natural, jornalística/editorial.
@@ -227,7 +212,7 @@ REC:
 - Dentro do body_html:
   - Use exatamente 1 lista (ul ou ol) e 1 tabela (<table>), em seções diferentes.
   - Em cada novo texto, escolha de forma diferente em qual H2 a lista será inserida e em qual H2 a tabela será inserida.
-- No total, o texto inteiro (somando todos os campos de conteúdo) deve conter EXATAMENTE ${resolvedApprox} palavras.
+- No total, produza EXATAMENTE ${resolvedApprox} palavras, ficando o mais próximo possível desse valor, sem ultrapassar e sem ficar abaixo.
 - section_cta_label: CTA em MAIÚSCULAS, até 6 palavras, relacionado ao tema e escrito NO MESMO IDIOMA do texto (por exemplo, em ${languageInstruction}). 
   - NUNCA use palavras em português como "APROVEITE", "VEJA", "GANHE", "ROUPAS" quando o idioma solicitado não for português. 
   - Todo o texto do CTA deve seguir exatamente o idioma pedido.
@@ -252,7 +237,7 @@ FULLREVIEW:
   - Use exatamente 1 lista (ul ou ol) e 1 tabela (<table>), em seções diferentes.
   - Varie em qual seção a lista aparece e em qual seção a tabela aparece, para que os textos não fiquem sempre com a mesma estrutura.
 - steps_html: lista numerada com 7–10 passos.
-- No total, o texto inteiro (somando todos os campos de conteúdo) deve conter EXATAMENTE ${resolvedApprox} palavras.
+- No total, produza EXATAMENTE ${resolvedApprox} palavras, ficando o mais próximo possível desse valor, sem ultrapassar e sem ficar abaixo.
 - FAQ com exatamente 7 perguntas, cada uma com resposta de 1–2 linhas.
 - Bloco CONTENT (3º título) segue as mesmas regras do REC:
   - Sempre conectado ao tema principal.
@@ -266,8 +251,8 @@ FULLREVIEW:
     return `
 Você é uma IA que escreve textos editoriais com qualidade de revista para blogs de finanças, games, benefícios e temas relacionados.
 
-O usuário escolheu uma QUANTIDADE EXATA de palavras para este texto. Use esse valor como limite obrigatório de tamanho (campo "approx_word_count" no schema e instruções abaixo).
-Você DEVE entregar um texto com EXATAMENTE ${resolvedApprox} palavras no total, contando todas as palavras de todos os campos de conteúdo. Você é responsável por controlar essa contagem.
+O usuário escolheu uma quantidade EXATA de palavras para este texto. Use esse valor como referência OBRIGATÓRIA de tamanho (campo "approx_word_count" no schema e instruções abaixo).
+Você DEVE produzir um texto com EXATAMENTE ${resolvedApprox} palavras no total. Ele NÃO pode ultrapassar nem ficar abaixo desse valor. Ajuste o tamanho dos parágrafos, exemplos, lista, tabela e respostas de FAQ para manter esse limite.
 
 Sua resposta DEVE ser SEMPRE um JSON VÁLIDO, seguindo EXATAMENTE o schema abaixo.
 NUNCA escreva nada fora do JSON.
@@ -318,44 +303,6 @@ function generateRowId() {
         Date.now().toString(16) +
         Math.floor(Math.random() * 999999).toString(16)
     );
-}
-
-// labels PT/EN/ES para FAQ / conclusão / passos
-function getLocalizedLabels(language) {
-    const lang = (language || "").toLowerCase();
-    const isEn =
-        lang === "en-us" ||
-        lang === "en" ||
-        lang.startsWith("en-") ||
-        lang.startsWith("en_");
-    const isEs =
-        lang === "es-es" ||
-        lang === "es" ||
-        lang.startsWith("es-") ||
-        lang.startsWith("es_");
-
-    if (isEn) {
-        return {
-            faqTitle: "Frequently Asked Questions",
-            conclusionTitle: "Conclusion",
-            stepsTitle: "Step by Step",
-        };
-    }
-
-    if (isEs) {
-        return {
-            faqTitle: "Preguntas Frecuentes",
-            conclusionTitle: "Conclusión",
-            stepsTitle: "Paso a Paso",
-        };
-    }
-
-    // padrão pt-BR
-    return {
-        faqTitle: "Perguntas Frequentes",
-        conclusionTitle: "Conclusão",
-        stepsTitle: "Passo a Passo",
-    };
 }
 
 // ===== HTML -> blocos Gutenberg =====
@@ -702,10 +649,6 @@ function buildHtmlFromArticle(article) {
     const type = article.type;
     const parts = [];
 
-    const { faqTitle, conclusionTitle, stepsTitle } = getLocalizedLabels(
-        article.language
-    );
-
     if (type === "REC") {
         if (article.subtitle_html) {
             parts.push(htmlToBlocks(article.subtitle_html));
@@ -727,7 +670,7 @@ function buildHtmlFromArticle(article) {
         }
 
         if (Array.isArray(article.faq) && article.faq.length > 0) {
-            let faqHtml = `<h2>${faqTitle}</h2>`;
+            let faqHtml = "";
             article.faq.forEach((item) => {
                 if (!item) return;
                 if (item.question) faqHtml += `<p><strong>${item.question}</strong></p>`;
@@ -737,7 +680,7 @@ function buildHtmlFromArticle(article) {
         }
 
         if (article.conclusion_html) {
-            const conclHtml = `<h2>${conclusionTitle}</h2>` + article.conclusion_html;
+            const conclHtml = article.conclusion_html;
             parts.push(htmlToBlocks(conclHtml));
         }
 
@@ -753,12 +696,12 @@ function buildHtmlFromArticle(article) {
     }
 
     if (article.steps_html) {
-        const stepsHtml = `<h2>${stepsTitle}</h2>` + article.steps_html;
+        const stepsHtml = article.steps_html;
         parts.push(htmlToBlocks(stepsHtml));
     }
 
     if (Array.isArray(article.faq) && article.faq.length > 0) {
-        let faqHtml = `<h2>${faqTitle}</h2>`;
+        let faqHtml = "";
         article.faq.forEach((item) => {
             if (!item) return;
             if (item.question) faqHtml += `<p><strong>${item.question}</strong></p>`;
@@ -768,7 +711,7 @@ function buildHtmlFromArticle(article) {
     }
 
     if (article.conclusion_html) {
-        const conclHtml = `<h2>${conclusionTitle}</h2>` + article.conclusion_html;
+        const conclHtml = article.conclusion_html;
         parts.push(htmlToBlocks(conclHtml));
     }
 
@@ -780,8 +723,6 @@ function buildPreviewHtmlFromArticle(article) {
     if (!article) return "";
     const type = article.type;
     const parts = [];
-
-    const { faqTitle, conclusionTitle } = getLocalizedLabels(article.language);
 
     if (type === "REC") {
         if (article.subtitle_html) {
@@ -817,7 +758,7 @@ function buildPreviewHtmlFromArticle(article) {
     }
 
     if (Array.isArray(article.faq) && article.faq.length > 0) {
-        let faqHtml = `<h2>${faqTitle}</h2>`;
+        let faqHtml = "";
         article.faq.forEach((item) => {
             if (!item) return;
             if (item.question) faqHtml += `<p><strong>${item.question}</strong></p>`;
@@ -827,7 +768,7 @@ function buildPreviewHtmlFromArticle(article) {
     }
 
     if (article.conclusion_html) {
-        parts.push(`<h2>${conclusionTitle}</h2>` + article.conclusion_html);
+        parts.push(article.conclusion_html);
     }
 
     return parts.join("\n\n");
@@ -841,10 +782,7 @@ async function generateArticle() {
     const articleType = document.getElementById("articleType").value;
 
     const wordCountRaw = document.getElementById("wordCount")?.value || "";
-    let approxWordCount = parseInt(wordCountRaw, 10);
-    if (isNaN(approxWordCount) || approxWordCount <= 0) {
-        approxWordCount = articleType === "FULLREVIEW" ? 1000 : 650;
-    }
+    const approxWordCount = parseInt(wordCountRaw, 10);
 
     const statusEl = document.getElementById("statusGenerate");
     const btn = document.getElementById("btnGenerate");
@@ -853,6 +791,13 @@ async function generateArticle() {
         statusEl.classList.add("error");
         statusEl.innerHTML =
             "<strong>Erro:</strong> informe um tema para o texto.";
+        return;
+    }
+
+    if (isNaN(approxWordCount) || approxWordCount <= 0) {
+        statusEl.classList.add("error");
+        statusEl.innerHTML =
+            "<strong>Erro:</strong> informe a quantidade de palavras desejada (somente números).";
         return;
     }
 
@@ -870,8 +815,8 @@ Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o seguinte 
 
 Regras adicionais:
 - Você NÃO pode mudar o assunto central desse tópico. Apenas traduza/adapte para o idioma pedido, mantendo a mesma intenção.
-- Todo o conteúdo (títulos, parágrafos, exemplos, comparações e FAQs) deve falar diretamente sobre esse tema e variações naturais dele, sem mudar para outro assunto.
-- O texto DEVE ter EXATAMENTE ${approxWordCount} palavras no total, somando todos os campos de conteúdo. Você é responsável por contar as palavras e respeitar esse número.
+- Todo o conteúdo (títulos, parágrafos, exemplos, comparações, blocos CONTENT e FAQs) deve falar diretamente sobre esse tema e variações naturais dele, sem mudar para outro assunto.
+- O texto deve ter EXATAMENTE ${approxWordCount} palavras, RESPEITANDO ESSE VALOR COMO LIMITE EXATO. Ele não pode ultrapassar nem ficar abaixo.
 `.trim();
 
         const response = await fetch("/api/generate-article", {
@@ -1098,12 +1043,11 @@ async function publishToWordpress() {
             }
         );
 
-        if (!response.ok) {
-            const errText = await response.text();
-            throw new Error("Erro da API WordPress: " + errText);
-        }
-
         const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error("Erro da API WordPress: " + JSON.stringify(data));
+        }
 
         statusEl.classList.remove("error");
         statusEl.innerHTML =
