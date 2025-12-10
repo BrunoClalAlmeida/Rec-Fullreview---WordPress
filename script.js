@@ -7,10 +7,10 @@ let lastArticleJson = null;
 let lastArticleHtml = "";
 
 // ===== Schema por tipo (REC ou FULLREVIEW) =====
+// Aqui é só estrutura de campos. Quem define conteúdo, idioma, títulos etc. é o GPT.
 function getArticleSchema(articleType, languageCode, approxWordCount) {
     const lang = languageCode || "pt-BR";
 
-    // Se approxWordCount <= 0, significa "sem limite fixo" (modelo escolhe).
     const targetWords =
         typeof approxWordCount === "number" && approxWordCount > 0
             ? approxWordCount
@@ -22,60 +22,34 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
             language: lang,
             topic: "string",
 
-            // Título principal (H1) – sem <h1> dentro, só texto.
             h1: "string",
 
-            // Introdução
-            intro_html:
-                "HTML string (1 parágrafo, 3–4 linhas, pode ter emoji, explicando o objetivo sem instruir).",
+            intro_html: "string (HTML)",
+            body_html: "string (HTML)",
 
-            // Corpo
-            body_html:
-                "HTML string com 7–9 seções, alternando H2/H3. Cada título com exatamente 2 parágrafos. Dentro do body_html deve existir exatamente 1 lista (ul ou ol) e exatamente 1 tabela (<table>) usada como comparação.",
+            steps_title: "string",
+            steps_html: "string (HTML)",
 
-            // Passo a passo
-            steps_title:
-                "string: título da seção de passo a passo (ex.: 'Passo a passo', 'Step by Step', 'Paso a paso'), no mesmo idioma do texto, sem citar o tema.",
-            steps_html:
-                "HTML string com lista numerada (7 a 10 passos: 1. 2. 3. ...), cada passo com explicação curta e natural.",
-
-            // FAQ
-            faq_title:
-                "string: título da seção de FAQ (ex.: 'Perguntas frequentes', 'Frequently Asked Questions', 'Preguntas frecuentes'), no mesmo idioma do texto, sem citar o tema.",
+            faq_title: "string",
             faq: [
                 {
-                    question:
-                        "string (curta, linguagem natural). O array FAQ deve ter exatamente 7 perguntas.",
-                    answer_html:
-                        "HTML string contendo apenas 1 frase bem curta, com CERCA DE 6 PALAVRAS (nunca mais que 12 palavras). Nada de respostas longas nem com vários períodos.",
+                    question: "string",
+                    answer_html: "string (HTML)",
                 },
             ],
 
-            // Conclusão
-            conclusion_title:
-                "string: título da seção de conclusão (ex.: 'Conclusão', 'Conclusion', 'Conclusión'), no mesmo idioma do texto, sem citar o tema.",
-            conclusion_html:
-                "HTML string com exatamente 3 parágrafos, cada um com no máximo 6 linhas (~até 450–500 caracteres), tom motivador, sem CTA visual.",
+            conclusion_title: "string",
+            conclusion_html: "string (HTML)",
 
-            // BLOCO CONTENT (3º título)
-            content_block_tag:
-                "string muito curta (até 4 palavras) usada como Tag dentro de um bloco especial que ficará na seção do 3º H2. DEVE estar diretamente relacionada ao tema principal do artigo (topic). Ex.: para Robux: 'Economia do Robux'; para roupas Shein: 'Testes Shein'.",
-            content_block_title:
-                "string: título chamativo em Title Case para o bloco especial do 3º H2, com cerca de 6–10 palavras e no máximo ~70 caracteres. O título DEVE mencionar explicitamente o assunto do artigo (topic) ou um benefício muito claro ligado ao tema.",
-            content_block_summary:
-                "string: resumo curto em 1 frase, com no máximo ~90 caracteres, explicando de forma bem chamativa o que a pessoa vai entender/descobrir sobre o tema do artigo. Tem que citar o tema ou algo muito diretamente relacionado.",
-            content_block_cta_label:
-                "string: label curto do CTA do bloco (até 4 palavras), chamativo e RELACIONADO ao tema. Ex.: para Robux: 'Veja mais sobre Robux'; para Shein: 'Descubra ofertas Shein'. Nada genérico.",
-            content_block_cta_link:
-                "string (opcional, pode ficar vazio).",
-            content_block_warning:
-                "string curta (obrigatória, até ~40 caracteres), usada como Aviso no bloco. Deve ser coerente com o tema. Ex.: 'Informações sujeitas às regras do Roblox', 'Conteúdo sujeito a mudanças na plataforma'.",
-            content_block_target_blank:
-                "string: '0' ou '1' indicando se o link abre em nova aba (use '0' por padrão).",
-            content_block_fixed:
-                "string: '0' ou '1' indicando se o bloco é fixo (use '1' por padrão).",
-            content_block_custom_color:
-                "string: '0' ou '1' indicando se é necessário personalizar a cor (use '0' por padrão).",
+            content_block_tag: "string",
+            content_block_title: "string",
+            content_block_summary: "string",
+            content_block_cta_label: "string",
+            content_block_cta_link: "string",
+            content_block_warning: "string",
+            content_block_target_blank: "string",
+            content_block_fixed: "string",
+            content_block_custom_color: "string",
 
             approx_word_count: targetWords,
         };
@@ -88,88 +62,41 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
         topic: "string",
         h1: "string",
 
-        subtitle_html:
-            "HTML string (1 parágrafo, até 4 linhas, aproximadamente 180–320 caracteres, explicação leve, sem negrito/CTA).",
-        ctas: [
-            "array de 3 strings; cada uma deve começar com ✅ e ter exatamente 7 palavras.",
-        ],
-        intro_html:
-            "HTML string (1 parágrafo, até 4 linhas, aproximadamente 220–380 caracteres, contexto do tema, sem instrução nem passo a passo).",
-        body_html:
-            "HTML string com exatamente 7 H2, cada um com 2 parágrafos. Dentro do body_html deve existir exatamente 1 lista (ul ou ol) e exatamente 1 tabela (<table>) usada como comparação.",
+        subtitle_html: "string (HTML)",
+        ctas: ["string"],
+        intro_html: "string (HTML)",
+        body_html: "string (HTML)",
 
-        // CTA do 7º título
-        section_cta_label:
-            "string: CTA em MAIÚSCULAS, até 6 palavras, chamativo e diretamente ligado ao tema do artigo (topic). Ex.: para Robux: 'APROVEITE AGORA DICAS SOBRE ROBUX'; para Shein: 'VEJA COMO GANHAR ROUPAS SHEIN'.",
+        section_cta_label: "string",
 
-        // BLOCO CONTENT (3º título)
-        content_block_tag:
-            "string muito curta (até 4 palavras) usada como Tag dentro de um bloco especial que ficará na seção do 3º H2. DEVE resumir um subtema ligado ao assunto principal. Ex.: 'Economia do Robux', 'Testes Shein', 'Benefícios do cartão'.",
-        content_block_title:
-            "string: título chamativo em Title Case para o bloco especial do 3º H2, com cerca de 6–10 palavras e no máximo ~70 caracteres. O título precisa ser claramente conectado ao tema do artigo (topic), usando o nome da plataforma/marca ou o benefício principal.",
-        content_block_summary:
-            "string: resumo curto em 1 frase, com no máximo ~90 caracteres, explicando o que a pessoa vai entender sobre o tema do artigo ao clicar/ver o bloco. Sempre relacionado ao assunto principal.",
-        content_block_cta_label:
-            "string: label curto do CTA do bloco (até 4 palavras), chamativo e específico do tema. Ex.: 'Entenda o Robux hoje', 'Veja benefícios Shein'. Nada genérico como 'Veja mais detalhes'.",
-        content_block_cta_link:
-            "string (opcional, pode ficar vazio).",
-        content_block_warning:
-            "string curta (obrigatória, até ~40 caracteres) para o Aviso do bloco. Sempre alinhada ao tema. Ex.: 'Informações sujeitas às regras do Roblox', 'Conteúdo sujeito a mudanças na plataforma'.",
-        content_block_target_blank:
-            "string: '0' ou '1' indicando se o link abre em nova aba (use '0' por padrão).",
-        content_block_fixed:
-            "string: '0' ou '1' indicando se o bloco é fixo (use '1' por padrão).",
-        content_block_custom_color:
-            "string: '0' ou '1' indicando se é necessário personalizar a cor (use '0' por padrão).",
+        content_block_tag: "string",
+        content_block_title: "string",
+        content_block_summary: "string",
+        content_block_cta_label: "string",
+        content_block_cta_link: "string",
+        content_block_warning: "string",
+        content_block_target_blank: "string",
+        content_block_fixed: "string",
+        content_block_custom_color: "string",
 
-        // FAQ
-        faq_title:
-            "string: título da seção de FAQ (ex.: 'Perguntas frequentes', 'Frequently Asked Questions', 'Preguntas frecuentes'), no mesmo idioma do texto, sem citar o tema.",
+        faq_title: "string",
         faq: [
             {
-                question:
-                    "string (curta, linguagem natural). O array FAQ deve ter exatamente 7 perguntas.",
-                answer_html:
-                    "HTML string contendo apenas 1 frase bem curta, com CERCA DE 6 PALAVRAS (nunca mais que 12 palavras). Nada de respostas longas nem com vários períodos.",
+                question: "string",
+                answer_html: "string (HTML)",
             },
         ],
 
-        // Conclusão
-        conclusion_title:
-            "string: título da seção de conclusão (ex.: 'Conclusão', 'Conclusion', 'Conclusión'), no mesmo idioma do texto, sem citar o tema.",
-        conclusion_html:
-            "HTML string com exatamente 3 parágrafos, cada um com no máximo 6 linhas (~até 450–500 caracteres), tom inspirador, sem CTA visual.",
+        conclusion_title: "string",
+        conclusion_html: "string (HTML)",
 
         approx_word_count: targetWords,
     };
 }
 
-
 // ===== Prompt do sistema =====
+// Tudo que “educa” o GPT está aqui, em TEXTO. JS não traduz, não escolhe título, não inventa conteúdo.
 function buildSystemPrompt(articleType, languageCode, approxWordCount) {
-    // descrição humana do idioma
-    let languageInstruction = "português do Brasil";
-    if (languageCode === "en-US") {
-        languageInstruction = "inglês dos Estados Unidos (inglês americano)";
-    } else if (languageCode === "es-ES") {
-        languageInstruction = "espanhol padrão (internacional)";
-    }
-
-    // Títulos fixos por idioma (GPT deve usar exatamente isso)
-    let faqFixed = "Perguntas frequentes";
-    let conclusionFixed = "Conclusão";
-    let stepsFixed = "Passo a passo";
-
-    if (languageCode === "en-US") {
-        faqFixed = "Frequently Asked Questions";
-        conclusionFixed = "Conclusion";
-        stepsFixed = "Step by Step";
-    } else if (languageCode === "es-ES") {
-        faqFixed = "Preguntas frecuentes";
-        conclusionFixed = "Conclusión";
-        stepsFixed = "Paso a paso";
-    }
-
     const hasLimit =
         typeof approxWordCount === "number" && approxWordCount > 0;
     const resolvedApprox = hasLimit ? approxWordCount : 0;
@@ -182,205 +109,220 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
 
     const wordLimitGeneral = hasLimit
         ? `
-- Quantidade de palavras (REGRA MUITO IMPORTANTE):
-  - Considere que o LIMITE MÁXIMO ABSOLUTO de palavras para este texto é de ${resolvedApprox} palavras no total.
-  - Você NUNCA deve ultrapassar esse limite. Se o texto ficar maior que ${resolvedApprox} palavras, RESUMA ou APAGUE frases até ficar dentro do limite ANTES de responder.
-  - O objetivo é ficar o mais próximo possível de ${resolvedApprox} palavras, mas sempre MENOS OU IGUAL a ${resolvedApprox}. Se precisar errar, erre para MENOS, nunca para mais.
+- Limite de palavras (REGRA PRINCIPAL):
+  - Considere ${resolvedApprox} como LIMITE MÁXIMO ABSOLUTO de palavras para todo o texto (somando todos os campos de conteúdo).
+  - O texto deve ficar SEMPRE menor ou igual a ${resolvedApprox} palavras.
+  - Você pode produzir menos palavras se for necessário. Se tiver dúvida, erre para MENOS, nunca para MAIS.
+  - Se perceber que o texto ficou maior, RESUMA e CORTE mentalmente antes de responder.
+  - Se qualquer outra regra (número de parágrafos, seções, perguntas etc.) entrar em conflito com o limite de palavras, SEMPRE priorize o limite de palavras.
 `
         : `
-- Quantidade de palavras:
+- Limite de palavras:
   - O usuário não definiu um número exato de palavras.
-  - Escolha um tamanho natural para um texto editorial completo, sem exagerar no volume.
+  - Escolha um tamanho natural e completo, sem exagerar no volume.
 `;
 
     const recWordRule = hasLimit
         ? `
-- No total, produza ENTRE ${Math.max(
+- Tamanho do texto (REC):
+  - Produza ENTRE ${Math.max(
             Math.round(resolvedApprox * 0.8),
             resolvedApprox - 150
-        )} e ${resolvedApprox} palavras, mas NUNCA ultrapasse ${resolvedApprox}.
-- Você deve planejar a quantidade de palavras desde o início, deixando os últimos parágrafos (FAQ e conclusão) mais curtos se estiver se aproximando do limite.
-- Se perceber que está grande demais, RESUMA ou APAGUE frases antes de finalizar.
-`
+        )} e ${resolvedApprox} palavras.
+  - Nunca ultrapasse ${resolvedApprox} palavras.
+  - Ajuste livremente a quantidade de subtítulos, parágrafos e detalhes para respeitar o limite.`
         : `
-- Não há limite fixo de palavras, mas mantenha um tamanho equilibrado, sem exagerar.
-`;
+- Tamanho do texto (REC):
+  - Não há limite fixo.
+  - Escreva um texto completo e equilibrado, sem ser excessivamente longo.`;
 
     const fullWordRule = hasLimit
         ? `
-- No total, produza ENTRE ${Math.max(
+- Tamanho do texto (FULLREVIEW):
+  - Produza ENTRE ${Math.max(
             Math.round(resolvedApprox * 0.8),
             resolvedApprox - 200
-        )} e ${resolvedApprox} palavras, mas NUNCA ultrapasse ${resolvedApprox}.
-- Planeje a quantidade de palavras desde o começo, deixando passos e conclusão mais curtos se estiver se aproximando do limite.
-- Se perceber que está grande demais, RESUMA ou APAGUE frases antes de finalizar.
-`
+        )} e ${resolvedApprox} palavras.
+  - Nunca ultrapasse ${resolvedApprox} palavras.
+  - Ajuste livremente a quantidade de seções, parágrafos e detalhes do passo a passo para respeitar o limite.`
         : `
-- Não há limite fixo de palavras, mas mantenha um tamanho equilibrado e objetivo.
-`;
+- Tamanho do texto (FULLREVIEW):
+  - Não há limite fixo.
+  - Escreva um texto completo, explicando o processo de forma clara e objetiva.`;
 
     const baseRules = `
 Regras gerais (valem para REC e FULLREVIEW):
 
 - Idioma:
-  - Escreva TODO o conteúdo exclusivamente em ${languageInstruction}.
-  - Isso vale para títulos, parágrafos, listas, tabelas, CTAs, FAQs, avisos, headings de seções (FAQ, Conclusão, Passo a passo) e qualquer outro texto.
-  - Não misture com outros idiomas, nem palavras soltas em outra língua.
-  - Se o usuário escrever o tema/tópico em outro idioma, você deve ADAPTAR e TRADUZIR o título (h1) e TODO o conteúdo para ${languageInstruction}, mantendo apenas o sentido do tema original.
+  - Escreva TODO o conteúdo no idioma especificado pelo campo "language" (por exemplo: "pt-BR", "en-US", "es-ES").
+  - Títulos, parágrafos, listas, tabelas, CTAs, FAQ, avisos e qualquer outro texto devem estar nesse mesmo idioma.
+  - Se o topic vier em outro idioma, adapte o texto para o idioma indicado em "language", mantendo o mesmo assunto.
 
-- Tema (topic) – REGRA MUITO IMPORTANTE:
+- Tema (topic) – MUITO IMPORTANTE:
   - O campo "topic" representa exatamente o tema informado pelo usuário.
-  - Você NÃO pode trocar o assunto principal do texto. Não pode transformar um tema sobre "calçados Shein" em um texto genérico sobre "roupas Shein", por exemplo.
-  - Você pode apenas traduzir e adaptar o texto do topic para o idioma solicitado, mantendo SEMPRE a mesma intenção e foco.
-  - TODO o conteúdo (h1, intro, body_html, steps_html, FAQ, conclusão e blocos CONTENT) deve estar claramente conectado ao tema especificado no topic.
+  - Você NÃO pode trocar o assunto principal por outro parecido ou mais genérico.
+  - Não mude de categoria: se o topic fala de calçados, continue falando de calçados; se fala de roupas esportivas femininas, continue nisso.
+  - Você pode apenas ajustar o texto do título (h1) para ficar natural no idioma, SEM mudar o assunto.
+  - TODO o conteúdo (h1, intro, body_html, steps_html, FAQ, conclusão e blocos content_block_*) deve estar claramente ligado ao tema.
 
 ${wordLimitGeneral}
 
 - Linguagem:
-  - Natural, jornalística/editorial.
-  - Sem repetições desnecessárias.
-  - Sem frases artificiais ou linguagem robótica.
-  - Fugir de repetições de ideias e palavras.
+  - Use tom natural, claro e fluido, com estilo editorial.
+  - Evite repetições desnecessárias e frases artificiais.
+  - Não se refira ao próprio texto como “artigo”, “post”, “guia”, etc.
 
-- Estrutura visual:
-  - Conteúdo totalmente pronto para WordPress.
+- Estrutura de HTML:
   - Use apenas HTML simples: <h2>, <h3>, <p>, <ul>, <ol>, <li>, <table>, <thead>, <tbody>, <tr>, <td>, <strong>, <em>, <a>, <span>.
-  - NÃO use <h1> dentro de nenhum campo HTML. <h1> será usado apenas no campo de texto "h1".
-  - As seções de FAQ, Conclusão e (no FULLREVIEW) Passo a passo DEVEM usar os títulos corretos nos campos de texto, e o sistema cliente apenas exibirá esses valores.
+  - NÃO use <h1> dentro de HTML. O h1 será usado somente no campo de texto "h1".
+  - Não use scripts, estilos ou códigos especiais.
 
-- Proibições:
-  - Nunca usar as palavras "REC" ou "FULLREVIEW" dentro do texto.
-  - Nunca usar "artigo", "post" ou "guia" para se referir ao próprio texto.
-  - Nunca repetir a palavra-chave em excesso.
-
-- Sempre:
-  - Misturar estilos de blocos (parágrafos, listas, tabelas, comparações).
-  - Manter ritmo dinâmico.
-  - Variar vocabulário.
-  - Criar textos 100% originais.
-  - Respeitar os campos do schema.
-
-- Listas e comparações (body_html):
+- Listas e tabelas:
   - Em TODO texto (REC ou FULLREVIEW), o body_html deve conter:
-    - Exatamente 1 lista comum (ul ou ol).
-    - Exatamente 1 bloco de comparação em formato de tabela (<table>).
-  - A lista e a tabela DEVEM estar em seções diferentes do body_html (não coloque a lista e a tabela uma imediatamente depois da outra).
-  - NÃO crie mais de uma lista no body_html.
-  - NÃO crie mais de uma tabela no body_html.
-  - A posição da lista e da tabela NÃO deve ser fixa. Em cada novo texto, VARIE a posição em que a lista aparece (pode estar mais no início, mais no meio ou mais no final) e VARIE também a posição da tabela.
-  - Evite criar sempre a lista ou a tabela na mesma altura do texto (por exemplo, não coloque sempre a lista no 2º subtítulo e a tabela no 5º). Pense como um redator humano que decide, a cada novo texto, onde faz mais sentido comparar em tabela e onde faz mais sentido listar.
+    - Exatamente 1 lista (ul ou ol).
+    - Exatamente 1 tabela (<table>) de comparação.
+  - A lista e a tabela devem aparecer em seções diferentes do body_html.
+  - Não crie mais de uma lista.
+  - Não crie mais de uma tabela.
 
-- BLOCO CONTENT (3º TÍTULO) – REGRA MUITO FORTE:
-  - Todos os campos content_block_* DEVEM ser claramente relacionados ao tema principal do artigo (campo "topic").
-  - Se o topic fala de Robux, o bloco precisa falar de Robux, golpes, economia do Roblox, etc.
-  - Se o topic fala de roupas da Shein, o bloco precisa falar de roupas Shein, testes, cupons, avaliações, etc.
-  - Nunca use textos genéricos como "Veja mais detalhes", "Conteúdo importante", "Informações úteis".
-  - O bloco deve parecer um mini-card promocional diretamente ligado ao tema, como se fosse um destaque dentro do texto principal.
-  - É PROIBIDO criar manualmente, dentro do body_html, um "bloco especial" separado com título próprio, subtítulo, resumo e aviso. NÃO escreva coisas como "Bloco Especial:", "Estratégias Reais Para...", "Conheça truques Shein" dentro do body_html como se fosse um bloco próprio.
-  - O conteúdo especial deve existir exclusivamente nos campos content_block_tag, content_block_title, content_block_summary, content_block_cta_label e content_block_warning.
-
-- REGRA ABSOLUTA SOBRE O BLOCO CONTENT (NÃO QUEBRAR):
-  - Os textos dos campos content_block_tag, content_block_title, content_block_summary, content_block_cta_label e content_block_warning DEVEM existir APENAS nos campos content_block_*.
-  - É PROIBIDO copiar, repetir, reescrever, resumir, reformular, traduzir de novo ou criar variações muito parecidas desses textos dentro de:
-    - body_html
-    - steps_html
-    - qualquer resposta de FAQ (answer_html)
-    - conclusion_html
-  - Esses textos são exclusivos do BLOCO CONTENT. Eles NÃO podem aparecer como parágrafos normais no corpo do texto, nem como subtítulos, nem como perguntas ou respostas de FAQ.
+- Bloco CONTENT (3º título):
+  - Todos os campos content_block_* devem ser diretamente relacionados ao tema principal (topic).
+  - Não use textos genéricos. Seja específico em relação ao tema.
+  - Os textos content_block_tag, content_block_title, content_block_summary, content_block_cta_label e content_block_warning são exclusivos do bloco especial.
+  - NÃO copie nem repita esses textos dentro de body_html, steps_html, FAQ ou conclusão.
 `.trim();
 
     const recRules = `
 REC:
 
-- Explica o tema, não ensina passo a passo.
-- H1 (campo "h1") deve ser um TÍTULO equivalente ao tópico digitado pelo usuário, escrito no MESMO IDIOMA do texto. Você pode adaptar e traduzir o texto do tópico, mantendo apenas o sentido.
-- Subtítulo (subtitle_html) e introdução (intro_html): até 4 linhas cada.
-- Corpo com exatamente 7 H2, cada um com 2 parágrafos.
-- Dentro do body_html:
-  - Use exatamente 1 lista (ul ou ol) e 1 tabela (<table>), em seções diferentes.
-  - Em cada novo texto, escolha de forma diferente em qual H2 a lista será inserida e em qual H2 a tabela será inserida.
+- Objetivo:
+  - Explicar o tema de forma clara e completa, sem passo a passo detalhado.
+
+- Título:
+  - O campo "h1" deve ser um título equivalente ao topic, no mesmo idioma indicado em "language", mantendo o mesmo assunto.
+
+- Subtítulo e introdução:
+  - subtitle_html: 1 parágrafo curto apresentando o tema.
+  - intro_html: 1 parágrafo com contexto e motivação.
+
+${hasLimit
+            ? `- Corpo (quando existe limite de palavras):
+  - Use subtítulos H2 e parágrafos de forma FLEXÍVEL.
+  - Você pode usar a quantidade de H2 que fizer sentido (por exemplo, entre 5 e 7), ajustando conforme o limite de palavras.
+  - Se precisar, reduza a quantidade de subtítulos ou encurte parágrafos para caber no limite.`
+            : `- Corpo (sem limite definido):
+  - Use vários subtítulos H2 para organizar o conteúdo.
+  - Cada seção deve ter parágrafos bem desenvolvidos e coerentes.`
+        }
+
+- Dentro do body_html (REC):
+  - Use exatamente 1 lista (ul ou ol) em uma das seções.
+  - Use exatamente 1 tabela de comparação (<table>) em outra seção.
+  - Não repita lista ou tabela mais de uma vez.
 
 ${recWordRule}
 
-- section_cta_label: CTA em MAIÚSCULAS, até 6 palavras, relacionado ao tema e escrito NO MESMO IDIOMA do texto (${languageInstruction}).
+- section_cta_label:
+  - Texto curto, em MAIÚSCULAS, com até 6 palavras, diretamente ligado ao tema e no idioma indicado em "language".
 
 - FAQ (REC):
-  - O campo "faq_title" DEVE ser preenchido com EXATAMENTE este texto (sem nada a mais, sem o tema junto):
-    - "${faqFixed}"
-  - Não adicione complementos como "sobre ganhar roupas na Shein", "sobre Robux", etc.
+  - faq_title: escolha um título natural de FAQ no mesmo idioma do texto (sem citar o tema).
   - Crie exatamente 7 perguntas.
-  - CADA resposta (answer_html) deve conter APENAS 1 frase bem curta, com cerca de 6 palavras (no máximo 12 palavras).
-  - Não use parágrafos longos, não use mais de 1 período por resposta.
-  - Pense como um FAQ de bullets rápidos, tipo ping-pong pergunta/resposta.
+  - Cada answer_html deve ter 1 frase curta (cerca de 6 palavras, máximo 12).
 
 - Conclusão (REC):
-  - O campo "conclusion_title" DEVE ser preenchido com EXATAMENTE este texto:
-    - "${conclusionFixed}"
-  - A conclusão deve ter exatamente 2 parágrafos, cada um com no máximo 6 linhas.
+  - conclusion_title: escolha um título natural de conclusão no mesmo idioma (sem citar o tema).
+${hasLimit
+            ? `  - Use 1 ou 2 parágrafos curtos, ajustando para respeitar o limite de palavras.`
+            : `  - Use alguns parágrafos curtos para encerrar o assunto de forma clara.`
+        }
 
-- Para o BLOCO CONTENT (3º título) em REC:
-  - Use a Tag para resumir em 1–4 palavras um subtema do assunto.
-  - O Título deve chamar atenção e mencionar o tema (Robux, Shein, cartão, etc.).
-  - O Resumo deve ser uma frase curta dizendo por que aquilo é importante para quem se interessou pelo tema.
-  - O Label do CTA deve ser curto (até 4 palavras) e específico sobre o tema, nunca genérico e SEMPRE no mesmo idioma do texto.
-  - O Aviso é obrigatório: use uma frase curta ligada ao tema, como 'Informações sujeitas às regras do Roblox' ou 'Conteúdo sujeito a mudanças na plataforma', também no mesmo idioma do texto.
+- Bloco CONTENT (3º título) em REC:
+  - content_block_tag: tag curta ligada ao tema.
+  - content_block_title: título chamativo e direto sobre o tema.
+  - content_block_summary: 1 frase curta explicando por que esse bloco é relevante para quem se interessa pelo tema.
+  - content_block_cta_label: CTA curto (até 4 palavras), específico do tema.
+  - content_block_warning: aviso curto consistente com o tema.
 `.trim();
 
     const fullRules = `
 FULLREVIEW:
 
-- Ensina como fazer, com passo a passo.
-- H1 (campo "h1") deve ser um TÍTULO equivalente ao tópico digitado pelo usuário, escrito no MESMO IDIOMA do texto. Você pode adaptar e traduzir o texto do tópico, mantendo apenas o sentido.
-- Corpo com 7–9 seções (H2/H3), cada título com 2 parágrafos.
-- Dentro do body_html:
-  - Use exatamente 1 lista (ul ou ol) e 1 tabela (<table>), em seções diferentes.
-  - Varie em qual seção a lista aparece e em qual seção a tabela aparece, para que os textos não fiquem sempre com a mesma estrutura.
+- Objetivo:
+  - Ensinar como fazer algo ligado ao tema, com passo a passo.
+
+- Título:
+  - O campo "h1" deve ser um título equivalente ao topic, no mesmo idioma indicado em "language", mantendo o mesmo assunto.
+
+- Introdução:
+  - intro_html: 1 parágrafo apresentando o que a pessoa vai aprender e por que isso é útil.
+
+${hasLimit
+            ? `- Corpo (quando existe limite de palavras):
+  - Use seções H2/H3 e parágrafos de forma FLEXÍVEL.
+  - Ajuste a quantidade de seções conforme o limite de palavras.
+  - Reduza seções ou encurte parágrafos se for necessário para caber no limite.`
+            : `- Corpo (sem limite definido):
+  - Use várias seções H2/H3 para organizar o conteúdo.
+  - Cada seção deve ter parágrafos bem desenvolvidos e coerentes.`
+        }
+
+- Dentro do body_html (FULLREVIEW):
+  - Use exatamente 1 lista (ul ou ol).
+  - Use exatamente 1 tabela de comparação (<table>).
+  - Coloque lista e tabela em seções diferentes, sem repetir.
 
 ${fullWordRule}
 
 - Passo a passo (FULLREVIEW):
-  - O campo "steps_title" DEVE ser preenchido com EXATAMENTE este texto:
-    - "${stepsFixed}"
-  - Não adicione complementos. Não escreva "Passo a passo para ganhar roupas na Shein" ou variações.
-  - "steps_html" deve conter uma lista numerada de 7 a 10 passos, cada um com explicação curta e clara.
+  - steps_title: escolha um título natural que indique “passo a passo” no mesmo idioma (sem citar o tema).
+  - steps_html deve ser uma lista numerada de 7 a 10 passos, com frases curtas e práticas.
 
 - FAQ (FULLREVIEW):
-  - O campo "faq_title" DEVE ser preenchido com EXATAMENTE este texto:
-    - "${faqFixed}"
-  - Não adicionar o tema junto. Nada de "sobre ganhar roupas na Shein".
+  - faq_title: escolha um título natural de FAQ no mesmo idioma (sem citar o tema).
   - Crie exatamente 7 perguntas.
-  - CADA resposta (answer_html) deve conter APENAS 1 frase bem curta, com cerca de 6 palavras (no máximo 12 palavras).
-  - Não escreva respostas longas; isso aqui é para tirar dúvidas rápidas, em formato bem enxuto.
-
+  - Cada answer_html deve ter 1 frase curta (cerca de 6 palavras, máximo 12).
 
 - Conclusão (FULLREVIEW):
-  - O campo "conclusion_title" DEVE ser preenchido com EXATAMENTE este texto:
-    - "${conclusionFixed}"
-  - Conclusão com 2 parágrafos, cada um com até 6 linhas.
+  - conclusion_title: escolha um título natural de conclusão no mesmo idioma (sem citar o tema).
+${hasLimit
+            ? `  - Use 1 ou 2 parágrafos curtos, respeitando o limite total de palavras.`
+            : `  - Use alguns parágrafos curtos para encerrar o assunto de forma clara.`
+        }
 
-- Bloco CONTENT (3º título) segue as mesmas regras do REC:
-  - Sempre conectado ao tema principal.
-  - Nada genérico; use o nome da plataforma/marca ou benefício principal.
-  - Todos os textos do bloco devem estar no MESMO idioma do texto principal (${languageInstruction}).
-  - O Aviso também é obrigatório e curto.
+- Bloco CONTENT (3º título) em FULLREVIEW:
+  - Siga as mesmas regras do REC.
+  - Todos os textos do bloco devem estar no mesmo idioma indicado em "language" e ligados diretamente ao tema.
 `.trim();
 
     const typeSpecific = articleType === "REC" ? recRules : fullRules;
 
     return `
-Você é uma IA que escreve textos editoriais com qualidade de revista para blogs de finanças, games, benefícios e temas relacionados.
+Você é uma IA que escreve textos editoriais de alta qualidade para blogs de finanças, games, benefícios e temas relacionados.
 
-O sistema cliente NÃO vai tomar decisões de conteúdo. Ele apenas envia o tema, o idioma, o tipo de texto (REC ou FULLREVIEW) e, opcionalmente, um limite máximo de palavras.
-VOCÊ é o responsável por:
-- Respeitar o tema EXATO (topic) informado.
-- Respeitar o idioma solicitado.
-- Respeitar o limite máximo de palavras (quando fornecido), nunca ultrapassando.
-- Preencher corretamente todos os campos do JSON, incluindo títulos de seções (faq_title, conclusion_title, steps_title) usando EXATAMENTE os textos definidos acima, sem complementos.
+O sistema cliente apenas envia:
+- o tema (topic),
+- o código do idioma (language),
+- o tipo de texto (REC ou FULLREVIEW),
+- e, opcionalmente, um limite máximo de palavras.
 
-Se o usuário informar uma quantidade de palavras, você DEVE tratar esse valor como limite máximo absoluto, nunca ultrapassando. Se perceber que o texto excedeu, reduza até ficar dentro do limite antes de finalizar a resposta.
+VOCÊ é totalmente responsável por:
+- Respeitar o tema EXATO informado (sem trocar por outro assunto).
+- Escrever todo o conteúdo no idioma especificado em "language".
+- Respeitar o limite máximo de palavras, quando fornecido.
+- Preencher corretamente todos os campos do JSON.
+
+Regras sobre limite de palavras:
+- Quando o usuário informar uma quantidade de palavras:
+  - Esse valor é o limite máximo absoluto.
+  - A estrutura (número de H2, H3, parágrafos, tamanho de conclusão, etc.) passa a ser FLEXÍVEL.
+  - Se precisar escolher entre manter uma estrutura fixa ou respeitar o limite, SEMPRE respeite o limite de palavras.
+- Quando não houver quantidade de palavras definida:
+  - Use uma estrutura natural para o tipo de texto (REC ou FULLREVIEW), sem exagero no tamanho.
 
 Sua resposta DEVE ser SEMPRE um JSON VÁLIDO, seguindo EXATAMENTE o schema abaixo.
 NUNCA escreva nada fora do JSON.
+NÃO explique as regras; apenas aplique.
 
 Schema:
 
@@ -430,39 +372,10 @@ function generateRowId() {
     );
 }
 
-// labels PT/EN/ES – usados só como fallback se o GPT falhar
-function getLocalizedLabels(language) {
-    const lang = (language || "").toLowerCase();
-    const isEn =
-        lang === "en-us" ||
-        lang === "en" ||
-        lang.startsWith("en-") ||
-        lang.startsWith("en_");
-    const isEs =
-        lang === "es-es" ||
-        lang === "es" ||
-        lang.startsWith("es-") ||
-        lang.startsWith("es_");
-
-    if (isEn) {
-        return {
-            faqTitle: "Frequently Asked Questions",
-            conclusionTitle: "Conclusion",
-            stepsTitle: "Step by Step",
-        };
-    }
-
-    if (isEs) {
-        return {
-            faqTitle: "Preguntas frecuentes",
-            conclusionTitle: "Conclusión",
-            stepsTitle: "Paso a paso",
-        };
-    }
-
-    // padrão pt-BR
+// Fallback simples se o GPT não preencher títulos de FAQ / conclusão / passos
+function getLocalizedLabels() {
     return {
-        faqTitle: "Perguntas frequentes",
+        faqTitle: "FAQ",
         conclusionTitle: "Conclusão",
         stepsTitle: "Passo a passo",
     };
@@ -674,11 +587,11 @@ function buildContentAcfBlock(article) {
     // fallback de aviso, se vier vazio
     if (!warning || !warning.trim()) {
         if (topic && topic.toLowerCase().includes("robux")) {
-            warning = "Informações sujeitas às regras do Roblox.";
+            warning = "Informações sujeitas às regras da plataforma.";
         } else if (topic && topic.toLowerCase().includes("shein")) {
-            warning = "Conteúdo sujeito às políticas da Shein.";
+            warning = "Conteúdo sujeito às políticas da plataforma.";
         } else {
-            warning = "Conteúdo sujeito a mudanças na plataforma.";
+            warning = "Conteúdo sujeito a mudanças.";
         }
     }
 
@@ -764,8 +677,7 @@ function injectPreviewContentBlockIntoBodyHtml(bodyHtml, article) {
     const summary = article.content_block_summary || "";
     const ctaLabel = article.content_block_cta_label || "";
     const warning =
-        article.content_block_warning ||
-        "Conteúdo sujeito a mudanças na plataforma.";
+        article.content_block_warning || "Conteúdo sujeito a mudanças.";
 
     const hasMain = tag || title || summary || ctaLabel || warning;
     if (!hasMain) return bodyHtml;
@@ -995,24 +907,24 @@ async function generateArticle() {
         let userPrompt;
         if (hasLimit) {
             userPrompt = `
-Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o seguinte tópico EXATO informado pelo usuário:
+Crie um texto do tipo "${articleType}" usando o schema dado, no idioma "${language}", sobre o seguinte tópico EXATO:
 
 "${topic}"
 
-Regras adicionais específicas do pedido:
-- Você NÃO pode mudar o assunto central desse tópico. Apenas traduza/adapte para o idioma pedido, mantendo a mesma intenção.
-- Todo o conteúdo (títulos, parágrafos, exemplos, comparações, blocos especiais, passo a passo, FAQ e conclusão) deve falar diretamente sobre esse tema e variações naturais dele, sem mudar para outro assunto.
-- O texto deve ter NO MÁXIMO ${approxWordCount} palavras, usando esse valor como limite absoluto. Se for errar, erre para menos e nunca para mais.
+Regras específicas deste pedido:
+- Não mude o assunto central do topic. Não troque por um tema parecido ou genérico.
+- Todo o conteúdo (títulos, parágrafos, comparações, bloco especial, passo a passo, FAQ e conclusão) deve falar diretamente sobre esse tema e suas variações naturais.
+- O texto deve ter NO MÁXIMO ${approxWordCount} palavras (soma de todos os campos de conteúdo). Se precisar errar, erre para menos.
 `.trim();
         } else {
             userPrompt = `
-Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o seguinte tópico EXATO informado pelo usuário:
+Crie um texto do tipo "${articleType}" usando o schema dado, no idioma "${language}", sobre o seguinte tópico EXATO:
 
 "${topic}"
 
-Regras adicionais específicas do pedido:
-- Você NÃO pode mudar o assunto central desse tópico. Apenas traduza/adapte para o idioma pedido, mantendo a mesma intenção.
-- Todo o conteúdo (títulos, parágrafos, exemplos, comparações, blocos especiais, passo a passo, FAQ e conclusão) deve falar diretamente sobre esse tema e variações naturais dele, sem mudar para outro assunto.
+Regras específicas deste pedido:
+- Não mude o assunto central do topic. Não troque por um tema parecido ou genérico.
+- Todo o conteúdo (títulos, parágrafos, comparações, bloco especial, passo a passo, FAQ e conclusão) deve falar diretamente sobre esse tema e variações naturais dele.
 - O usuário não definiu um número exato de palavras. Escolha um tamanho natural, editorial, sem exagerar.
 `.trim();
         }
@@ -1140,10 +1052,9 @@ function readArticleSettingsFromForm() {
     const hideFooter = !!document.getElementById("cfgHideFooter")?.checked;
     const persistParam = !!document.getElementById("cfgPersistParam")?.checked;
 
-    // Objeto que o snippet PHP espera em $request->get_param('config_artigo')
     return {
         habilitar_preloader: enablePreloader,
-        personalizar_preloader: enablePreloader, // usamos o mesmo toggle
+        personalizar_preloader: enablePreloader,
         tempo_preloader: enablePreloader ? preloaderTime : null,
 
         habilitar_imagem: enableImage,
@@ -1155,7 +1066,6 @@ function readArticleSettingsFromForm() {
         ocultar_footer: hideFooter,
         persistir_parametro: persistParam,
 
-        // por enquanto não tem campo de quiz na tela; deixamos nulo
         artquiz_associado: null,
     };
 }
