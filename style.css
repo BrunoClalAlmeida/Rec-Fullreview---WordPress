@@ -612,7 +612,7 @@ pre,
     }
 }
 
-/* ===== ESCONDER CAMPOS DEV ===== */
+/* ===== Campos somente dev (ocultos na UI) ===== */
 .dev-only {
     display: none;
 }

@@ -208,6 +208,60 @@ function readArticleSettingsFromForm() {
     };
 }
 
+// ===== Carregar categorias do WordPress (por nome) =====
+async function loadWpCategories() {
+    const baseUrlInput = document.getElementById("wpBaseUrl");
+    const categorySelect = document.getElementById("wpCategorySelect");
+    const hiddenCategoryId = document.getElementById("wpCategoryId");
+
+    if (!baseUrlInput || !categorySelect || !hiddenCategoryId) return;
+
+    const baseUrl = baseUrlInput.value.trim();
+    if (!baseUrl) {
+        categorySelect.innerHTML =
+            '<option value="">Informe a URL do WordPress</option>';
+        hiddenCategoryId.value = "0";
+        return;
+    }
+
+    const url =
+        baseUrl.replace(/\/$/, "") +
+        "/wp-json/wp/v2/categories?per_page=100";
+
+    categorySelect.innerHTML =
+        '<option value="">Carregando categorias...</option>';
+    hiddenCategoryId.value = "0";
+
+    try {
+        const resp = await fetch(url);
+        if (!resp.ok) {
+            throw new Error("Status " + resp.status);
+        }
+
+        const cats = await resp.json();
+        if (!Array.isArray(cats) || cats.length === 0) {
+            categorySelect.innerHTML =
+                '<option value="">Nenhuma categoria encontrada</option>';
+            return;
+        }
+
+        categorySelect.innerHTML =
+            '<option value="">Selecione a categoria</option>';
+
+        cats.forEach((cat) => {
+            if (!cat || typeof cat.id === "undefined" || !cat.name) return;
+            const opt = document.createElement("option");
+            opt.value = String(cat.id);
+            opt.textContent = cat.name;
+            categorySelect.appendChild(opt);
+        });
+    } catch (err) {
+        console.error("Erro ao carregar categorias do WordPress:", err);
+        categorySelect.innerHTML =
+            '<option value="">Erro ao carregar categorias</option>';
+    }
+}
+
 // ===== Publicar no WordPress =====
 async function publishToWordpress() {
     const statusEl = document.getElementById("statusPublish");
@@ -361,4 +415,39 @@ document.addEventListener("DOMContentLoaded", () => {
         preloaderCheckbox.addEventListener("change", syncPreloaderTimeField);
     }
     syncPreloaderTimeField();
+
+    // ===== Integração categorias =====
+    const wpBaseUrlInput = document.getElementById("wpBaseUrl");
+    const wpCategorySelect = document.getElementById("wpCategorySelect");
+    const hiddenCategoryId = document.getElementById("wpCategoryId");
+    const sitePresetSelect = document.getElementById("wpSitePreset");
+
+    if (wpCategorySelect && hiddenCategoryId) {
+        wpCategorySelect.addEventListener("change", () => {
+            hiddenCategoryId.value = wpCategorySelect.value || "0";
+        });
+    }
+
+    if (wpBaseUrlInput) {
+        wpBaseUrlInput.addEventListener("change", () => {
+            loadWpCategories();
+        });
+        wpBaseUrlInput.addEventListener("blur", () => {
+            loadWpCategories();
+        });
+    }
+
+    if (sitePresetSelect) {
+        // depois que o preset preencher a URL, carrega categorias
+        sitePresetSelect.addEventListener("change", () => {
+            setTimeout(() => {
+                loadWpCategories();
+            }, 150);
+        });
+    }
+
+    // Se já tiver URL preenchida ao abrir, tenta carregar
+    if (wpBaseUrlInput && wpBaseUrlInput.value.trim()) {
+        loadWpCategories();
+    }
 });

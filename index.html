@@ -127,18 +127,18 @@
             </div>
 
             <p class="card-description">
-                Informe o site WordPress e as credenciais para criar o post automaticamente.
+                Informe o site WordPress para criar o post automaticamente.
             </p>
 
             <div class="row">
-                <!-- Select de sites pré-configurados -->
+                <!-- NOVO: Select de sites pré-configurados -->
                 <div class="col-6">
                     <label for="wpSitePreset">Selecionar site WordPress</label>
                     <select id="wpSitePreset">
                         <option value="">Carregando sites...</option>
                     </select>
                     <p class="hint">
-                        Escolha um site para preencher automaticamente URL, usuário e Application Password.
+                        Escolha um site para preencher automaticamente a URL.
                     </p>
                 </div>
 
@@ -149,20 +149,30 @@
                     <input type="text" id="wpBaseUrl" placeholder="https://seusite.com" />
                 </div>
 
-                <div class="col-3">
+                <!-- OCULTAR CAMPOS SENSÍVEIS COM dev-only -->
+                <div class="col-3 dev-only">
                     <label for="wpUser">Usuário WordPress</label>
                     <input type="text" id="wpUser" placeholder="admin" />
                 </div>
 
-                <div class="col-3">
+                <div class="col-3 dev-only">
                     <label for="wpAppPassword">Application Password (WP)</label>
                     <input type="password" id="wpAppPassword" placeholder="xxxx xxxx xxxx xxxx" />
                 </div>
 
+                <!-- CATEGORIA POR NOME (select) -->
                 <div class="col-3">
-                    <label for="wpCategoryId">Categoria ID</label>
-                    <input type="number" id="wpCategoryId" value="0" />
+                    <label for="wpCategorySelect">Categoria</label>
+                    <select id="wpCategorySelect">
+                        <option value="">Informe a URL do WordPress</option>
+                    </select>
+                    <p class="hint">
+                        As categorias serão carregadas automaticamente do WordPress.
+                    </p>
                 </div>
+
+                <!-- ID escondido, usado só na API -->
+                <input type="hidden" id="wpCategoryId" value="0" />
 
                 <div class="col-3">
                     <label for="wpStatus">Status da publicação</label>
