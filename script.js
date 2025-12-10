@@ -10,7 +10,7 @@ let lastArticleHtml = "";
 function getArticleSchema(articleType, languageCode, approxWordCount) {
     const lang = languageCode || "pt-BR";
 
-    // Se approxWordCount <= 0, não forçamos limite no schema
+    // Se approxWordCount <= 0, significa "sem limite fixo" (modelo escolhe).
     const targetWords =
         typeof approxWordCount === "number" && approxWordCount > 0
             ? approxWordCount
@@ -22,7 +22,7 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
             language: lang,
             topic: "string",
 
-            // H1: título principal, SEM <h1> no HTML, só o texto
+            // Título principal (H1) – sem <h1> dentro, só texto.
             h1: "string",
 
             // Introdução
@@ -33,15 +33,15 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
             body_html:
                 "HTML string com 7–9 seções, alternando H2/H3. Cada título com exatamente 2 parágrafos. Dentro do body_html deve existir exatamente 1 lista (ul ou ol) e exatamente 1 tabela (<table>) usada como comparação.",
 
-            // PASSO A PASSO
+            // Passo a passo
             steps_title:
-                "string: título em formato de heading (sem <h1>) para a seção de passo a passo (por exemplo, 'Passo a passo', 'How it works', etc.), no MESMO idioma do texto.",
+                "string: título da seção de passo a passo (ex.: 'Passo a passo', 'Step by Step', 'Paso a paso'), no mesmo idioma do texto, sem citar o tema.",
             steps_html:
                 "HTML string com lista numerada (7 a 10 passos: 1. 2. 3. ...), cada passo com explicação curta e natural.",
 
             // FAQ
             faq_title:
-                "string: título em formato de heading para a seção de perguntas frequentes (por exemplo, 'Perguntas frequentes', 'FAQ'), no mesmo idioma do texto.",
+                "string: título da seção de FAQ (ex.: 'Perguntas frequentes', 'Frequently Asked Questions', 'Preguntas frecuentes'), no mesmo idioma do texto, sem citar o tema.",
             faq: [
                 {
                     question:
@@ -53,11 +53,11 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
 
             // Conclusão
             conclusion_title:
-                "string: título em formato de heading para a seção de conclusão, no mesmo idioma do texto (por exemplo, 'Conclusão', 'Final thoughts').",
+                "string: título da seção de conclusão (ex.: 'Conclusão', 'Conclusion', 'Conclusión'), no mesmo idioma do texto, sem citar o tema.",
             conclusion_html:
                 "HTML string com exatamente 3 parágrafos, cada um com no máximo 6 linhas (~até 450–500 caracteres), tom motivador, sem CTA visual.",
 
-            // BLOCO CONTENT (3º título) – SEMPRE RELACIONADO AO TEMA
+            // BLOCO CONTENT (3º título)
             content_block_tag:
                 "string muito curta (até 4 palavras) usada como Tag dentro de um bloco especial que ficará na seção do 3º H2. DEVE estar diretamente relacionada ao tema principal do artigo (topic). Ex.: para Robux: 'Economia do Robux'; para roupas Shein: 'Testes Shein'.",
             content_block_title:
@@ -90,14 +90,11 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
 
         subtitle_html:
             "HTML string (1 parágrafo, até 4 linhas, aproximadamente 180–320 caracteres, explicação leve, sem negrito/CTA).",
-
         ctas: [
             "array de 3 strings; cada uma deve começar com ✅ e ter exatamente 7 palavras.",
         ],
-
         intro_html:
             "HTML string (1 parágrafo, até 4 linhas, aproximadamente 220–380 caracteres, contexto do tema, sem instrução nem passo a passo).",
-
         body_html:
             "HTML string com exatamente 7 H2, cada um com 2 parágrafos. Dentro do body_html deve existir exatamente 1 lista (ul ou ol) e exatamente 1 tabela (<table>) usada como comparação.",
 
@@ -105,7 +102,7 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
         section_cta_label:
             "string: CTA em MAIÚSCULAS, até 6 palavras, chamativo e diretamente ligado ao tema do artigo (topic). Ex.: para Robux: 'APROVEITE AGORA DICAS SOBRE ROBUX'; para Shein: 'VEJA COMO GANHAR ROUPAS SHEIN'.",
 
-        // BLOCO CONTENT (3º título) – SEMPRE RELACIONADO AO TEMA
+        // BLOCO CONTENT (3º título)
         content_block_tag:
             "string muito curta (até 4 palavras) usada como Tag dentro de um bloco especial que ficará na seção do 3º H2. DEVE resumir um subtema ligado ao assunto principal. Ex.: 'Economia do Robux', 'Testes Shein', 'Benefícios do cartão'.",
         content_block_title:
@@ -125,9 +122,9 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
         content_block_custom_color:
             "string: '0' ou '1' indicando se é necessário personalizar a cor (use '0' por padrão).",
 
-        // FAQ + conclusão – com títulos definidos pelo GPT
+        // FAQ
         faq_title:
-            "string: título em formato de heading para a seção de perguntas frequentes, no mesmo idioma do texto.",
+            "string: título da seção de FAQ (ex.: 'Perguntas frequentes', 'Frequently Asked Questions', 'Preguntas frecuentes'), no mesmo idioma do texto, sem citar o tema.",
         faq: [
             {
                 question:
@@ -136,8 +133,10 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
                     "HTML string (1–2 linhas por resposta, linguagem natural).",
             },
         ],
+
+        // Conclusão
         conclusion_title:
-            "string: título em formato de heading para a seção de conclusão, no mesmo idioma do texto.",
+            "string: título da seção de conclusão (ex.: 'Conclusão', 'Conclusion', 'Conclusión'), no mesmo idioma do texto, sem citar o tema.",
         conclusion_html:
             "HTML string com exatamente 3 parágrafos, cada um com no máximo 6 linhas (~até 450–500 caracteres), tom inspirador, sem CTA visual.",
 
@@ -155,6 +154,21 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
         languageInstruction = "espanhol padrão (internacional)";
     }
 
+    // Títulos fixos por idioma (GPT deve usar exatamente isso)
+    let faqFixed = "Perguntas frequentes";
+    let conclusionFixed = "Conclusão";
+    let stepsFixed = "Passo a passo";
+
+    if (languageCode === "en-US") {
+        faqFixed = "Frequently Asked Questions";
+        conclusionFixed = "Conclusion";
+        stepsFixed = "Step by Step";
+    } else if (languageCode === "es-ES") {
+        faqFixed = "Preguntas frecuentes";
+        conclusionFixed = "Conclusión";
+        stepsFixed = "Paso a paso";
+    }
+
     const hasLimit =
         typeof approxWordCount === "number" && approxWordCount > 0;
     const resolvedApprox = hasLimit ? approxWordCount : 0;
@@ -165,12 +179,11 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
         2
     );
 
-    // Bloco de regra de quantidade de palavras (apenas se o usuário definiu)
     const wordLimitGeneral = hasLimit
         ? `
 - Quantidade de palavras (REGRA MUITO IMPORTANTE):
   - Considere que o LIMITE MÁXIMO ABSOLUTO de palavras para este texto é de ${resolvedApprox} palavras no total.
-  - Você NUNCA deve ultrapassar esse limite. Se o texto ficar maior que ${resolvedApprox} palavras, APAGUE frases até ficar dentro do limite.
+  - Você NUNCA deve ultrapassar esse limite. Se o texto ficar maior que ${resolvedApprox} palavras, RESUMA ou APAGUE frases até ficar dentro do limite ANTES de responder.
   - O objetivo é ficar o mais próximo possível de ${resolvedApprox} palavras, mas sempre MENOS OU IGUAL a ${resolvedApprox}. Se precisar errar, erre para MENOS, nunca para mais.
 `
         : `
@@ -185,7 +198,8 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
             Math.round(resolvedApprox * 0.8),
             resolvedApprox - 150
         )} e ${resolvedApprox} palavras, mas NUNCA ultrapasse ${resolvedApprox}.
-- Se perceber que está se aproximando demais do limite, comece a encurtar os parágrafos finais e respostas de FAQ para não estourar o máximo.
+- Você deve planejar a quantidade de palavras desde o início, deixando os últimos parágrafos (FAQ e conclusão) mais curtos se estiver se aproximando do limite.
+- Se perceber que está grande demais, RESUMA ou APAGUE frases antes de finalizar.
 `
         : `
 - Não há limite fixo de palavras, mas mantenha um tamanho equilibrado, sem exagerar.
@@ -197,7 +211,8 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
             Math.round(resolvedApprox * 0.8),
             resolvedApprox - 200
         )} e ${resolvedApprox} palavras, mas NUNCA ultrapasse ${resolvedApprox}.
-- Se perceber que está se aproximando demais do limite, resuma os passos e encurte a conclusão para ficar dentro do máximo.
+- Planeje a quantidade de palavras desde o começo, deixando passos e conclusão mais curtos se estiver se aproximando do limite.
+- Se perceber que está grande demais, RESUMA ou APAGUE frases antes de finalizar.
 `
         : `
 - Não há limite fixo de palavras, mas mantenha um tamanho equilibrado e objetivo.
@@ -229,9 +244,8 @@ ${wordLimitGeneral}
 - Estrutura visual:
   - Conteúdo totalmente pronto para WordPress.
   - Use apenas HTML simples: <h2>, <h3>, <p>, <ul>, <ol>, <li>, <table>, <thead>, <tbody>, <tr>, <td>, <strong>, <em>, <a>, <span>.
-  - NÃO use barras, separadores ou linhas como "---" ou "###".
   - NÃO use <h1> dentro de nenhum campo HTML. <h1> será usado apenas no campo de texto "h1".
-  - As seções de FAQ, Conclusão e (no FULLREVIEW) Passo a passo DEVEM ter títulos definidos por você nos campos apropriados do JSON (faq_title, conclusion_title, steps_title). O sistema NÃO vai inventar ou traduzir esses títulos.
+  - As seções de FAQ, Conclusão e (no FULLREVIEW) Passo a passo DEVEM usar os títulos corretos nos campos de texto, e o sistema cliente apenas exibirá esses valores.
 
 - Proibições:
   - Nunca usar as palavras "REC" ou "FULLREVIEW" dentro do texto.
@@ -255,12 +269,14 @@ ${wordLimitGeneral}
   - A posição da lista e da tabela NÃO deve ser fixa. Em cada novo texto, VARIE a posição em que a lista aparece (pode estar mais no início, mais no meio ou mais no final) e VARIE também a posição da tabela.
   - Evite criar sempre a lista ou a tabela na mesma altura do texto (por exemplo, não coloque sempre a lista no 2º subtítulo e a tabela no 5º). Pense como um redator humano que decide, a cada novo texto, onde faz mais sentido comparar em tabela e onde faz mais sentido listar.
 
-- BLOCO CONTENT (3º TÍTULO):
+- BLOCO CONTENT (3º TÍTULO) – REGRA MUITO FORTE:
   - Todos os campos content_block_* DEVEM ser claramente relacionados ao tema principal do artigo (campo "topic").
   - Se o topic fala de Robux, o bloco precisa falar de Robux, golpes, economia do Roblox, etc.
   - Se o topic fala de roupas da Shein, o bloco precisa falar de roupas Shein, testes, cupons, avaliações, etc.
   - Nunca use textos genéricos como "Veja mais detalhes", "Conteúdo importante", "Informações úteis".
   - O bloco deve parecer um mini-card promocional diretamente ligado ao tema, como se fosse um destaque dentro do texto principal.
+  - É PROIBIDO criar manualmente, dentro do body_html, um "bloco especial" separado com título próprio, subtítulo, resumo e aviso. NÃO escreva coisas como "Bloco Especial:", "Estratégias Reais Para...", "Conheça truques Shein" dentro do body_html como se fosse um bloco próprio.
+  - O conteúdo especial deve existir exclusivamente nos campos content_block_tag, content_block_title, content_block_summary, content_block_cta_label e content_block_warning.
 
 - REGRA ABSOLUTA SOBRE O BLOCO CONTENT (NÃO QUEBRAR):
   - Os textos dos campos content_block_tag, content_block_title, content_block_summary, content_block_cta_label e content_block_warning DEVEM existir APENAS nos campos content_block_*.
@@ -282,18 +298,21 @@ REC:
 - Dentro do body_html:
   - Use exatamente 1 lista (ul ou ol) e 1 tabela (<table>), em seções diferentes.
   - Em cada novo texto, escolha de forma diferente em qual H2 a lista será inserida e em qual H2 a tabela será inserida.
-${recWordRule}
-- section_cta_label: CTA em MAIÚSCULAS, até 6 palavras, relacionado ao tema e escrito NO MESMO IDIOMA do texto (por exemplo, em ${languageInstruction}). 
-  - NUNCA use palavras em português como "APROVEITE", "VEJA", "GANHE", "ROUPAS" quando o idioma solicitado não for português. 
-  - Todo o texto do CTA deve seguir exatamente o idioma pedido.
 
-- FAQ:
-  - Preencha o campo "faq_title" com um título de seção coerente (por exemplo, "Perguntas frequentes", "FAQ", etc.), sempre no mesmo idioma do texto.
+${recWordRule}
+
+- section_cta_label: CTA em MAIÚSCULAS, até 6 palavras, relacionado ao tema e escrito NO MESMO IDIOMA do texto (${languageInstruction}).
+
+- FAQ (REC):
+  - O campo "faq_title" DEVE ser preenchido com EXATAMENTE este texto (sem nada a mais, sem o tema junto):
+    - "${faqFixed}"
+  - Não adicione complementos como "sobre ganhar roupas na Shein", "sobre Robux", etc.
   - Crie exatamente 7 perguntas, cada uma com resposta de 1–2 linhas.
 
-- Conclusão:
-  - Preencha o campo "conclusion_title" com um título de seção coerente (por exemplo, "Conclusão", "Considerações finais", etc.), sempre no mesmo idioma do texto.
-  - A conclusão deve ter exatamente 3 parágrafos.
+- Conclusão (REC):
+  - O campo "conclusion_title" DEVE ser preenchido com EXATAMENTE este texto:
+    - "${conclusionFixed}"
+  - A conclusão deve ter exatamente 3 parágrafos, cada um com no máximo 6 linhas.
 
 - Para o BLOCO CONTENT (3º título) em REC:
   - Use a Tag para resumir em 1–4 palavras um subtema do assunto.
@@ -315,16 +334,21 @@ FULLREVIEW:
 
 ${fullWordRule}
 
-- Passo a passo:
-  - Preencha o campo "steps_title" com um título de seção coerente (por exemplo, "Passo a passo", "Step by step"), no mesmo idioma do texto.
-  - Preencha "steps_html" com uma lista numerada de 7 a 10 passos, cada um com explicação curta e clara.
+- Passo a passo (FULLREVIEW):
+  - O campo "steps_title" DEVE ser preenchido com EXATAMENTE este texto:
+    - "${stepsFixed}"
+  - Não adicione complementos. Não escreva "Passo a passo para ganhar roupas na Shein" ou variações.
+  - "steps_html" deve conter uma lista numerada de 7 a 10 passos, cada um com explicação curta e clara.
 
-- FAQ:
-  - Preencha o campo "faq_title" com um título de seção coerente, no mesmo idioma do texto.
+- FAQ (FULLREVIEW):
+  - O campo "faq_title" DEVE ser preenchido com EXATAMENTE este texto:
+    - "${faqFixed}"
+  - Não adicionar o tema junto. Nada de "sobre ganhar roupas na Shein".
   - Crie exatamente 7 perguntas, cada uma com resposta de 1–2 linhas.
 
-- Conclusão:
-  - Preencha o campo "conclusion_title" com um título de seção coerente, no mesmo idioma do texto.
+- Conclusão (FULLREVIEW):
+  - O campo "conclusion_title" DEVE ser preenchido com EXATAMENTE este texto:
+    - "${conclusionFixed}"
   - Conclusão com 3 parágrafos, cada um com até 6 linhas.
 
 - Bloco CONTENT (3º título) segue as mesmas regras do REC:
@@ -343,8 +367,8 @@ O sistema cliente NÃO vai tomar decisões de conteúdo. Ele apenas envia o tema
 VOCÊ é o responsável por:
 - Respeitar o tema EXATO (topic) informado.
 - Respeitar o idioma solicitado.
-- Respeitar o limite máximo de palavras (quando fornecido).
-- Preencher corretamente todos os campos do JSON, incluindo títulos de seções (faq_title, conclusion_title, steps_title).
+- Respeitar o limite máximo de palavras (quando fornecido), nunca ultrapassando.
+- Preencher corretamente todos os campos do JSON, incluindo títulos de seções (faq_title, conclusion_title, steps_title) usando EXATAMENTE os textos definidos acima, sem complementos.
 
 Se o usuário informar uma quantidade de palavras, você DEVE tratar esse valor como limite máximo absoluto, nunca ultrapassando. Se perceber que o texto excedeu, reduza até ficar dentro do limite antes de finalizar a resposta.
 
@@ -397,6 +421,44 @@ function generateRowId() {
         Date.now().toString(16) +
         Math.floor(Math.random() * 999999).toString(16)
     );
+}
+
+// labels PT/EN/ES – usados só como fallback se o GPT falhar
+function getLocalizedLabels(language) {
+    const lang = (language || "").toLowerCase();
+    const isEn =
+        lang === "en-us" ||
+        lang === "en" ||
+        lang.startsWith("en-") ||
+        lang.startsWith("en_");
+    const isEs =
+        lang === "es-es" ||
+        lang === "es" ||
+        lang.startsWith("es-") ||
+        lang.startsWith("es_");
+
+    if (isEn) {
+        return {
+            faqTitle: "Frequently Asked Questions",
+            conclusionTitle: "Conclusion",
+            stepsTitle: "Step by Step",
+        };
+    }
+
+    if (isEs) {
+        return {
+            faqTitle: "Preguntas frecuentes",
+            conclusionTitle: "Conclusión",
+            stepsTitle: "Paso a paso",
+        };
+    }
+
+    // padrão pt-BR
+    return {
+        faqTitle: "Perguntas frequentes",
+        conclusionTitle: "Conclusão",
+        stepsTitle: "Passo a passo",
+    };
 }
 
 // ===== HTML -> blocos Gutenberg =====
@@ -743,6 +805,17 @@ function buildHtmlFromArticle(article) {
     const type = article.type;
     const parts = [];
 
+    const labelsFallback = getLocalizedLabels(article.language);
+    const faqTitle =
+        (article.faq_title && article.faq_title.trim()) ||
+        labelsFallback.faqTitle;
+    const conclusionTitle =
+        (article.conclusion_title && article.conclusion_title.trim()) ||
+        labelsFallback.conclusionTitle;
+    const stepsTitle =
+        (article.steps_title && article.steps_title.trim()) ||
+        labelsFallback.stepsTitle;
+
     if (type === "REC") {
         if (article.subtitle_html) {
             parts.push(htmlToBlocks(article.subtitle_html));
@@ -764,28 +837,17 @@ function buildHtmlFromArticle(article) {
         }
 
         if (Array.isArray(article.faq) && article.faq.length > 0) {
-            const faqTitleText =
-                (article.faq_title && article.faq_title.trim()) || "";
-            let faqHtml = faqTitleText
-                ? `<h2>${faqTitleText}</h2>`
-                : "";
+            let faqHtml = `<h2>${faqTitle}</h2>`;
             article.faq.forEach((item) => {
                 if (!item) return;
-                if (item.question)
-                    faqHtml += `<p><strong>${item.question}</strong></p>`;
+                if (item.question) faqHtml += `<p><strong>${item.question}</strong></p>`;
                 if (item.answer_html) faqHtml += item.answer_html;
             });
-            if (faqHtml) parts.push(htmlToBlocks(faqHtml));
+            parts.push(htmlToBlocks(faqHtml));
         }
 
         if (article.conclusion_html) {
-            const conclusionTitleText =
-                (article.conclusion_title && article.conclusion_title.trim()) ||
-                "";
-            const conclHtml =
-                (conclusionTitleText
-                    ? `<h2>${conclusionTitleText}</h2>`
-                    : "") + article.conclusion_html;
+            const conclHtml = `<h2>${conclusionTitle}</h2>` + article.conclusion_html;
             parts.push(htmlToBlocks(conclHtml));
         }
 
@@ -801,34 +863,22 @@ function buildHtmlFromArticle(article) {
     }
 
     if (article.steps_html) {
-        const stepsTitleText =
-            (article.steps_title && article.steps_title.trim()) || "";
-        const stepsHtml =
-            (stepsTitleText ? `<h2>${stepsTitleText}</h2>` : "") +
-            article.steps_html;
+        const stepsHtml = `<h2>${stepsTitle}</h2>` + article.steps_html;
         parts.push(htmlToBlocks(stepsHtml));
     }
 
     if (Array.isArray(article.faq) && article.faq.length > 0) {
-        const faqTitleText =
-            (article.faq_title && article.faq_title.trim()) || "";
-        let faqHtml = faqTitleText ? `<h2>${faqTitleText}</h2>` : "";
+        let faqHtml = `<h2>${faqTitle}</h2>`;
         article.faq.forEach((item) => {
             if (!item) return;
-            if (item.question)
-                faqHtml += `<p><strong>${item.question}</strong></p>`;
+            if (item.question) faqHtml += `<p><strong>${item.question}</strong></p>`;
             if (item.answer_html) faqHtml += item.answer_html;
         });
-        if (faqHtml) parts.push(htmlToBlocks(faqHtml));
+        parts.push(htmlToBlocks(faqHtml));
     }
 
     if (article.conclusion_html) {
-        const conclusionTitleText =
-            (article.conclusion_title && article.conclusion_title.trim()) ||
-            "";
-        const conclHtml =
-            (conclusionTitleText ? `<h2>${conclusionTitleText}</h2>` : "") +
-            article.conclusion_html;
+        const conclHtml = `<h2>${conclusionTitle}</h2>` + article.conclusion_html;
         parts.push(htmlToBlocks(conclHtml));
     }
 
@@ -840,6 +890,14 @@ function buildPreviewHtmlFromArticle(article) {
     if (!article) return "";
     const type = article.type;
     const parts = [];
+
+    const labelsFallback = getLocalizedLabels(article.language);
+    const faqTitle =
+        (article.faq_title && article.faq_title.trim()) ||
+        labelsFallback.faqTitle;
+    const conclusionTitle =
+        (article.conclusion_title && article.conclusion_title.trim()) ||
+        labelsFallback.conclusionTitle;
 
     if (type === "REC") {
         if (article.subtitle_html) {
@@ -875,26 +933,17 @@ function buildPreviewHtmlFromArticle(article) {
     }
 
     if (Array.isArray(article.faq) && article.faq.length > 0) {
-        const faqTitleText =
-            (article.faq_title && article.faq_title.trim()) || "";
-        let faqHtml = faqTitleText ? `<h2>${faqTitleText}</h2>` : "";
+        let faqHtml = `<h2>${faqTitle}</h2>`;
         article.faq.forEach((item) => {
             if (!item) return;
-            if (item.question)
-                faqHtml += `<p><strong>${item.question}</strong></p>`;
+            if (item.question) faqHtml += `<p><strong>${item.question}</strong></p>`;
             if (item.answer_html) faqHtml += item.answer_html;
         });
         parts.push(faqHtml);
     }
 
     if (article.conclusion_html) {
-        const conclusionTitleText =
-            (article.conclusion_title && article.conclusion_title.trim()) ||
-            "";
-        parts.push(
-            (conclusionTitleText ? `<h2>${conclusionTitleText}</h2>` : "") +
-            article.conclusion_html
-        );
+        parts.push(`<h2>${conclusionTitle}</h2>` + article.conclusion_html);
     }
 
     return parts.join("\n\n");
@@ -910,9 +959,10 @@ async function generateArticle() {
     const wordCountRaw = document.getElementById("wordCount")?.value || "";
     let approxWordCount = parseInt(wordCountRaw, 10);
     if (isNaN(approxWordCount) || approxWordCount <= 0) {
-        // Sem gambiarra de 650/1000: se o usuário não definir, não forçamos nada
-        approxWordCount = 0;
+        approxWordCount = 0; // sem limite fixo se o usuário deixar vazio
     }
+    const hasLimit = approxWordCount > 0;
+    const maxTokens = hasLimit ? Math.round(approxWordCount * 1.8) : 2048;
 
     const statusEl = document.getElementById("statusGenerate");
     const btn = document.getElementById("btnGenerate");
@@ -935,21 +985,30 @@ async function generateArticle() {
             approxWordCount
         );
 
-        const hasLimit = approxWordCount > 0;
-        const wordInstruction = hasLimit
-            ? `O texto deve respeitar um LIMITE MÁXIMO de ${approxWordCount} palavras no total. Nunca ultrapasse esse número. Se necessário, reduza parágrafos e respostas para ficar dentro do limite.`
-            : `O usuário não definiu um limite exato de palavras. Escolha um tamanho natural, sem exagero.`;
-
-        const userPrompt = `
+        let userPrompt;
+        if (hasLimit) {
+            userPrompt = `
 Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o seguinte tópico EXATO informado pelo usuário:
 
 "${topic}"
 
-Regras adicionais:
+Regras adicionais específicas do pedido:
 - Você NÃO pode mudar o assunto central desse tópico. Apenas traduza/adapte para o idioma pedido, mantendo a mesma intenção.
-- Todo o conteúdo (títulos, parágrafos, exemplos, comparações, blocos CONTENT, passo a passo, FAQ e conclusão) deve falar diretamente sobre esse tema e variações naturais dele, sem mudar para outro assunto.
-- ${wordInstruction}
+- Todo o conteúdo (títulos, parágrafos, exemplos, comparações, blocos especiais, passo a passo, FAQ e conclusão) deve falar diretamente sobre esse tema e variações naturais dele, sem mudar para outro assunto.
+- O texto deve ter NO MÁXIMO ${approxWordCount} palavras, usando esse valor como limite absoluto. Se for errar, erre para menos e nunca para mais.
 `.trim();
+        } else {
+            userPrompt = `
+Crie um texto do tipo "${articleType}" no idioma "${language}" sobre o seguinte tópico EXATO informado pelo usuário:
+
+"${topic}"
+
+Regras adicionais específicas do pedido:
+- Você NÃO pode mudar o assunto central desse tópico. Apenas traduza/adapte para o idioma pedido, mantendo a mesma intenção.
+- Todo o conteúdo (títulos, parágrafos, exemplos, comparações, blocos especiais, passo a passo, FAQ e conclusão) deve falar diretamente sobre esse tema e variações naturais dele, sem mudar para outro assunto.
+- O usuário não definiu um número exato de palavras. Escolha um tamanho natural, editorial, sem exagerar.
+`.trim();
+        }
 
         const response = await fetch("/api/generate-article", {
             method: "POST",
@@ -960,14 +1019,13 @@ Regras adicionais:
                 model,
                 systemPrompt,
                 userPrompt,
+                maxTokens,
             }),
         });
 
         if (!response.ok) {
             const errText = await response.text();
-            throw new Error(
-                "Erro da API interna (/api/generate-article): " + errText
-            );
+            throw new Error("Erro da API interna (/api/generate-article): " + errText);
         }
 
         const data = await response.json();
@@ -1001,7 +1059,6 @@ Regras adicionais:
             articleJson.h1 = topic;
         }
 
-        // Contagem de palavras (apenas para diagnóstico)
         let totalWords = 0;
         if (articleJson.subtitle_html)
             totalWords += countWordsFromHtml(articleJson.subtitle_html);
@@ -1013,10 +1070,8 @@ Regras adicionais:
             totalWords += countWordsFromHtml(articleJson.steps_html);
         if (Array.isArray(articleJson.faq)) {
             articleJson.faq.forEach((f) => {
-                if (f.question)
-                    totalWords += countWordsFromHtml(f.question);
-                if (f.answer_html)
-                    totalWords += countWordsFromHtml(f.answer_html);
+                if (f.question) totalWords += countWordsFromHtml(f.question);
+                if (f.answer_html) totalWords += countWordsFromHtml(f.answer_html);
             });
         }
         if (articleJson.conclusion_html) {
@@ -1040,13 +1095,11 @@ Regras adicionais:
 
         document.getElementById("btnPublish").disabled = false;
 
-        const targetLabel = approxWordCount > 0 ? approxWordCount : "livre";
         statusEl.classList.remove("error");
         statusEl.innerHTML =
             "<strong>Sucesso:</strong> texto gerado. Revise abaixo antes de publicar. (Estimativa de palavras: " +
             totalWords +
-            " | Alvo: " +
-            targetLabel +
+            (hasLimit ? " | Limite: " + approxWordCount : "") +
             ")";
     } catch (err) {
         console.error(err);
@@ -1145,7 +1198,6 @@ async function publishToWordpress() {
     const metaDescription = stripHtml(introField).slice(0, 160);
     const excerpt = stripHtml(introField).slice(0, 200);
 
-    // Lê configurações da tela e monta objeto esperado pelo snippet
     const articleConfig = readArticleSettingsFromForm();
 
     const body = {
@@ -1159,7 +1211,6 @@ async function publishToWordpress() {
             cf_article_type: lastArticleJson.type || "",
             cf_meta_description: metaDescription,
         },
-        // Este objeto será lido pelo snippet PHP (rest_after_insert_post)
         config_artigo: articleConfig,
     };
 
@@ -1183,15 +1234,12 @@ async function publishToWordpress() {
             }
         );
 
-        const data = await response.json();
-
         if (!response.ok) {
-            // Se a API retornar erro, NÃO consideramos como publicado
-            throw new Error(
-                (data && data.message) ||
-                "Erro da API WordPress (status " + response.status + ")"
-            );
+            const errText = await response.text();
+            throw new Error("Erro da API WordPress: " + errText);
         }
+
+        const data = await response.json();
 
         statusEl.classList.remove("error");
         statusEl.innerHTML =
@@ -1230,7 +1278,6 @@ function syncPreloaderTimeField() {
 
 // ===== Listeners =====
 document.addEventListener("DOMContentLoaded", () => {
-    // Campo de chave agora é só visual (se existir), sem chave real
     const keyInput = document.getElementById("openaiKey");
     if (keyInput) {
         keyInput.value = "Configuração via servidor (Vercel)";
@@ -1254,7 +1301,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Preloader: linkar toggle com input de tempo
     const preloaderCheckbox = document.getElementById("cfgPreloaderEnable");
     if (preloaderCheckbox) {
         preloaderCheckbox.addEventListener("change", syncPreloaderTimeField);

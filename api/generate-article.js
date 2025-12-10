@@ -17,7 +17,7 @@ module.exports = (req, res) => {
   req.on("end", async () => {
     try {
       const parsed = body ? JSON.parse(body) : {};
-      const { model, systemPrompt, userPrompt } = parsed;
+      const { model, systemPrompt, userPrompt, maxTokens } = parsed;
 
       const apiKey = process.env.OPENAI_API_KEY;
       if (!apiKey) {
@@ -38,6 +38,8 @@ module.exports = (req, res) => {
           { role: "user", content: userPrompt || "" },
         ],
         temperature: 0.7,
+        max_tokens:
+          typeof maxTokens === "number" && maxTokens > 0 ? maxTokens : 2048,
       };
 
       const openaiResponse = await fetch(
