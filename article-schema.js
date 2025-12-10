@@ -201,8 +201,7 @@ ${wordLimitGeneral}
 - Campo section_cta_label (REC):
   - Este campo é OBRIGATÓRIO.
   - Nunca deixe section_cta_label vazio ou ausente.
-  - Deve ser um CTA curto, em MAIÚSCULAS, com até 6 palavras, diretamente ligado ao tema e no mesmo idioma do campo "language".
-`.trim();
+  - Deve ser um CTA curto, em MAIÚSCULAS, com até 6 palavras, diretamente ligado ao tema e no mesmo idioma do campo "language".`.trim();
 
     const recRules = `
 REC:

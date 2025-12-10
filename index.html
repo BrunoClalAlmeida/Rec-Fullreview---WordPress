@@ -8,12 +8,14 @@
 
     <link rel="stylesheet" href="style.css" />
 
+    <!-- Presets de sites WordPress -->
     <script src="wp-sites-presets.js" defer></script>
+
+    <!-- Código separado -->
     <script src="article-schema.js" defer></script>
     <script src="article-utils.js" defer></script>
     <script src="blocks-wp.js" defer></script>
     <script src="main.js" defer></script>
-
 </head>
 
 <body>
@@ -35,24 +37,21 @@
         <!-- Card 1: Config da IA e tema -->
         <section class="card">
             <div class="card-header">
-                <h2 class="card-title">1. Configuração da IA & Tema</h2>
+                <h2 class="card-title">1. Configuração do Tema</h2>
             </div>
 
-            <p class="card-description">
-                Preencha sua chave da OpenAI, escolha o tipo de artigo e o tema.
-            </p>
-
             <div class="row">
-                <div class="col-6">
+                <!-- ESSE BLOCO FICA ESCONDIDO (apenas para manter o DOM) -->
+                <div class="col-6 dev-only">
                     <label for="openaiKey">OpenAI API Key</label>
-                    <!-- valor agora é preenchido pelo JS e o campo fica travado -->
                     <input type="password" id="openaiKey" placeholder="sk-..." />
                     <p class="hint">
                         A chave já está configurada no sistema. Este campo é apenas visual.
                     </p>
                 </div>
 
-                <div class="col-6">
+                <!-- ESSE BLOCO TAMBÉM FICA ESCONDIDO, MAS O INPUT EXISTE E O JS LÊ NORMAL -->
+                <div class="col-6 dev-only">
                     <label for="model">Modelo (OpenAI)</label>
                     <input type="text" id="model" value="gpt-5.1" />
                     <p class="hint">Ex: gpt-4.1, gpt-4.1-mini, gpt-5.1.</p>
@@ -132,7 +131,7 @@
             </p>
 
             <div class="row">
-                <!-- NOVO: Select de sites pré-configurados -->
+                <!-- Select de sites pré-configurados -->
                 <div class="col-6">
                     <label for="wpSitePreset">Selecionar site WordPress</label>
                     <select id="wpSitePreset">
