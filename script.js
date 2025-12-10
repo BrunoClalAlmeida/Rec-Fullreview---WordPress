@@ -485,7 +485,7 @@ function buildCtaAcfBlock(ctasArray) {
     )},"mode":"edit"} /-->`;
 }
 
-// ===== CTA do 7º título =====
+// ===== CTA do 7º título (ou último se tiver menos de 7) =====
 function buildSectionCtaLabel(article) {
     const raw =
         (article && (article.section_cta_label || article.section_cta)) || "";
@@ -517,27 +517,26 @@ function injectSeventhHeadingCta(blocks, article) {
     if (!label) return blocks;
 
     const markerH2 = '<!-- wp:heading {"level":2}';
+    const h2Positions = [];
     let from = 0;
-    let count = 0;
-    let seventhIndex = -1;
 
     while (true) {
         const pos = blocks.indexOf(markerH2, from);
         if (pos === -1) break;
-        count++;
-        if (count === 7) {
-            seventhIndex = pos;
-            break;
-        }
+        h2Positions.push(pos);
         from = pos + markerH2.length;
     }
 
-    if (seventhIndex === -1) return blocks;
+    if (h2Positions.length === 0) return blocks;
+
+    // 7º H2 se existir, senão o último H2
+    const targetIndexPos =
+        h2Positions.length >= 7 ? h2Positions[6] : h2Positions[h2Positions.length - 1];
 
     const paraStartMarker = "<!-- wp:paragraph -->";
     const paraEndMarker = "<!-- /wp:paragraph -->";
 
-    const firstParaStart = blocks.indexOf(paraStartMarker, seventhIndex);
+    const firstParaStart = blocks.indexOf(paraStartMarker, targetIndexPos);
     if (firstParaStart === -1) return blocks;
 
     const firstParaEnd = blocks.indexOf(paraEndMarker, firstParaStart);
@@ -559,10 +558,13 @@ function injectPreviewSeventhCtaIntoBodyHtml(bodyHtml, article) {
     wrapper.innerHTML = bodyHtml;
 
     const headings = wrapper.querySelectorAll("h2");
-    if (headings.length < 7) return bodyHtml;
+    if (headings.length === 0) return bodyHtml;
 
-    const h7 = headings[6];
-    let node = h7.nextSibling;
+    // 7º H2 se existir, senão o último H2
+    const targetHeading =
+        headings.length >= 7 ? headings[6] : headings[headings.length - 1];
+
+    let node = targetHeading.nextSibling;
     let firstPara = null;
 
     while (node) {
