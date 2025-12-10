@@ -130,7 +130,7 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
             resolvedApprox - 150
         )} e ${resolvedApprox} palavras.
   - Nunca ultrapasse ${resolvedApprox} palavras.
-  - Você pode ajustar livremente a quantidade de subtítulos H2, o tamanho dos parágrafos e o nível de detalhe para caber no limite.`
+  - Você pode ajustar livremente a quantidade de subtítulos, o tamanho dos parágrafos e o nível de detalhe para caber no limite.`
         : `
 - Tamanho do texto (REC):
   - Não há limite fixo.
@@ -154,9 +154,24 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
 Regras gerais (valem para REC e FULLREVIEW):
 
 - Idioma:
-  - Escreva TODO o conteúdo no idioma especificado pelo campo "language" (por exemplo: "pt-BR", "en-US", "es-ES").
+  - Escreva TODO o conteúdo no idioma especificado pelo campo "language" do JSON final (por exemplo: "pt-BR", "en-US", "es-ES").
   - Títulos, parágrafos, listas, tabelas, CTAs, FAQ, avisos e qualquer outro texto devem estar nesse mesmo idioma.
   - Se o topic vier em outro idioma, adapte o texto para o idioma indicado em "language", mantendo o mesmo assunto.
+
+- Títulos fixos por idioma (VOCÊ DEVE USAR EXATAMENTE ESTES TEXTOS):
+  - Se o campo "language" do JSON final for "pt-BR":
+    - faq_title: "Perguntas frequentes"
+    - conclusion_title: "Conclusão"
+    - se existir passo a passo (FULLREVIEW): steps_title: "Passo a passo"
+  - Se o campo "language" do JSON final for "en-US":
+    - faq_title: "Frequently Asked Questions"
+    - conclusion_title: "Conclusion"
+    - se existir passo a passo (FULLREVIEW): steps_title: "Step by Step"
+  - Se o campo "language" do JSON final for "es-ES":
+    - faq_title: "Preguntas frecuentes"
+    - conclusion_title: "Conclusión"
+    - se existir passo a passo (FULLREVIEW): steps_title: "Paso a paso"
+  - Não invente outras variações para esses títulos. Use exatamente os textos acima, sem adicionar o tema neles.
 
 - Tema (topic) – REGRA MUITO FORTE:
   - O campo "topic" é o tema exato que o usuário quer.
@@ -170,7 +185,7 @@ ${wordLimitGeneral}
 - Linguagem:
   - Use tom natural, claro e fluido, em estilo editorial.
   - Evite repetições desnecessárias e frases artificiais.
-  - Não se refira ao próprio texto como “artigo”, “post”, “guia”, etc.
+  - Não se refira ao próprio texto como “artigo”, “post” ou “guia”; apenas escreva o conteúdo direto.
 
 - Estrutura de HTML:
   - Use apenas HTML simples: <h2>, <h3>, <p>, <ul>, <ol>, <li>, <table>, <thead>, <tbody>, <tr>, <td>, <strong>, <em>, <a>, <span>.
@@ -190,6 +205,11 @@ ${wordLimitGeneral}
   - Não use textos genéricos. Seja específico em relação ao tema.
   - Os textos content_block_tag, content_block_title, content_block_summary, content_block_cta_label e content_block_warning são exclusivos do bloco especial.
   - NÃO copie nem repita esses textos dentro de body_html, steps_html, FAQ ou conclusão.
+
+- Campo section_cta_label (REC):
+  - Este campo é OBRIGATÓRIO.
+  - Nunca deixe section_cta_label vazio ou ausente.
+  - Deve ser um CTA curto, em MAIÚSCULAS, com até 6 palavras, diretamente ligado ao tema e no mesmo idioma do campo "language".
 `.trim();
 
     const recRules = `
@@ -207,12 +227,12 @@ REC:
 
 ${hasLimit
             ? `- Corpo (quando existe limite de palavras):
-  - Use subtítulos H2 e parágrafos de forma FLEXÍVEL.
-  - A quantidade de H2 e o número de parágrafos em cada H2 NÃO são fixos. Ajuste como for melhor para caber no limite de palavras.
-  - Ignore qualquer regra rígida de “exatamente 2 parágrafos por título” se isso for atrapalhar o limite de palavras.`
+  - Use subtítulos e parágrafos de forma FLEXÍVEL.
+  - A quantidade de subtítulos e o número de parágrafos por subtítulo NÃO são fixos.
+  - Você pode ajustar qualquer coisa na estrutura (número de H2, quantidade de parágrafos, tamanho das respostas de FAQ, conclusão mais curta, etc.) para caber dentro do limite de palavras.`
             : `- Corpo (sem limite de palavras definido):
-  - Use vários subtítulos H2 para organizar o conteúdo.
-  - Em geral, use 2 parágrafos por H2, mas você pode ajustar se fizer sentido.`
+  - Use vários subtítulos para organizar o conteúdo.
+  - Em geral, use 2 parágrafos por subtítulo, mas você pode ajustar se fizer sentido.`
         }
 
 - Dentro do body_html (REC):
@@ -223,15 +243,17 @@ ${hasLimit
 ${recWordRule}
 
 - section_cta_label:
-  - Texto curto, em MAIÚSCULAS, com até 6 palavras, diretamente ligado ao tema e no idioma indicado em "language".
+  - Campo OBRIGATÓRIO.
+  - Nunca deixe vazio.
+  - Texto curto, em MAIÚSCULAS, com até 6 palavras, diretamente ligado ao tema e no idioma do campo "language".
 
 - FAQ (REC):
-  - faq_title: escolha um título natural de FAQ no mesmo idioma do texto (sem citar o tema).
+  - faq_title deve seguir a regra dos títulos fixos por idioma descrita nas regras gerais.
   - Crie exatamente 7 perguntas.
   - Cada answer_html deve ter 1 frase curta (cerca de 6 palavras, máximo 12).
 
 - Conclusão (REC):
-  - conclusion_title: escolha um título natural de conclusão no mesmo idioma (sem citar o tema).
+  - conclusion_title deve seguir a regra dos títulos fixos por idioma descrita nas regras gerais.
 ${hasLimit
             ? `  - Use 1 ou 2 parágrafos curtos, ajustando o tamanho para respeitar o limite de palavras.`
             : `  - Use alguns parágrafos curtos para fechar o assunto de forma clara.`
@@ -259,11 +281,11 @@ FULLREVIEW:
 
 ${hasLimit
             ? `- Corpo (quando existe limite de palavras):
-  - Use seções H2/H3 e parágrafos de forma FLEXÍVEL.
-  - A quantidade de seções e o número de parágrafos por seção NÃO são fixos. Ajuste para caber no limite de palavras.
-  - Ignore qualquer regra rígida de “2 parágrafos por seção” se isso for atrapalhar o limite de palavras.`
+  - Use seções e parágrafos de forma FLEXÍVEL.
+  - A quantidade de seções e o número de parágrafos por seção NÃO são fixos.
+  - Você pode ajustar qualquer coisa na estrutura para caber no limite de palavras (inclusive encurtar ou resumir partes do passo a passo).`
             : `- Corpo (sem limite de palavras definido):
-  - Use várias seções H2/H3 para organizar o conteúdo.
+  - Use várias seções para organizar o conteúdo.
   - Em geral, use 2 parágrafos por seção, mas você pode ajustar se fizer sentido.`
         }
 
@@ -275,16 +297,16 @@ ${hasLimit
 ${fullWordRule}
 
 - Passo a passo (FULLREVIEW):
-  - steps_title: escolha um título natural que indique “passo a passo” no mesmo idioma (sem citar o tema).
+  - steps_title deve seguir a regra dos títulos fixos por idioma descrita nas regras gerais.
   - steps_html deve ser uma lista numerada de 7 a 10 passos, com frases curtas e práticas.
 
 - FAQ (FULLREVIEW):
-  - faq_title: escolha um título natural de FAQ no mesmo idioma (sem citar o tema).
+  - faq_title deve seguir a regra dos títulos fixos por idioma descrita nas regras gerais.
   - Crie exatamente 7 perguntas.
   - Cada answer_html deve ter 1 frase curta (cerca de 6 palavras, máximo 12).
 
 - Conclusão (FULLREVIEW):
-  - conclusion_title: escolha um título natural de conclusão no mesmo idioma (sem citar o tema).
+  - conclusion_title deve seguir a regra dos títulos fixos por idioma descrita nas regras gerais.
 ${hasLimit
             ? `  - Use 1 ou 2 parágrafos curtos, respeitando o limite total de palavras.`
             : `  - Use alguns parágrafos curtos para fechar o assunto de forma clara.`
@@ -310,7 +332,7 @@ VOCÊ é totalmente responsável por:
 - Respeitar o tema EXATO informado (sem trocar por outro assunto, nem generalizar).
 - Escrever todo o conteúdo no idioma especificado em "language".
 - Respeitar o limite máximo de palavras, quando fornecido.
-- Ajustar livremente a estrutura (quantidade de títulos, parágrafos, tamanho de seções) para cumprir o limite de palavras.
+- Ajustar livremente a estrutura (quantidade de títulos, parágrafos, tamanho de seções, tamanho das respostas de FAQ e da conclusão) para cumprir o limite de palavras.
 - Preencher corretamente todos os campos do JSON.
 
 Regras sobre limite de palavras:
@@ -336,7 +358,6 @@ Regras específicas do tipo "${articleType}":
 ${typeSpecific}
 `.trim();
 }
-
 
 // ===== Utilitários =====
 function stripHtml(html) {
