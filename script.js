@@ -374,15 +374,6 @@ function generateRowId() {
     );
 }
 
-// Fallback simples se o GPT não preencher títulos de FAQ / conclusão / passos
-function getLocalizedLabels() {
-    return {
-        faqTitle: "FAQ",
-        conclusionTitle: "Conclusão",
-        stepsTitle: "Passo a passo",
-    };
-}
-
 // ===== HTML -> blocos Gutenberg =====
 function convertHtmlToBlocks(html) {
     if (!html) return "";
@@ -586,7 +577,7 @@ function buildContentAcfBlock(article) {
     const hasMain = tag || title || summary || ctaLabel || warning;
     if (!hasMain) return "";
 
-    // fallback de aviso, se vier vazio
+    // fallback de aviso, se vier vazio (isso é só pra não quebrar UX; GPT continua responsável pelo principal)
     if (!warning || !warning.trim()) {
         if (topic && topic.toLowerCase().includes("robux")) {
             warning = "Informações sujeitas às regras da plataforma.";
@@ -726,16 +717,12 @@ function buildHtmlFromArticle(article) {
     const type = article.type;
     const parts = [];
 
-    const labelsFallback = getLocalizedLabels(article.language);
     const faqTitle =
-        (article.faq_title && article.faq_title.trim()) ||
-        labelsFallback.faqTitle;
+        (article.faq_title && article.faq_title.trim()) || "";
     const conclusionTitle =
-        (article.conclusion_title && article.conclusion_title.trim()) ||
-        labelsFallback.conclusionTitle;
+        (article.conclusion_title && article.conclusion_title.trim()) || "";
     const stepsTitle =
-        (article.steps_title && article.steps_title.trim()) ||
-        labelsFallback.stepsTitle;
+        (article.steps_title && article.steps_title.trim()) || "";
 
     if (type === "REC") {
         if (article.subtitle_html) {
@@ -758,7 +745,10 @@ function buildHtmlFromArticle(article) {
         }
 
         if (Array.isArray(article.faq) && article.faq.length > 0) {
-            let faqHtml = `<h2>${faqTitle}</h2>`;
+            let faqHtml = "";
+            if (faqTitle) {
+                faqHtml += `<h2>${faqTitle}</h2>`;
+            }
             article.faq.forEach((item) => {
                 if (!item) return;
                 if (item.question) faqHtml += `<p><strong>${item.question}</strong></p>`;
@@ -768,7 +758,9 @@ function buildHtmlFromArticle(article) {
         }
 
         if (article.conclusion_html) {
-            const conclHtml = `<h2>${conclusionTitle}</h2>` + article.conclusion_html;
+            const conclHtml =
+                (conclusionTitle ? `<h2>${conclusionTitle}</h2>` : "") +
+                article.conclusion_html;
             parts.push(htmlToBlocks(conclHtml));
         }
 
@@ -784,12 +776,17 @@ function buildHtmlFromArticle(article) {
     }
 
     if (article.steps_html) {
-        const stepsHtml = `<h2>${stepsTitle}</h2>` + article.steps_html;
+        const stepsHtml =
+            (stepsTitle ? `<h2>${stepsTitle}</h2>` : "") +
+            article.steps_html;
         parts.push(htmlToBlocks(stepsHtml));
     }
 
     if (Array.isArray(article.faq) && article.faq.length > 0) {
-        let faqHtml = `<h2>${faqTitle}</h2>`;
+        let faqHtml = "";
+        if (faqTitle) {
+            faqHtml += `<h2>${faqTitle}</h2>`;
+        }
         article.faq.forEach((item) => {
             if (!item) return;
             if (item.question) faqHtml += `<p><strong>${item.question}</strong></p>`;
@@ -799,7 +796,9 @@ function buildHtmlFromArticle(article) {
     }
 
     if (article.conclusion_html) {
-        const conclHtml = `<h2>${conclusionTitle}</h2>` + article.conclusion_html;
+        const conclHtml =
+            (conclusionTitle ? `<h2>${conclusionTitle}</h2>` : "") +
+            article.conclusion_html;
         parts.push(htmlToBlocks(conclHtml));
     }
 
@@ -812,13 +811,10 @@ function buildPreviewHtmlFromArticle(article) {
     const type = article.type;
     const parts = [];
 
-    const labelsFallback = getLocalizedLabels(article.language);
     const faqTitle =
-        (article.faq_title && article.faq_title.trim()) ||
-        labelsFallback.faqTitle;
+        (article.faq_title && article.faq_title.trim()) || "";
     const conclusionTitle =
-        (article.conclusion_title && article.conclusion_title.trim()) ||
-        labelsFallback.conclusionTitle;
+        (article.conclusion_title && article.conclusion_title.trim()) || "";
 
     if (type === "REC") {
         if (article.subtitle_html) {
@@ -854,7 +850,10 @@ function buildPreviewHtmlFromArticle(article) {
     }
 
     if (Array.isArray(article.faq) && article.faq.length > 0) {
-        let faqHtml = `<h2>${faqTitle}</h2>`;
+        let faqHtml = "";
+        if (faqTitle) {
+            faqHtml += `<h2>${faqTitle}</h2>`;
+        }
         article.faq.forEach((item) => {
             if (!item) return;
             if (item.question) faqHtml += `<p><strong>${item.question}</strong></p>`;
@@ -864,7 +863,10 @@ function buildPreviewHtmlFromArticle(article) {
     }
 
     if (article.conclusion_html) {
-        parts.push(`<h2>${conclusionTitle}</h2>` + article.conclusion_html);
+        const conclHtml =
+            (conclusionTitle ? `<h2>${conclusionTitle}</h2>` : "") +
+            article.conclusion_html;
+        parts.push(conclHtml);
     }
 
     return parts.join("\n\n");
