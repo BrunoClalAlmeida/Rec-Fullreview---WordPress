@@ -47,7 +47,7 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
                     question:
                         "string (curta, linguagem natural). O array FAQ deve ter exatamente 7 perguntas.",
                     answer_html:
-                        "HTML string (1–2 linhas por resposta, linguagem natural).",
+                        "HTML string contendo apenas 1 frase bem curta, com CERCA DE 6 PALAVRAS (nunca mais que 12 palavras). Nada de respostas longas nem com vários períodos.",
                 },
             ],
 
@@ -130,7 +130,7 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
                 question:
                     "string (curta, linguagem natural). O array FAQ deve ter exatamente 7 perguntas.",
                 answer_html:
-                    "HTML string (1–2 linhas por resposta, linguagem natural).",
+                    "HTML string contendo apenas 1 frase bem curta, com CERCA DE 6 PALAVRAS (nunca mais que 12 palavras). Nada de respostas longas nem com vários períodos.",
             },
         ],
 
@@ -143,6 +143,7 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
         approx_word_count: targetWords,
     };
 }
+
 
 // ===== Prompt do sistema =====
 function buildSystemPrompt(articleType, languageCode, approxWordCount) {
@@ -307,12 +308,15 @@ ${recWordRule}
   - O campo "faq_title" DEVE ser preenchido com EXATAMENTE este texto (sem nada a mais, sem o tema junto):
     - "${faqFixed}"
   - Não adicione complementos como "sobre ganhar roupas na Shein", "sobre Robux", etc.
-  - Crie exatamente 7 perguntas, cada uma com resposta de 1–2 linhas.
+  - Crie exatamente 7 perguntas.
+  - CADA resposta (answer_html) deve conter APENAS 1 frase bem curta, com cerca de 6 palavras (no máximo 12 palavras).
+  - Não use parágrafos longos, não use mais de 1 período por resposta.
+  - Pense como um FAQ de bullets rápidos, tipo ping-pong pergunta/resposta.
 
 - Conclusão (REC):
   - O campo "conclusion_title" DEVE ser preenchido com EXATAMENTE este texto:
     - "${conclusionFixed}"
-  - A conclusão deve ter exatamente 3 parágrafos, cada um com no máximo 6 linhas.
+  - A conclusão deve ter exatamente 2 parágrafos, cada um com no máximo 6 linhas.
 
 - Para o BLOCO CONTENT (3º título) em REC:
   - Use a Tag para resumir em 1–4 palavras um subtema do assunto.
@@ -344,12 +348,15 @@ ${fullWordRule}
   - O campo "faq_title" DEVE ser preenchido com EXATAMENTE este texto:
     - "${faqFixed}"
   - Não adicionar o tema junto. Nada de "sobre ganhar roupas na Shein".
-  - Crie exatamente 7 perguntas, cada uma com resposta de 1–2 linhas.
+  - Crie exatamente 7 perguntas.
+  - CADA resposta (answer_html) deve conter APENAS 1 frase bem curta, com cerca de 6 palavras (no máximo 12 palavras).
+  - Não escreva respostas longas; isso aqui é para tirar dúvidas rápidas, em formato bem enxuto.
+
 
 - Conclusão (FULLREVIEW):
   - O campo "conclusion_title" DEVE ser preenchido com EXATAMENTE este texto:
     - "${conclusionFixed}"
-  - Conclusão com 3 parágrafos, cada um com até 6 linhas.
+  - Conclusão com 2 parágrafos, cada um com até 6 linhas.
 
 - Bloco CONTENT (3º título) segue as mesmas regras do REC:
   - Sempre conectado ao tema principal.
