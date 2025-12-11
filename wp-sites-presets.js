@@ -123,11 +123,6 @@ const WP_SITES_PRESETS = [
         optDefault.textContent = "Selecione um site pré-configurado";
         select.appendChild(optDefault);
 
-        const optManual = document.createElement("option");
-        optManual.value = "__manual";
-        optManual.textContent = "Preencher manualmente";
-        select.appendChild(optManual);
-
         // Adiciona opções da lista
         if (Array.isArray(WP_SITES_PRESETS)) {
             WP_SITES_PRESETS.forEach((site) => {
