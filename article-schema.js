@@ -1,148 +1,146 @@
 // ===== Schema por tipo (REC ou FULLREVIEW) =====
 // Aqui é só estrutura de campos. Quem define conteúdo, idioma, títulos etc. é o GPT.
 function getArticleSchema(articleType, languageCode, approxWordCount) {
-    const lang = languageCode || "pt-BR";
+  const lang = languageCode || "pt-BR";
 
-    const targetWords =
-        typeof approxWordCount === "number" && approxWordCount > 0
-            ? approxWordCount
-            : 0;
+  const targetWords =
+    typeof approxWordCount === "number" && approxWordCount > 0
+      ? approxWordCount
+      : 0;
 
-    if (articleType === "FULLREVIEW") {
-        return {
-            type: "FULLREVIEW",
-            language: lang,
-            topic: "string",
-
-            h1: "string",
-
-            intro_html: "string (HTML)",
-            body_html: "string (HTML)",
-
-            steps_title: "string",
-            steps_html: "string (HTML)",
-
-            faq_title: "string",
-            faq: [
-                {
-                    question: "string",
-                    answer_html: "string (HTML)",
-                },
-            ],
-
-            conclusion_title: "string",
-            conclusion_html: "string (HTML)",
-
-            content_block_tag: "string",
-            content_block_title: "string",
-            content_block_summary: "string",
-            content_block_cta_label: "string",
-            content_block_cta_link: "string",
-            content_block_warning: "string",
-            content_block_target_blank: "string",
-            content_block_fixed: "string",
-            content_block_custom_color: "string",
-
-            approx_word_count: targetWords,
-        };
-    }
-
-    // REC
+  if (articleType === "FULLREVIEW") {
     return {
-        type: "REC",
-        language: lang,
-        topic: "string",
-        h1: "string",
+      type: "FULLREVIEW",
+      language: lang,
+      topic: "string",
 
-        subtitle_html: "string (HTML)",
-        ctas: ["string"],
-        intro_html: "string (HTML)",
-        body_html: "string (HTML)",
+      h1: "string",
 
-        section_cta_label: "string",
+      intro_html: "string (HTML)",
+      body_html: "string (HTML)",
 
-        content_block_tag: "string",
-        content_block_title: "string",
-        content_block_summary: "string",
-        content_block_cta_label: "string",
-        content_block_cta_link: "string",
-        content_block_warning: "string",
-        content_block_target_blank: "string",
-        content_block_fixed: "string",
-        content_block_custom_color: "string",
+      steps_title: "string",
+      steps_html: "string (HTML)",
 
-        faq_title: "string",
-        faq: [
-            {
-                question: "string",
-                answer_html: "string (HTML)",
-            },
-        ],
+      faq_title: "string",
+      faq: [
+        {
+          question: "string",
+          answer_html: "string (HTML)",
+        },
+      ],
 
-        conclusion_title: "string",
-        conclusion_html: "string (HTML)",
+      conclusion_title: "string",
+      conclusion_html: "string (HTML)",
 
-        approx_word_count: targetWords,
+      content_block_tag: "string",
+      content_block_title: "string",
+      content_block_summary: "string",
+      content_block_cta_label: "string",
+      content_block_cta_link: "string",
+      content_block_warning: "string",
+      content_block_target_blank: "string",
+      content_block_fixed: "string",
+      content_block_custom_color: "string",
+
+      approx_word_count: targetWords,
     };
+  }
+
+  // REC
+  return {
+    type: "REC",
+    language: lang,
+    topic: "string",
+    h1: "string",
+
+    subtitle_html: "string (HTML)",
+    ctas: ["string"],
+    intro_html: "string (HTML)",
+    body_html: "string (HTML)",
+
+    section_cta_label: "string",
+
+    content_block_tag: "string",
+    content_block_title: "string",
+    content_block_summary: "string",
+    content_block_cta_label: "string",
+    content_block_cta_link: "string",
+    content_block_warning: "string",
+    content_block_target_blank: "string",
+    content_block_fixed: "string",
+    content_block_custom_color: "string",
+
+    faq_title: "string",
+    faq: [
+      {
+        question: "string",
+        answer_html: "string (HTML)",
+      },
+    ],
+
+    conclusion_title: "string",
+    conclusion_html: "string (HTML)",
+
+    approx_word_count: targetWords,
+  };
 }
 
 // ===== Prompt do sistema =====
-// Tudo que “educa” o GPT está aqui, em TEXTO. JS não traduz, não escolhe título, não inventa conteúdo.
+// Tudo que "educa" o GPT está aqui, em TEXTO. JS não traduz, não escolhe título, não inventa conteúdo.
 function buildSystemPrompt(articleType, languageCode, approxWordCount) {
-    const hasLimit =
-        typeof approxWordCount === "number" && approxWordCount > 0;
-    const resolvedApprox = hasLimit ? approxWordCount : 0;
+  const hasLimit =
+    typeof approxWordCount === "number" && approxWordCount > 0;
+  const resolvedApprox = hasLimit ? approxWordCount : 0;
 
-    const schema = JSON.stringify(
-        getArticleSchema(articleType, languageCode, resolvedApprox),
-        null,
-        2
-    );
+  const schema = JSON.stringify(
+    getArticleSchema(articleType, languageCode, resolvedApprox),
+    null,
+    2
+  );
 
-    const wordLimitGeneral = hasLimit
-        ? `
+  const wordLimitGeneral = hasLimit
+    ? `
 - Limite de palavras (REGRA PRINCIPAL):
   - Considere ${resolvedApprox} como LIMITE MÁXIMO ABSOLUTO de palavras para todo o texto (somando todos os campos de conteúdo).
   - O texto DEVE ficar SEMPRE menor ou igual a ${resolvedApprox} palavras.
   - Você pode produzir menos palavras se for necessário. Se tiver dúvida, erre para MENOS, nunca para MAIS.
   - Se perceber que o texto ficou maior, RESUMA e CORTE mentalmente ANTES de responder.
   - Se QUALQUER outra regra de estrutura (número de títulos, parágrafos por título, tamanho de conclusão etc.) conflitar com o limite de palavras, ignore a estrutura e PRIORIZE o limite de palavras.
-`
-        : `
-- Limite de palavras:
+  - **Ao gerar textos maiores, como 1000 ou 1500 palavras, adicione mais títulos (h2) e subtítulos para distribuir o conteúdo de forma equilibrada e atingir a contagem de palavras.**`
+    : `- Limite de palavras:
   - O usuário não definiu um número exato de palavras.
-  - Escreva um texto completo, natural e equilibrado, sem exagerar no volume.
-`;
+  - Escreva um texto completo, natural e equilibrado, sem exagerar no volume.`;
 
-    const recWordRule = hasLimit
-        ? `
+  const recWordRule = hasLimit
+    ? `
 - Tamanho do texto (REC):
   - Produza ENTRE ${Math.max(
-            Math.round(resolvedApprox * 0.8),
-            resolvedApprox - 150
-        )} e ${resolvedApprox} palavras.
+      Math.round(resolvedApprox * 0.8),
+      resolvedApprox - 150
+    )} e ${resolvedApprox} palavras.
   - Nunca ultrapasse ${resolvedApprox} palavras.
   - Você pode ajustar livremente a quantidade de subtítulos, o tamanho dos parágrafos e o nível de detalhe para caber no limite.`
-        : `
+    : `
 - Tamanho do texto (REC):
   - Não há limite fixo.
   - Escreva um texto completo e equilibrado.`;
 
-    const fullWordRule = hasLimit
-        ? `
+  const fullWordRule = hasLimit
+    ? `
 - Tamanho do texto (FULLREVIEW):
   - Produza ENTRE ${Math.max(
-            Math.round(resolvedApprox * 0.8),
-            resolvedApprox - 200
-        )} e ${resolvedApprox} palavras.
+      Math.round(resolvedApprox * 0.8),
+      resolvedApprox - 200
+    )} e ${resolvedApprox} palavras.
   - Nunca ultrapasse ${resolvedApprox} palavras.
   - Você pode ajustar livremente a quantidade de seções, o tamanho dos parágrafos e o nível de detalhe do passo a passo para caber no limite.`
-        : `
+    : `
 - Tamanho do texto (FULLREVIEW):
   - Não há limite fixo.
   - Escreva um texto completo, explicando o processo de forma clara e objetiva.`;
 
-    const baseRules = `
+  const baseRules = `
 Regras gerais (valem para REC e FULLREVIEW):
 
 - Idioma:
@@ -187,7 +185,7 @@ ${wordLimitGeneral}
 - Listas e tabelas:
   - Em TODO texto (REC ou FULLREVIEW), o body_html deve conter:
     - Exatamente 1 lista (ul ou ol).
-    - Exatamente 1 tabela (<table>) de comparação.
+    - Exatamente 1 tabela de comparação.
   - A lista e a tabela devem aparecer em seções diferentes do body_html.
   - Não crie mais de uma lista.
   - Não crie mais de uma tabela.
@@ -203,7 +201,7 @@ ${wordLimitGeneral}
   - Nunca deixe section_cta_label vazio ou ausente.
   - Deve ser um CTA curto, em MAIÚSCULAS, com até 6 palavras, diretamente ligado ao tema e no mesmo idioma do campo "language".`.trim();
 
-    const recRules = `
+  const recRules = `
 REC:
 
 - Objetivo:
@@ -221,14 +219,14 @@ REC:
     - 1 parágrafo com contexto e motivação.
 
 ${hasLimit
-            ? `- Corpo (quando existe limite de palavras):
+      ? `- Corpo (quando existe limite de palavras):
   - Use subtítulos com <h2> e parágrafos de forma FLEXÍVEL.
   - A quantidade de subtítulos (h2) e o número de parágrafos por subtítulo NÃO são fixos.
   - Você pode ajustar qualquer coisa na estrutura (número de H2, quantidade de parágrafos, tamanho das respostas de FAQ, conclusão mais curta, etc.) para caber dentro do limite de palavras.`
-            : `- Corpo (sem limite de palavras definido):
+      : `- Corpo (sem limite de palavras definido):
   - Use vários subtítulos com <h2> para organizar o conteúdo.
   - Em geral, use 2 parágrafos por subtítulo, mas você pode ajustar se fizer sentido.`
-        }
+    }
 
 - Dentro do body_html (REC):
   - Use exatamente 1 lista (ul ou ol) em uma das seções.
@@ -250,9 +248,9 @@ ${recWordRule}
 - Conclusão (REC):
   - conclusion_title deve seguir a regra dos títulos fixos por idioma descrita nas regras gerais.
 ${hasLimit
-            ? `  - Use 1 ou 2 parágrafos curtos, ajustando o tamanho para respeitar o limite de palavras.`
-            : `  - Use alguns parágrafos curtos para fechar o assunto de forma clara.`
-        }
+      ? `  - Use 1 ou 2 parágrafos curtos, ajustando o tamanho para respeitar o limite de palavras.`
+      : `  - Use alguns parágrafos curtos para fechar o assunto de forma clara.`
+    }
 
 - Bloco CONTENT (3º título) em REC:
   - content_block_tag: tag curta ligada ao tema.
@@ -262,7 +260,7 @@ ${hasLimit
   - content_block_warning: aviso curto consistente com o tema.
 `.trim();
 
-    const fullRules = `
+  const fullRules = `
 FULLREVIEW:
 
 - Objetivo:
@@ -275,14 +273,14 @@ FULLREVIEW:
   - intro_html: 1 parágrafo apresentando o que a pessoa vai aprender e por que isso é útil.
 
 ${hasLimit
-            ? `- Corpo (quando existe limite de palavras):
+      ? `- Corpo (quando existe limite de palavras):
   - Use seções com <h2>/<h3> e parágrafos de forma FLEXÍVEL.
   - A quantidade de seções e o número de parágrafos por seção NÃO são fixos.
   - Você pode ajustar qualquer coisa na estrutura para caber no limite de palavras (inclusive encurtar ou resumir partes do passo a passo).`
-            : `- Corpo (sem limite de palavras definido):
+      : `- Corpo (sem limite de palavras definido):
   - Use várias seções com <h2>/<h3> para organizar o conteúdo.
   - Em geral, use 2 parágrafos por seção, mas você pode ajustar se fizer sentido.`
-        }
+    }
 
 - Dentro do body_html (FULLREVIEW):
   - Use exatamente 1 lista (ul ou ol).
@@ -303,18 +301,18 @@ ${fullWordRule}
 - Conclusão (FULLREVIEW):
   - conclusion_title deve seguir a regra dos títulos fixos por idioma descrita nas regras gerais.
 ${hasLimit
-            ? `  - Use 1 ou 2 parágrafos curtos, respeitando o limite total de palavras.`
-            : `  - Use alguns parágrafos curtos para fechar o assunto de forma clara.`
-        }
+      ? `  - Use 1 ou 2 parágrafos curtos, respeitando o limite total de palavras.`
+      : `  - Use alguns parágrafos curtos para fechar o assunto de forma clara.`
+    }
 
 - Bloco CONTENT (3º título) em FULLREVIEW:
   - Siga as mesmas regras do REC.
   - Todos os textos do bloco devem estar no mesmo idioma indicado em "language" e ligados diretamente ao tema.
 `.trim();
 
-    const typeSpecific = articleType === "REC" ? recRules : fullRules;
+  const typeSpecific = articleType === "REC" ? recRules : fullRules;
 
-    return `
+  return `
 Você é uma IA que escreve textos editoriais de alta qualidade para blogs de finanças, games, benefícios e temas relacionados.
 
 O sistema cliente apenas envia:
@@ -335,6 +333,8 @@ Regras sobre limite de palavras:
   - Esse valor é o limite máximo absoluto.
   - Qualquer instrução de quantidade exata de parágrafos ou títulos é apenas uma referência, NÃO uma obrigação.
   - Se precisar escolher entre manter uma estrutura fixa ou respeitar o limite, SEMPRE respeite o limite de palavras.
+  - Se o texto ficar abaixo do limite de palavras, acrescente mais conteúdo relevante e adicione subtítulos (h2), se necessário.
+
 - Quando não houver quantidade de palavras definida:
   - Use uma estrutura natural para o tipo de texto (REC ou FULLREVIEW), sem exagero no tamanho.
 
@@ -353,3 +353,4 @@ Regras específicas do tipo "${articleType}":
 ${typeSpecific}
 `.trim();
 }
+
