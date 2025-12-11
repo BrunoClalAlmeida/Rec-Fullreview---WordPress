@@ -158,6 +158,13 @@ textarea {
         transform 0.08s ease;
 }
 
+/* ESTILO PARA CAMPOS READONLY (URL travada) */
+input[readonly] {
+    background: #e5e7eb;
+    cursor: not-allowed;
+}
+
+/* placeholders */
 input::placeholder,
 textarea::placeholder {
     color: #9ca3af;

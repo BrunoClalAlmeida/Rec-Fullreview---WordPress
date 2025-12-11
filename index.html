@@ -145,7 +145,10 @@
                 <!-- 1ª linha de campos: URL / Categoria / Status (3 colunas alinhadas) -->
                 <div class="col-4">
                     <label for="wpBaseUrl">URL base do WordPress</label>
-                    <input type="text" id="wpBaseUrl" placeholder="https://seusite.com" />
+                    <input type="text" id="wpBaseUrl" placeholder="https://seusite.com" readonly />
+                    <p class="hint">
+                        Este campo é preenchido automaticamente ao selecionar um site.
+                    </p>
                 </div>
 
                 <!-- CATEGORIA POR NOME (select) -->
@@ -170,15 +173,7 @@
                 <!-- ID escondido, usado só na API -->
                 <input type="hidden" id="wpCategoryId" value="0" />
 
-                <!-- 2ª linha: Título do post + campos sensíveis (dev-only) -->
-                <div class="col-4">
-                    <label for="useSeoTitle">Título do post</label>
-                    <select id="useSeoTitle">
-                        <option value="h1">Usar H1 gerado</option>
-                    </select>
-                </div>
-
-                <!-- OCULTAR CAMPOS SENSÍVEIS COM dev-only -->
+                <!-- Campos sensíveis (dev-only) -->
                 <div class="col-4 dev-only">
                     <label for="wpUser">Usuário WordPress</label>
                     <input type="text" id="wpUser" placeholder="admin" />

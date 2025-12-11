@@ -116,12 +116,17 @@ const WP_SITES_PRESETS = [
 
         if (!baseUrlInput || !userInput || !passInput) return;
 
+        // por padrão: travado e sem interação
+        baseUrlInput.readOnly = true;
+        baseUrlInput.style.pointerEvents = "none";
+
         // Limpa opções atuais e adiciona padrão
         select.innerHTML = "";
         const optDefault = document.createElement("option");
         optDefault.value = "";
         optDefault.textContent = "Selecione um site pré-configurado";
         select.appendChild(optDefault);
+
 
         // Adiciona opções da lista
         if (Array.isArray(WP_SITES_PRESETS)) {
@@ -138,15 +143,30 @@ const WP_SITES_PRESETS = [
         select.addEventListener("change", () => {
             const value = select.value;
 
-            if (!value || value === "__manual") {
-                // Modo manual, não altera nada
+            // Modo manual: destrava o campo para digitação
+            if (value === "__manual") {
+                baseUrlInput.readOnly = false;
+                baseUrlInput.style.pointerEvents = "auto";
+                baseUrlInput.focus();
                 return;
             }
 
+            // Nenhum site selecionado: trava e limpa
+            if (!value) {
+                baseUrlInput.readOnly = true;
+                baseUrlInput.style.pointerEvents = "none";
+                baseUrlInput.value = "";
+                return;
+            }
+
+            // Site pré-configurado: preenche e trava
             const site = (WP_SITES_PRESETS || []).find((s) => s.id === value);
             if (!site) return;
 
-            if (site.baseUrl) baseUrlInput.value = site.baseUrl;
+            baseUrlInput.value = site.baseUrl || "";
+            baseUrlInput.readOnly = true;
+            baseUrlInput.style.pointerEvents = "none";
+
             if (site.user) userInput.value = site.user;
             if (site.appPassword) passInput.value = site.appPassword;
 
