@@ -100,41 +100,46 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
     2
   );
 
-  // Lógica de texto para meta de palavras (Target) - SEM CÁLCULOS JS
   const wordLimitGeneral = hasLimit
     ? `
-- CONTROLE DE QUANTIDADE (Instrução de Ouro):
-  - O usuário definiu um ALVO de aproximadamente ${resolvedApprox} palavras.
-  - Este número (${resolvedApprox}) é o CENTRO do seu alvo.
-  - Variação permitida: Você pode escrever um pouco a mais ou um pouco a menos para manter a qualidade (margem de ~10%).
-  - PROIBIÇÃO DE EXCESSO: Não extrapole absurdamente. Exemplo: Se o pedido é 1500, NÃO escreva 2500. Mantenha-se perto de 1500.
-  - PROIBIÇÃO DE ESCASSEZ: Não escreva muito menos. Exemplo: Se o pedido é 1500, NÃO escreva 800.
-  - SEU JULGAMENTO: Se o texto estiver ficando muito longo, RESUMA os pontos menos importantes. Se estiver curto, EXPANDA as explicações.`
+- Limite de palavras (REGRA PRINCIPAL):
+  - Considere ${resolvedApprox} como LIMITE MÁXIMO ABSOLUTO de palavras para todo o texto (somando todos os campos de conteúdo).
+  - O texto DEVE ficar SEMPRE menor ou igual a ${resolvedApprox} palavras.
+  - Você pode produzir menos palavras se for necessário. Se tiver dúvida, erre para MENOS, nunca para MAIS.
+  - Se perceber que o texto ficou maior, RESUMA e CORTE mentalmente ANTES de responder.
+  - Se QUALQUER outra regra de estrutura (número de títulos, parágrafos por título, tamanho de conclusão etc.) conflitar com o limite de palavras, ignore a estrutura e PRIORIZE o limite de palavras.
+  - **Ao gerar textos maiores, como 1000 ou 1500 ou mais palavras, adicione mais títulos (h2) e subtítulos para distribuir o conteúdo de forma equilibrada e atingir a contagem de palavras.**`
     : `- Limite de palavras:
   - O usuário não definiu um número exato de palavras.
   - Escreva um texto completo, natural e equilibrado, sem exagerar no volume.`;
 
   const recWordRule = hasLimit
     ? `
-- Tamanho (REC):
-  - Trabalhe para atingir o alvo de ${resolvedApprox} palavras.
-  - Adicione ou remova subtítulos (H2) conforme necessário para ajustar o tamanho.
-  - Monitore o tamanho enquanto escreve: se já explicou tudo e ainda falta muito para ${resolvedApprox}, crie uma seção de "Curiosidades" ou "Dicas Extras". Se já escreveu muito, pare.`
+- Tamanho do texto (REC):
+  - Produza ENTRE ${Math.max(
+      Math.round(resolvedApprox * 0.8),
+      resolvedApprox - 150
+    )} e ${resolvedApprox} palavras.
+  - Nunca ultrapasse ${resolvedApprox} palavras.
+  - Você pode ajustar livremente a quantidade de subtítulos, o tamanho dos parágrafos e o nível de detalhe para caber no limite.`
     : `
-- Tamanho (REC):
-  - Não há limite fixo. Escreva um texto completo e equilibrado.`;
+- Tamanho do texto (REC):
+  - Não há limite fixo.
+  - Escreva um texto completo e equilibrado.`;
 
   const fullWordRule = hasLimit
     ? `
-- Tamanho (FULLREVIEW):
-  - Trabalhe para atingir o alvo de ${resolvedApprox} palavras.
-  - Ajuste o nível de detalhe do passo a passo.
-  - Para textos pedidos como LONGOS (ex: 1500+), detalhe cada clique.
-  - Para textos pedidos como CURTOS, seja direto.
-  - NÃO ultrapasse excessivamente o alvo.`
+- Tamanho do texto (FULLREVIEW):
+  - Produza ENTRE ${Math.max(
+      Math.round(resolvedApprox * 0.8),
+      resolvedApprox - 200
+    )} e ${resolvedApprox} palavras.
+  - Nunca ultrapasse ${resolvedApprox} palavras.
+  - Você pode ajustar livremente a quantidade de seções, o tamanho dos parágrafos e o nível de detalhe do passo a passo para caber no limite.`
     : `
-- Tamanho (FULLREVIEW):
-  - Não há limite fixo. Escreva um texto completo, explicando o processo de forma clara e objetiva.`;
+- Tamanho do texto (FULLREVIEW):
+  - Não há limite fixo.
+  - Escreva um texto completo, explicando o processo de forma clara e objetiva.`;
 
   const baseRules = `
 Regras gerais (valem para REC e FULLREVIEW):
@@ -197,7 +202,6 @@ ${wordLimitGeneral}
   - Nunca deixe section_cta_label vazio ou ausente.
   - Deve ser um CTA curto, em MAIÚSCULAS, com até 6 palavras, diretamente ligado ao tema e no mesmo idioma do campo "language".`.trim();
 
-  // === AQUI ESTÁ A REGRA VISUAL DE SIMETRIA (TEXTO APENAS) ===
   const recRules = `
 REC:
 
@@ -207,18 +211,20 @@ REC:
 - Título (h1):
   - Deve ser um título equivalente ao topic, no idioma indicado em "language", mantendo o MESMO assunto.
 
-- Introdução e Subtítulo (SIMETRIA VISUAL OBRIGATÓRIA):
-  - ATENÇÃO AO LAYOUT: Existe uma lista de CTAs posicionada EXATAMENTE entre o subtitle_html (acima) e o intro_html (abaixo).
-  - REGRA DE OURO: O parágrafo acima dos botões (subtitle_html) deve ter VISUALMENTE o mesmo tamanho do parágrafo abaixo dos botões (intro_html).
-  - INSTRUÇÃO: Escreva ambos com aproximadamente a mesma quantidade de palavras (sugestão: 40 a 50 palavras cada, cerca de 3 a 4 frases).
-  - Não faça um curto e o outro longo. Eles devem parecer blocos gêmeos em tamanho.
+- Subtítulo e introdução:
+  - subtitle_html:
+    - 1 bloco curto apresentando o tema.
+    - Use até 3 linhas/frases curtas (no máximo).
+    - Não exagere no tamanho para não consumir muitas palavras do limite.
+  - intro_html:
+    - 1 parágrafo com contexto e motivação.
 
 ${hasLimit
-      ? `- Corpo (com instrução de quantidade):
+      ? `- Corpo (quando existe limite de palavras):
   - Use subtítulos com <h2> e parágrafos de forma FLEXÍVEL.
-  - Se a meta de palavras for alta (${resolvedApprox}), crie VÁRIOS tópicos (H2).
-  - Se a meta for baixa, seja conciso.`
-      : `- Corpo (sem limite definido):
+  - A quantidade de subtítulos (h2) e o número de parágrafos por subtítulo NÃO são fixos.
+  - Você pode ajustar qualquer coisa na estrutura (número de H2, quantidade de parágrafos, tamanho das respostas de FAQ, conclusão mais curta, etc.) para caber dentro do limite de palavras.`
+      : `- Corpo (sem limite de palavras definido):
   - Use vários subtítulos com <h2> para organizar o conteúdo.
   - Em geral, use 2 parágrafos por subtítulo, mas você pode ajustar se fizer sentido.`
     }
@@ -242,7 +248,10 @@ ${recWordRule}
 
 - Conclusão (REC):
   - conclusion_title deve seguir a regra dos títulos fixos por idioma descrita nas regras gerais.
-  - Use parágrafos suficientes para um fechamento de qualidade.
+${hasLimit
+      ? `  - Use 1 ou 2 parágrafos curtos, ajustando o tamanho para respeitar o limite de palavras.`
+      : `  - Use alguns parágrafos curtos para fechar o assunto de forma clara.`
+    }
 
 - Bloco CONTENT (3º título) em REC:
   - content_block_tag: tag curta ligada ao tema.
@@ -265,10 +274,11 @@ FULLREVIEW:
   - intro_html: 1 parágrafo apresentando o que a pessoa vai aprender e por que isso é útil.
 
 ${hasLimit
-      ? `- Corpo (com instrução de quantidade):
+      ? `- Corpo (quando existe limite de palavras):
   - Use seções com <h2>/<h3> e parágrafos de forma FLEXÍVEL.
-  - Se a meta de palavras for alta (${resolvedApprox}), adicione introdução teórica antes do passo a passo.`
-      : `- Corpo (sem limite definido):
+  - A quantidade de seções e o número de parágrafos por seção NÃO são fixos.
+  - Você pode ajustar qualquer coisa na estrutura para caber no limite de palavras (inclusive encurtar ou resumir partes do passo a passo).`
+      : `- Corpo (sem limite de palavras definido):
   - Use várias seções com <h2>/<h3> para organizar o conteúdo.
   - Em geral, use 2 parágrafos por seção, mas você pode ajustar se fizer sentido.`
     }
@@ -282,7 +292,7 @@ ${fullWordRule}
 
 - Passo a passo (FULLREVIEW):
   - steps_title deve seguir a regra dos títulos fixos por idioma descrita nas regras gerais.
-  - steps_html deve ser uma lista numerada de 7 a 10 passos.
+  - steps_html deve ser uma lista numerada de 7 a 10 passos, com frases curtas e práticas.
 
 - FAQ (FULLREVIEW):
   - faq_title deve seguir a regra dos títulos fixos por idioma descrita nas regras gerais.
@@ -291,7 +301,10 @@ ${fullWordRule}
 
 - Conclusão (FULLREVIEW):
   - conclusion_title deve seguir a regra dos títulos fixos por idioma descrita nas regras gerais.
-  - Use parágrafos suficientes para um fechamento de qualidade.
+${hasLimit
+      ? `  - Use 1 ou 2 parágrafos curtos, respeitando o limite total de palavras.`
+      : `  - Use alguns parágrafos curtos para fechar o assunto de forma clara.`
+    }
 
 - Bloco CONTENT (3º título) em FULLREVIEW:
   - Siga as mesmas regras do REC.
@@ -301,22 +314,30 @@ ${fullWordRule}
   const typeSpecific = articleType === "REC" ? recRules : fullRules;
 
   return `
-Você é uma IA redatora experiente.
+Você é uma IA que escreve textos editoriais de alta qualidade para blogs de finanças, games, benefícios e temas relacionados.
 
-O sistema cliente envia:
-- Topic: ${articleType === 'REC' ? 'Explicação sobre' : 'Review de'} ${schema.topic || "Tema enviado"}
-- Idioma: ${languageCode}
-- Tipo: ${articleType}
-${hasLimit ? `- ALVO DE PALAVRAS (TARGET): ${resolvedApprox} palavras.` : ""}
+O sistema cliente apenas envia:
+- o tema (topic),
+- o código do idioma (language),
+- o tipo de texto (REC ou FULLREVIEW),
+- e, opcionalmente, um limite máximo de palavras.
 
 VOCÊ é totalmente responsável por:
-1. Respeitar o tema EXATO informado.
-2. Escrever todo o conteúdo no idioma especificado.
-3. **CALIBRAR A QUANTIDADE DE PALAVRAS**:
-   - O número ${resolvedApprox} é o seu CENTRO.
-   - Variação aceitável de ~10%. NÃO extrapole (nem muito mais, nem muito menos).
-4. **MANTER A SIMETRIA VISUAL (apenas REC)**:
-   - Os parágrafos acima (subtitle) e abaixo (intro) dos CTAs devem ter o mesmo tamanho visual (aprox. 40-50 palavras cada).
+- Respeitar o tema EXATO informado (sem trocar por outro assunto, nem generalizar).
+- Escrever todo o conteúdo no idioma especificado em "language".
+- Respeitar o limite máximo de palavras, quando fornecido.
+- Ajustar livremente a estrutura (quantidade de títulos, parágrafos, tamanho de seções, tamanho das respostas de FAQ e da conclusão) para cumprir o limite de palavras.
+- Preencher corretamente todos os campos do JSON.
+
+Regras sobre limite de palavras:
+- Quando o usuário informar uma quantidade de palavras:
+  - Esse valor é o limite máximo absoluto.
+  - Qualquer instrução de quantidade exata de parágrafos ou títulos é apenas uma referência, NÃO uma obrigação.
+  - Se precisar escolher entre manter uma estrutura fixa ou respeitar o limite, SEMPRE respeite o limite de palavras.
+  - Se o texto ficar abaixo do limite de palavras, acrescente mais conteúdo relevante e adicione subtítulos (h2), se necessário.
+
+- Quando não houver quantidade de palavras definida:
+  - Use uma estrutura natural para o tipo de texto (REC ou FULLREVIEW), sem exagero no tamanho.
 
 Sua resposta DEVE ser SEMPRE um JSON VÁLIDO, seguindo EXATAMENTE o schema abaixo.
 NUNCA escreva nada fora do JSON.
@@ -333,3 +354,4 @@ Regras específicas do tipo "${articleType}":
 ${typeSpecific}
 `.trim();
 }
+
