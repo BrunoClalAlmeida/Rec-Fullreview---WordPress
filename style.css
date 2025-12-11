@@ -158,52 +158,50 @@ textarea {
         transform 0.08s ease;
 }
 
-/* ESTILO PARA CAMPOS READONLY (URL travada) */
-input[readonly] {
-    background: #e5e7eb;
-    cursor: not-allowed;
-}
-
-/* placeholders */
 input::placeholder,
 textarea::placeholder {
     color: #9ca3af;
 }
 
 input:focus,
-textarea:focus,
-select:focus {
+textarea:focus {
     border-color: #4f46e5;
     box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.32);
     background: #ffffff;
     transform: translateY(-1px);
 }
 
-textarea {
-    min-height: 80px;
-    resize: vertical;
-}
-
-.hint {
-    font-size: 0.74rem;
-    color: #94a3b8;
-    margin-top: 3px;
-}
-
-/* ===== Select estilizado ===== */
+/* ===== Select estilizado (mais bonito e arredondado) ===== */
 select {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
 
+    /* pill */
+    border-radius: 999px;
+    padding: 10px 44px 10px 14px;
+    border: 1px solid #c7d2fe;
     background-color: #f9fafb;
+
     background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%234f46e5' d='M5.5 7.5l4.5 4.5 4.5-4.5-1.4-1.4L10 9.2 6.9 6.1z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 14px center;
+    background-position: right 16px center;
     background-size: 14px 14px;
 
-    padding-right: 40px;
     cursor: pointer;
+}
+
+select:hover {
+    background-color: #ffffff;
+    border-color: #a5b4fc;
+    box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.35);
+}
+
+select:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.45);
+    background-color: #ffffff;
+    transform: translateY(-1px);
 }
 
 select option {
@@ -216,6 +214,18 @@ select option {
 select option:checked {
     background: #e5edff;
     color: #0f172a;
+}
+
+/* ===== Textarea ===== */
+textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.hint {
+    font-size: 0.74rem;
+    color: #94a3b8;
+    margin-top: 3px;
 }
 
 /* ===== Botões ===== */
