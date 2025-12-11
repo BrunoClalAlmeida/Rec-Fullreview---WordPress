@@ -1,3 +1,4 @@
+//article-utils.js esse codigo pertence
 // ===== Utilitários =====
 function stripHtml(html) {
     const div = document.createElement("div");

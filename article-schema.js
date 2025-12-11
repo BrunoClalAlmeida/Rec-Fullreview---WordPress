@@ -1,3 +1,4 @@
+//article-schema.js esse codigo pertence
 // ===== Schema por tipo (REC ou FULLREVIEW) =====
 // Aqui é só estrutura de campos. Quem define conteúdo, idioma, títulos etc. é o GPT.
 function getArticleSchema(articleType, languageCode, approxWordCount) {
@@ -107,7 +108,7 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
   - Você pode produzir menos palavras se for necessário. Se tiver dúvida, erre para MENOS, nunca para MAIS.
   - Se perceber que o texto ficou maior, RESUMA e CORTE mentalmente ANTES de responder.
   - Se QUALQUER outra regra de estrutura (número de títulos, parágrafos por título, tamanho de conclusão etc.) conflitar com o limite de palavras, ignore a estrutura e PRIORIZE o limite de palavras.
-  - **Ao gerar textos maiores, como 1000 ou 1500 palavras, adicione mais títulos (h2) e subtítulos para distribuir o conteúdo de forma equilibrada e atingir a contagem de palavras.**`
+  - **Ao gerar textos maiores, como 1000 ou 1500 ou mais palavras, adicione mais títulos (h2) e subtítulos para distribuir o conteúdo de forma equilibrada e atingir a contagem de palavras.**`
     : `- Limite de palavras:
   - O usuário não definiu um número exato de palavras.
   - Escreva um texto completo, natural e equilibrado, sem exagerar no volume.`;

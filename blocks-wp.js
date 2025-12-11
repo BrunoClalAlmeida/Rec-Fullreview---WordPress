@@ -1,3 +1,4 @@
+//blocks-wp.js esse codigo pertence
 // ===== HTML -> blocos Gutenberg =====
 function convertHtmlToBlocks(html) {
     if (!html) return "";

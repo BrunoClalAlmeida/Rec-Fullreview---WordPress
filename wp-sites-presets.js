@@ -1,4 +1,4 @@
-// wp-sites-presets.js
+// wp-sites-presets.js esse codigo pertence
 // Lista de sites pré-configurados para publicação no WordPress
 
 const WP_SITES_PRESETS = [
