@@ -131,8 +131,8 @@
             </p>
 
             <div class="row">
-                <!-- NOVO: Select de sites pré-configurados -->
-                <div class="col-6">
+                <!-- Selecionar site: linha inteira -->
+                <div class="col-12">
                     <label for="wpSitePreset">Selecionar site WordPress</label>
                     <select id="wpSitePreset">
                         <option value="">Carregando sites...</option>
@@ -142,26 +142,14 @@
                     </p>
                 </div>
 
-                <div class="col-6"></div>
-
-                <div class="col-6">
+                <!-- 1ª linha de campos: URL / Categoria / Status (3 colunas alinhadas) -->
+                <div class="col-4">
                     <label for="wpBaseUrl">URL base do WordPress</label>
                     <input type="text" id="wpBaseUrl" placeholder="https://seusite.com" />
                 </div>
 
-                <!-- OCULTAR CAMPOS SENSÍVEIS COM dev-only -->
-                <div class="col-3 dev-only">
-                    <label for="wpUser">Usuário WordPress</label>
-                    <input type="text" id="wpUser" placeholder="admin" />
-                </div>
-
-                <div class="col-3 dev-only">
-                    <label for="wpAppPassword">Application Password (WP)</label>
-                    <input type="password" id="wpAppPassword" placeholder="xxxx xxxx xxxx xxxx" />
-                </div>
-
                 <!-- CATEGORIA POR NOME (select) -->
-                <div class="col-3">
+                <div class="col-4">
                     <label for="wpCategorySelect">Categoria</label>
                     <select id="wpCategorySelect">
                         <option value="">Informe a URL do WordPress</option>
@@ -171,10 +159,7 @@
                     </p>
                 </div>
 
-                <!-- ID escondido, usado só na API -->
-                <input type="hidden" id="wpCategoryId" value="0" />
-
-                <div class="col-3">
+                <div class="col-4">
                     <label for="wpStatus">Status da publicação</label>
                     <select id="wpStatus">
                         <option value="draft">Rascunho</option>
@@ -182,11 +167,26 @@
                     </select>
                 </div>
 
-                <div class="col-3">
+                <!-- ID escondido, usado só na API -->
+                <input type="hidden" id="wpCategoryId" value="0" />
+
+                <!-- 2ª linha: Título do post + campos sensíveis (dev-only) -->
+                <div class="col-4">
                     <label for="useSeoTitle">Título do post</label>
                     <select id="useSeoTitle">
                         <option value="h1">Usar H1 gerado</option>
                     </select>
+                </div>
+
+                <!-- OCULTAR CAMPOS SENSÍVEIS COM dev-only -->
+                <div class="col-4 dev-only">
+                    <label for="wpUser">Usuário WordPress</label>
+                    <input type="text" id="wpUser" placeholder="admin" />
+                </div>
+
+                <div class="col-4 dev-only">
+                    <label for="wpAppPassword">Application Password (WP)</label>
+                    <input type="password" id="wpAppPassword" placeholder="xxxx xxxx xxxx xxxx" />
                 </div>
             </div>
 
