@@ -6,8 +6,8 @@ const WP_SITES_PRESETS = [
         id: "ouniversodoscartoes",
         label: "O Universo dos Cartões",
         baseUrl: "https://ouniversodoscartoes.com",
-        user: "",
-        appPassword: "",
+        user: "admin",
+        appPassword: "MsBl 9FTg 1yqA sbzF 72c6 BV1K",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
