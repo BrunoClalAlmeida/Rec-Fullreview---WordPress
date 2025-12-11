@@ -78,8 +78,8 @@ const WP_SITES_PRESETS = [
         id: "thecredittips",
         label: "The Credit Tips",
         baseUrl: "https://thecredittips.com",
-        user: "",
-        appPassword: "",
+        user: "adminwp2",
+        appPassword: "5hQ9 QyDd RNok CRGt 5p7a kxrX",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     }
