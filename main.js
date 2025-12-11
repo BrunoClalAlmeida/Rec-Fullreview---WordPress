@@ -1,4 +1,4 @@
-// main.js pertence esse codigo //
+// main.js esse codigo pertence
 // ===== OpenAI agora via BACKEND (/api/generate-article) =====
 // A chave real fica SOMENTE na variável de ambiente OPENAI_API_KEY no servidor (Vercel).
 // Este arquivo NÃO terá nenhuma chave sensível.
