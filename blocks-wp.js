@@ -13,25 +13,25 @@ function convertHtmlToBlocks(html) {
             if (tag === "h2" || tag === "h3") {
                 const level = tag === "h2" ? 2 : 3;
                 blocks.push(
-                    `${node.outerHTML}`
+                    `<!-- wp:heading {"level":${level}} -->${node.outerHTML}<!-- /wp:heading -->`
                 );
                 return;
             }
 
             if (tag === "p") {
                 blocks.push(
-                    `${node.outerHTML}`
+                    `<!-- wp:paragraph -->${node.outerHTML}<!-- /wp:paragraph -->`
                 );
                 return;
             }
 
             if (tag === "ul" || tag === "ol") {
-                blocks.push(`${node.outerHTML}`);
+                blocks.push(`<!-- wp:list -->${node.outerHTML}<!-- /wp:list -->`);
                 return;
             }
 
             if (tag === "table") {
-                blocks.push(`${node.outerHTML}`);
+                blocks.push(`<!-- wp:table -->${node.outerHTML}<!-- /wp:table -->`);
                 return;
             }
 
@@ -47,7 +47,7 @@ function convertHtmlToBlocks(html) {
             const text = node.textContent.trim();
             if (!text) return;
             blocks.push(
-                `<p>${text}</p>`
+                `<!-- wp:paragraph --><p>${text}</p><!-- /wp:paragraph -->`
             );
         }
     }
@@ -84,7 +84,9 @@ function buildCtaAcfBlock(ctasArray) {
         field_6634ec18cf579: rows,
     };
 
-    return ``;
+    return `<!-- wp:acf/block-cta-list {"name":"acf/block-cta-list","data":${JSON.stringify(
+        data
+    )},"mode":"edit"} /-->`;
 }
 
 // ===== CTA do 7º título (ou último / fim do body) =====
@@ -109,7 +111,9 @@ function buildMiddleSectionCtaBlock(label) {
         field_6633f9ad87030: "0",
     };
 
-    return ``;
+    return `<!-- wp:acf/block-cta {"name":"acf/block-cta","data":${JSON.stringify(
+        data
+    )},"mode":"edit"} /-->`;
 }
 
 function injectSeventhHeadingCta(blocks, article) {
@@ -118,8 +122,19 @@ function injectSeventhHeadingCta(blocks, article) {
 
     const ctaBlock = "\n" + buildMiddleSectionCtaBlock(label) + "\n";
 
-    const markerH2 = "";
-    const paraEndMarker = "";
+    const markerH2 = '<!-- wp:heading {"level":2}';
+    const h2Positions = [];
+    let from = 0;
+
+    while (true) {
+        const pos = blocks.indexOf(markerH2, from);
+        if (pos === -1) break;
+        h2Positions.push(pos);
+        from = pos + markerH2.length;
+    }
+
+    const paraStartMarker = "<!-- wp:paragraph -->";
+    const paraEndMarker = "<!-- /wp:paragraph -->";
 
     // Se tiver H2: usa o último (ou o 7º, se tiver 7+)
     if (h2Positions.length > 0) {
@@ -213,7 +228,7 @@ function buildContentAcfBlock(article) {
     const hasMain = tag || title || summary || ctaLabel || warning;
     if (!hasMain) return "";
 
-    // fallback de aviso
+    // fallback de aviso, se vier vazio (isso é só pra não quebrar UX; GPT continua responsável pelo principal)
     if (!warning || !warning.trim()) {
         if (topic && topic.toLowerCase().includes("robux")) {
             warning = "Informações sujeitas às regras da plataforma.";
@@ -256,15 +271,35 @@ function buildContentAcfBlock(article) {
         _personalizar: "field_6634e948cf410",
     };
 
-    return ``;
+    return `<!-- wp:acf/block-content {"name":"acf/block-content","data":${JSON.stringify(
+        data
+    )},"mode":"edit"} /-->`;
 }
 
 function injectThirdHeadingContentBlock(blocks, article) {
     const contentBlock = buildContentAcfBlock(article);
     if (!contentBlock) return blocks;
 
-    const markerH2 = "";
-    const paraEndMarker = "";
+    const markerH2 = '<!-- wp:heading {"level":2}';
+    let from = 0;
+    let count = 0;
+    let thirdIndex = -1;
+
+    while (true) {
+        const pos = blocks.indexOf(markerH2, from);
+        if (pos === -1) break;
+        count++;
+        if (count === 3) {
+            thirdIndex = pos;
+            break;
+        }
+        from = pos + markerH2.length;
+    }
+
+    if (thirdIndex === -1) return blocks;
+
+    const paraStartMarker = "<!-- wp:paragraph -->";
+    const paraEndMarker = "<!-- /wp:paragraph -->";
 
     const firstParaStart = blocks.indexOf(paraStartMarker, thirdIndex);
     if (firstParaStart === -1) return blocks;
@@ -426,13 +461,6 @@ function buildPreviewHtmlFromArticle(article) {
     if (!article) return "";
     const type = article.type;
     const parts = [];
-
-    // Título Visual no Preview
-    const titlePreview = article.h1 || article.topic || "";
-    if (titlePreview) {
-        parts.push(`<h1 style="margin-bottom: 10px;">${titlePreview}</h1>`);
-        parts.push(`<hr style="margin-bottom: 20px; border: 0; border-top: 1px solid #ccc;">`);
-    }
 
     const faqTitle =
         (article.faq_title && article.faq_title.trim()) || "";
