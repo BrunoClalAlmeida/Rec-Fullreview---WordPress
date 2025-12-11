@@ -124,7 +124,7 @@ const WP_SITES_PRESETS = [
         select.innerHTML = "";
         const optDefault = document.createElement("option");
         optDefault.value = "";
-        optDefault.textContent = "Selecione um site pré-configurado";
+        optDefault.textContent = "Selecione um Site Pré-Configurado";
         select.appendChild(optDefault);
 
 
