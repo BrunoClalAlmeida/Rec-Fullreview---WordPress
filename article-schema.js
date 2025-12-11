@@ -103,13 +103,13 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
   // Lógica de texto para meta de palavras (Target) - SEM CÁLCULOS JS
   const wordLimitGeneral = hasLimit
     ? `
-- CONTROLE DE QUANTIDADE (Instrução de Ouro):
-  - O usuário definiu um ALVO de aproximadamente ${resolvedApprox} palavras.
-  - Este número (${resolvedApprox}) é o CENTRO do seu alvo.
-  - Variação permitida: Você pode escrever um pouco a mais ou um pouco a menos para manter a qualidade (margem de ~10%).
-  - PROIBIÇÃO DE EXCESSO: Não extrapole absurdamente. Exemplo: Se o pedido é 1500, NÃO escreva 2500. Mantenha-se perto de 1500.
-  - PROIBIÇÃO DE ESCASSEZ: Não escreva muito menos. Exemplo: Se o pedido é 1500, NÃO escreva 800.
-  - SEU JULGAMENTO: Se o texto estiver ficando muito longo, RESUMA os pontos menos importantes. Se estiver curto, EXPANDA as explicações.`
+- CONTROLE DE QUANTIDADE RIGOROSO:
+  - O usuário definiu um ALVO de: ${resolvedApprox} palavras.
+  - LIMITE MÁXIMO ACEITÁVEL: ${resolvedApprox} + 80 palavras. (Exemplo: Se pediu 1000, o máximo absoluto é 1080).
+  - LIMITE MÍNIMO ACEITÁVEL: ${resolvedApprox} - 100 palavras.
+  - ORDEM: Você DEVE parar de escrever novos tópicos se perceber que vai estourar o limite máximo.
+  - EXPANSÃO CONTROLADA: Apenas adicione "Dicas Extras" ou "Curiosidades" se o texto estiver MUITO CURTO (abaixo do mínimo). Se já estiver no alvo, encerre.
+  - NÃO ultrapasse o dobro do pedido. Isso é proibido.`
     : `- Limite de palavras:
   - O usuário não definiu um número exato de palavras.
   - Escreva um texto completo, natural e equilibrado, sem exagerar no volume.`;
@@ -117,9 +117,10 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
   const recWordRule = hasLimit
     ? `
 - Tamanho (REC):
-  - Trabalhe para atingir o alvo de ${resolvedApprox} palavras.
-  - Adicione ou remova subtítulos (H2) conforme necessário para ajustar o tamanho.
-  - Monitore o tamanho enquanto escreve: se já explicou tudo e ainda falta muito para ${resolvedApprox}, crie uma seção de "Curiosidades" ou "Dicas Extras". Se já escreveu muito, pare.`
+  - Alvo: ${resolvedApprox} palavras.
+  - Se pediu poucas palavras (ex: 500), seja direto.
+  - Se pediu muitas palavras (ex: 1500), detalhe bem cada tópico.
+  - Respeite o teto máximo (Alvo + 80 palavras).`
     : `
 - Tamanho (REC):
   - Não há limite fixo. Escreva um texto completo e equilibrado.`;
@@ -127,11 +128,9 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
   const fullWordRule = hasLimit
     ? `
 - Tamanho (FULLREVIEW):
-  - Trabalhe para atingir o alvo de ${resolvedApprox} palavras.
-  - Ajuste o nível de detalhe do passo a passo.
-  - Para textos pedidos como LONGOS (ex: 1500+), detalhe cada clique.
-  - Para textos pedidos como CURTOS, seja direto.
-  - NÃO ultrapasse excessivamente o alvo.`
+  - Alvo: ${resolvedApprox} palavras.
+  - Se o texto estiver ficando longo demais, simplifique o passo a passo.
+  - Respeite o teto máximo (Alvo + 80 palavras).`
     : `
 - Tamanho (FULLREVIEW):
   - Não há limite fixo. Escreva um texto completo, explicando o processo de forma clara e objetiva.`;
@@ -197,7 +196,7 @@ ${wordLimitGeneral}
   - Nunca deixe section_cta_label vazio ou ausente.
   - Deve ser um CTA curto, em MAIÚSCULAS, com até 6 palavras, diretamente ligado ao tema e no mesmo idioma do campo "language".`.trim();
 
-  // === AQUI ESTÁ A REGRA VISUAL DE SIMETRIA (TEXTO APENAS) ===
+  // === AQUI ESTÁ A REGRA VISUAL DE SIMETRIA (MANTIDA) ===
   const recRules = `
 REC:
 
@@ -216,8 +215,7 @@ REC:
 ${hasLimit
       ? `- Corpo (com instrução de quantidade):
   - Use subtítulos com <h2> e parágrafos de forma FLEXÍVEL.
-  - Se a meta de palavras for alta (${resolvedApprox}), crie VÁRIOS tópicos (H2).
-  - Se a meta for baixa, seja conciso.`
+  - Se o limite estiver próximo, encerre o assunto.`
       : `- Corpo (sem limite definido):
   - Use vários subtítulos com <h2> para organizar o conteúdo.
   - Em geral, use 2 parágrafos por subtítulo, mas você pode ajustar se fizer sentido.`
@@ -267,7 +265,7 @@ FULLREVIEW:
 ${hasLimit
       ? `- Corpo (com instrução de quantidade):
   - Use seções com <h2>/<h3> e parágrafos de forma FLEXÍVEL.
-  - Se a meta de palavras for alta (${resolvedApprox}), adicione introdução teórica antes do passo a passo.`
+  - Se a meta de palavras estiver próxima, não adicione introduções longas.`
       : `- Corpo (sem limite definido):
   - Use várias seções com <h2>/<h3> para organizar o conteúdo.
   - Em geral, use 2 parágrafos por seção, mas você pode ajustar se fizer sentido.`
@@ -313,8 +311,9 @@ VOCÊ é totalmente responsável por:
 1. Respeitar o tema EXATO informado.
 2. Escrever todo o conteúdo no idioma especificado.
 3. **CALIBRAR A QUANTIDADE DE PALAVRAS**:
-   - O número ${resolvedApprox} é o seu CENTRO.
-   - Variação aceitável de ~10%. NÃO extrapole (nem muito mais, nem muito menos).
+   - O número ${resolvedApprox} é o ALVO.
+   - TOLERÂNCIA: Máximo de +80 palavras acima do alvo.
+   - NÃO extrapole. Se o texto estiver grande, corte seções extras.
 4. **MANTER A SIMETRIA VISUAL (apenas REC)**:
    - Os parágrafos acima (subtitle) e abaixo (intro) dos CTAs devem ter o mesmo tamanho visual (aprox. 40-50 palavras cada).
 
