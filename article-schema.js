@@ -100,7 +100,7 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
     2
   );
 
-  // === AQUI ESTÁ A LÓGICA DE TEXTO (SEM CÁLCULOS JS) ===
+  // Lógica de texto para meta de palavras (Target) - SEM CÁLCULOS JS
   const wordLimitGeneral = hasLimit
     ? `
 - CONTROLE DE QUANTIDADE (Instrução de Ouro):
@@ -197,6 +197,7 @@ ${wordLimitGeneral}
   - Nunca deixe section_cta_label vazio ou ausente.
   - Deve ser um CTA curto, em MAIÚSCULAS, com até 6 palavras, diretamente ligado ao tema e no mesmo idioma do campo "language".`.trim();
 
+  // === AQUI ESTÁ A REGRA VISUAL DE SIMETRIA (TEXTO APENAS) ===
   const recRules = `
 REC:
 
@@ -206,12 +207,11 @@ REC:
 - Título (h1):
   - Deve ser um título equivalente ao topic, no idioma indicado em "language", mantendo o MESMO assunto.
 
-- Subtítulo e introdução:
-  - subtitle_html:
-    - 1 bloco curto apresentando o tema.
-    - Use até 3 linhas/frases curtas (no máximo).
-  - intro_html:
-    - 1 parágrafo com contexto e motivação.
+- Introdução e Subtítulo (SIMETRIA VISUAL OBRIGATÓRIA):
+  - ATENÇÃO AO LAYOUT: Existe uma lista de CTAs posicionada EXATAMENTE entre o subtitle_html (acima) e o intro_html (abaixo).
+  - REGRA DE OURO: O parágrafo acima dos botões (subtitle_html) deve ter VISUALMENTE o mesmo tamanho do parágrafo abaixo dos botões (intro_html).
+  - INSTRUÇÃO: Escreva ambos com aproximadamente a mesma quantidade de palavras (sugestão: 40 a 50 palavras cada, cerca de 3 a 4 frases).
+  - Não faça um curto e o outro longo. Eles devem parecer blocos gêmeos em tamanho.
 
 ${hasLimit
       ? `- Corpo (com instrução de quantidade):
@@ -310,12 +310,13 @@ O sistema cliente envia:
 ${hasLimit ? `- ALVO DE PALAVRAS (TARGET): ${resolvedApprox} palavras.` : ""}
 
 VOCÊ é totalmente responsável por:
-1. Respeitar o tema EXATO informado (sem trocar por outro assunto, nem generalizar).
-2. Escrever todo o conteúdo no idioma especificado em "language".
+1. Respeitar o tema EXATO informado.
+2. Escrever todo o conteúdo no idioma especificado.
 3. **CALIBRAR A QUANTIDADE DE PALAVRAS**:
    - O número ${resolvedApprox} é o seu CENTRO.
-   - Você tem permissão para variar levemente (aprox 10%), mas NÃO extrapole.
-   - Evite extremos: Não entregue metade, nem o dobro do solicitado. Mantenha o bom senso editorial.
+   - Variação aceitável de ~10%. NÃO extrapole (nem muito mais, nem muito menos).
+4. **MANTER A SIMETRIA VISUAL (apenas REC)**:
+   - Os parágrafos acima (subtitle) e abaixo (intro) dos CTAs devem ter o mesmo tamanho visual (aprox. 40-50 palavras cada).
 
 Sua resposta DEVE ser SEMPRE um JSON VÁLIDO, seguindo EXATAMENTE o schema abaixo.
 NUNCA escreva nada fora do JSON.
