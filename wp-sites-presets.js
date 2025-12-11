@@ -82,6 +82,15 @@ const WP_SITES_PRESETS = [
         appPassword: "5hQ9 QyDd RNok CRGt 5p7a kxrX",
         defaultCategoryId: 0,
         defaultStatus: "draft"
+    },
+    {
+        id: "emmeusbeneficios",
+        label: "Em Meus Benefícios",
+        baseUrl: "https://em.meusbeneficios.net",
+        user: "adminwp2",
+        appPassword: "Lw8A Ei0z ldxi casV Tp8F pnPx",
+        defaultCategoryId: 0,
+        defaultStatus: "draft"
     }
 ];
 
