@@ -100,41 +100,41 @@ function buildSystemPrompt(articleType, languageCode, approxWordCount) {
     2
   );
 
-  // === ALTERAÇÃO PRINCIPAL AQUI ===
-  // Transformei "Limite Máximo" em "Meta de Palavras" com instrução de EXPANSÃO
+  // === AQUI ESTÁ A LÓGICA DE TEXTO (SEM CÁLCULOS JS) ===
   const wordLimitGeneral = hasLimit
     ? `
-- Meta de Palavras (REGRA DE EXPANSÃO):
-  - O usuário definiu uma META de aproximadamente ${resolvedApprox} palavras.
-  - O seu objetivo é ATINGIR essa quantidade. Não escreva menos.
-  - ESTRATÉGIA DE EXPANSÃO: Se o conteúdo padrão não for suficiente para atingir ${resolvedApprox} palavras, você DEVE adicionar NOVOS TÍTULOS (H2) e subtítulos com informações complementares relevantes (ex: Curiosidades, Segurança, História, Dicas Extras, Comparativos, Prós e Contras).
-  - Nunca entregue um texto curto se o pedido foi longo (1000, 1500+). É melhor passar um pouco do que faltar.
-  - Distribua o conteúdo para que a leitura não fique cansativa, usando parágrafos bem estruturados.`
+- CONTROLE DE QUANTIDADE (Instrução de Ouro):
+  - O usuário definiu um ALVO de aproximadamente ${resolvedApprox} palavras.
+  - Este número (${resolvedApprox}) é o CENTRO do seu alvo.
+  - Variação permitida: Você pode escrever um pouco a mais ou um pouco a menos para manter a qualidade (margem de ~10%).
+  - PROIBIÇÃO DE EXCESSO: Não extrapole absurdamente. Exemplo: Se o pedido é 1500, NÃO escreva 2500. Mantenha-se perto de 1500.
+  - PROIBIÇÃO DE ESCASSEZ: Não escreva muito menos. Exemplo: Se o pedido é 1500, NÃO escreva 800.
+  - SEU JULGAMENTO: Se o texto estiver ficando muito longo, RESUMA os pontos menos importantes. Se estiver curto, EXPANDA as explicações.`
     : `- Limite de palavras:
   - O usuário não definiu um número exato de palavras.
-  - Escreva um texto completo, natural e equilibrado.`;
+  - Escreva um texto completo, natural e equilibrado, sem exagerar no volume.`;
 
   const recWordRule = hasLimit
     ? `
-- Tamanho do texto (REC):
-  - Trabalhe para chegar próximo de ${resolvedApprox} palavras.
-  - Crie quantos subtítulos (H2) forem necessários para preencher esse volume.
-  - Se o tema for simples, aprofunde-se nos detalhes, contexto e variações para bater a meta.`
+- Tamanho (REC):
+  - Trabalhe para atingir o alvo de ${resolvedApprox} palavras.
+  - Adicione ou remova subtítulos (H2) conforme necessário para ajustar o tamanho.
+  - Monitore o tamanho enquanto escreve: se já explicou tudo e ainda falta muito para ${resolvedApprox}, crie uma seção de "Curiosidades" ou "Dicas Extras". Se já escreveu muito, pare.`
     : `
-- Tamanho do texto (REC):
-  - Não há limite fixo.
-  - Escreva um texto completo e equilibrado.`;
+- Tamanho (REC):
+  - Não há limite fixo. Escreva um texto completo e equilibrado.`;
 
   const fullWordRule = hasLimit
     ? `
-- Tamanho do texto (FULLREVIEW):
-  - Trabalhe para chegar próximo de ${resolvedApprox} palavras.
-  - Detalhe minuciosamente cada etapa do passo a passo.
-  - Antes ou depois do passo a passo, adicione seções extras (H2) explicando "Por que fazer isso", "Riscos envolvidos" ou "Solução de problemas comuns" para garantir o volume de palavras.`
+- Tamanho (FULLREVIEW):
+  - Trabalhe para atingir o alvo de ${resolvedApprox} palavras.
+  - Ajuste o nível de detalhe do passo a passo.
+  - Para textos pedidos como LONGOS (ex: 1500+), detalhe cada clique.
+  - Para textos pedidos como CURTOS, seja direto.
+  - NÃO ultrapasse excessivamente o alvo.`
     : `
-- Tamanho do texto (FULLREVIEW):
-  - Não há limite fixo.
-  - Escreva um texto completo, explicando o processo de forma clara e objetiva.`;
+- Tamanho (FULLREVIEW):
+  - Não há limite fixo. Escreva um texto completo, explicando o processo de forma clara e objetiva.`;
 
   const baseRules = `
 Regras gerais (valem para REC e FULLREVIEW):
@@ -214,10 +214,10 @@ REC:
     - 1 parágrafo com contexto e motivação.
 
 ${hasLimit
-      ? `- Corpo (com meta de palavras):
+      ? `- Corpo (com instrução de quantidade):
   - Use subtítulos com <h2> e parágrafos de forma FLEXÍVEL.
-  - **Instrução de Volume:** Para atingir a meta de palavras, você está AUTORIZADO E INCENTIVADO a criar mais tópicos (H2) do que o usual.
-  - Não se limite a poucos parágrafos. Exploda o tema em subtemas.`
+  - Se a meta de palavras for alta (${resolvedApprox}), crie VÁRIOS tópicos (H2).
+  - Se a meta for baixa, seja conciso.`
       : `- Corpo (sem limite definido):
   - Use vários subtítulos com <h2> para organizar o conteúdo.
   - Em geral, use 2 parágrafos por subtítulo, mas você pode ajustar se fizer sentido.`
@@ -265,9 +265,9 @@ FULLREVIEW:
   - intro_html: 1 parágrafo apresentando o que a pessoa vai aprender e por que isso é útil.
 
 ${hasLimit
-      ? `- Corpo (com meta de palavras):
+      ? `- Corpo (com instrução de quantidade):
   - Use seções com <h2>/<h3> e parágrafos de forma FLEXÍVEL.
-  - **Instrução de Volume:** Se a meta for alta, adicione seções teóricas antes da prática (Passo a passo) para contextualizar e atingir o número de palavras.`
+  - Se a meta de palavras for alta (${resolvedApprox}), adicione introdução teórica antes do passo a passo.`
       : `- Corpo (sem limite definido):
   - Use várias seções com <h2>/<h3> para organizar o conteúdo.
   - Em geral, use 2 parágrafos por seção, mas você pode ajustar se fizer sentido.`
@@ -282,7 +282,7 @@ ${fullWordRule}
 
 - Passo a passo (FULLREVIEW):
   - steps_title deve seguir a regra dos títulos fixos por idioma descrita nas regras gerais.
-  - steps_html deve ser uma lista numerada de 7 a 10 passos. Detalhe bem cada passo se precisar de mais palavras.
+  - steps_html deve ser uma lista numerada de 7 a 10 passos.
 
 - FAQ (FULLREVIEW):
   - faq_title deve seguir a regra dos títulos fixos por idioma descrita nas regras gerais.
@@ -307,15 +307,15 @@ O sistema cliente envia:
 - Topic: ${articleType === 'REC' ? 'Explicação sobre' : 'Review de'} ${schema.topic || "Tema enviado"}
 - Idioma: ${languageCode}
 - Tipo: ${articleType}
-${hasLimit ? `- META DE PALAVRAS: Aprox. ${resolvedApprox} palavras.` : ""}
+${hasLimit ? `- ALVO DE PALAVRAS (TARGET): ${resolvedApprox} palavras.` : ""}
 
 VOCÊ é totalmente responsável por:
 1. Respeitar o tema EXATO informado (sem trocar por outro assunto, nem generalizar).
 2. Escrever todo o conteúdo no idioma especificado em "language".
-3. **ATINGIR A META DE PALAVRAS:**
-   - Se o usuário pediu ${resolvedApprox} palavras, NÃO escreva menos.
-   - Use a estratégia de criar NOVOS TÍTULOS (H2) e aprofundar o conteúdo para chegar nesse número.
-   - O número de palavras é um ALVO, não um teto proibitivo. É melhor passar um pouco do que ficar curto.
+3. **CALIBRAR A QUANTIDADE DE PALAVRAS**:
+   - O número ${resolvedApprox} é o seu CENTRO.
+   - Você tem permissão para variar levemente (aprox 10%), mas NÃO extrapole.
+   - Evite extremos: Não entregue metade, nem o dobro do solicitado. Mantenha o bom senso editorial.
 
 Sua resposta DEVE ser SEMPRE um JSON VÁLIDO, seguindo EXATAMENTE o schema abaixo.
 NUNCA escreva nada fora do JSON.
