@@ -6,9 +6,7 @@ let lastArticleHtml = "";
 
 // ===== Gerar artigo (via backend /api/generate-article) =====
 async function generateArticle() {
-    // --- ALTERAÇÃO AQUI: Modelo fixo no código, já que removemos o input ---
     const model = "gpt-5.1";
-    // -----------------------------------------------------------------------
 
     const topic = document.getElementById("topic").value.trim();
     const language = document.getElementById("language").value;
@@ -24,6 +22,10 @@ async function generateArticle() {
 
     const statusEl = document.getElementById("statusGenerate");
     const btn = document.getElementById("btnGenerate");
+
+    // Elementos de Preview (Esquerda e Direita)
+    const previewREC = document.getElementById("previewREC");
+    const previewFULL = document.getElementById("previewFULL");
 
     if (!topic) {
         statusEl.classList.add("error");
@@ -140,19 +142,25 @@ Regras específicas deste pedido:
         lastArticleJson = articleJson;
         lastArticleHtml = buildHtmlFromArticle(articleJson);
 
-        const previewEl = document.getElementById("htmlPreview");
-        const previewHtml = buildPreviewHtmlFromArticle(articleJson);
-        previewEl.innerHTML =
-            previewHtml || "<em>Nenhum HTML gerado.</em>";
+        // ===== LÓGICA DE DUPLA COLUNA (Esquerda = REC, Direita = FULL) =====
+        const previewHtml = buildPreviewHtmlFromArticle(articleJson) || "<em>Nenhum HTML gerado.</em>";
+
+        if (articleType === "REC") {
+            // Preenche o lado ESQUERDO (REC) e limpa o DIREITO
+            if (previewREC) previewREC.innerHTML = previewHtml;
+            if (previewFULL) previewFULL.innerHTML = "<em>(Vazio - Último gerado foi REC)</em>";
+        } else {
+            // Preenche o lado DIREITO (FULL) e limpa o ESQUERDO
+            if (previewFULL) previewFULL.innerHTML = previewHtml;
+            if (previewREC) previewREC.innerHTML = "<em>(Vazio - Último gerado foi FULLREVIEW)</em>";
+        }
 
         document.getElementById("btnPublish").disabled = false;
 
         statusEl.classList.remove("error");
         statusEl.innerHTML =
-            "<strong>Sucesso:</strong> texto gerado. Revise abaixo antes de publicar. (Estimativa de palavras: " +
-            totalWords +
-            (hasLimit ? " | Limite: " + approxWordCount : "") +
-            ")";
+            "<strong>Sucesso:</strong> texto gerado (" + articleType + "). Estimativa: " +
+            totalWords + " palavras.";
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
@@ -382,7 +390,6 @@ function syncPreloaderTimeField() {
 
 // ===== Listeners =====
 document.addEventListener("DOMContentLoaded", () => {
-    // --- ALTERAÇÃO AQUI: Removi o código que tentava preencher o "openaiKey" ---
 
     const btnGenerate = document.getElementById("btnGenerate");
     if (btnGenerate) {

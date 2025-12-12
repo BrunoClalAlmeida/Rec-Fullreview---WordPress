@@ -80,14 +80,25 @@
             </div>
 
             <p class="card-description">
-                Visualize abaixo como o conteúdo ficará estruturado.
+                O conteúdo será gerado na coluna correspondente ao tipo escolhido.
             </p>
 
             <div class="row">
-                <div class="col-12">
-                    <label>Preview do HTML (como ficará no WordPress)</label>
-                    <div id="htmlPreview" class="preview">
-                        <em>O conteúdo aparecerá aqui após gerar com a IA.</em>
+                <div class="col-6">
+                    <label style="color: #4f46e5; font-weight: bold; margin-bottom: 8px; display: block;">
+                        📄 Preview REC (Esquerda)
+                    </label>
+                    <div id="previewREC" class="preview" style="min-height: 200px;">
+                        <em>O conteúdo REC aparecerá aqui.</em>
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <label style="color: #059669; font-weight: bold; margin-bottom: 8px; display: block;">
+                        🛠️ Preview FULLREVIEW (Direita)
+                    </label>
+                    <div id="previewFULL" class="preview" style="min-height: 200px;">
+                        <em>O conteúdo FULLREVIEW aparecerá aqui.</em>
                     </div>
                 </div>
             </div>
