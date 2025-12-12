@@ -1,96 +1,80 @@
 // wp-sites-presets.js esse codigo pertence
 // Lista de sites pré-configurados para publicação no WordPress
 
-const WP_SITES_PRESETS = [
+// wp-sites-presets.js
+// Lista de sites para o sistema Multi-Poster
+
+// Definimos na janela global para o main.js conseguir ler
+window.WP_SITES = [
     {
         id: "ouniversodoscartoes",
-        label: "O Universo dos Cartões",
-        baseUrl: "https://ouniversodoscartoes.com",
+        name: "O Universo dos Cartões",
+        url: "https://ouniversodoscartoes.com",
         user: "admin",
-        appPassword: "MsBl 9FTg 1yqA sbzF 72c6 BV1K",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
+        appPassword: "MsBl 9FTg 1yqA sbzF 72c6 BV1K"
     },
     {
         id: "investedigital",
-        label: "Investe Digital",
-        baseUrl: "https://investedigital.com.br",
+        name: "Investe Digital",
+        url: "https://investedigital.com.br",
         user: "admininvestedigital",
-        appPassword: "Bufa eADD g5Yz BUtv 6er6 Q3EG",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
+        appPassword: "Bufa eADD g5Yz BUtv 6er6 Q3EG"
     },
     {
         id: "aprovapp",
-        label: "Aprov",
-        baseUrl: "https://aprov.app",
+        name: "Aprov",
+        url: "https://aprov.app",
         user: "admin2",
-        appPassword: "uekb KlWF s2Ij DnjC HDDH U1KA",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
+        appPassword: "uekb KlWF s2Ij DnjC HDDH U1KA"
     },
     {
         id: "xtudoreceitas",
-        label: "X Tudo Receitas",
-        baseUrl: "https://xtudoreceitas.com",
+        name: "X Tudo Receitas",
+        url: "https://xtudoreceitas.com",
         user: "xtudoreceitas.com",
-        appPassword: "fZCO MxIk qBUA 1eWO JCyj kOuF",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
+        appPassword: "fZCO MxIk qBUA 1eWO JCyj kOuF"
     },
     {
         id: "cartaocerto",
-        label: "Cartão Certo",
-        baseUrl: "https://cartaocerto.com.br",
+        name: "Cartão Certo",
+        url: "https://cartaocerto.com.br",
         user: "adminwp2",
-        appPassword: "WQM4 bXk9 WcHL f8hQ s0uL CaxD",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
+        appPassword: "WQM4 bXk9 WcHL f8hQ s0uL CaxD"
     },
     {
         id: "curiosidadefinancas",
-        label: "Curiosidade Finanças",
-        baseUrl: "https://curiosidadefinancas.com",
+        name: "Curiosidade Finanças",
+        url: "https://curiosidadefinancas.com",
         user: "admin",
-        appPassword: "Qxpw 9f5y V41Q UicY NRLa T11r",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
+        appPassword: "Qxpw 9f5y V41Q UicY NRLa T11r"
     },
     {
         id: "meusbeneficios",
-        label: "Meus Benefícios",
-        baseUrl: "https://meusbeneficios.net",
+        name: "Meus Benefícios",
+        url: "https://meusbeneficios.net",
         user: "adminwp2",
-        appPassword: "sixE YFRy ZcWj 6qii pRej W3Qz",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
+        appPassword: "sixE YFRy ZcWj 6qii pRej W3Qz"
     },
     {
         id: "maquininha",
-        label: "Maquininha",
-        baseUrl: "https://www.maquininha.com.br",
+        name: "Maquininha",
+        url: "https://www.maquininha.com.br",
         user: "adminwp2",
-        appPassword: "btSm tMq4 pHvP pzcx RxjB 4mkT",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
+        appPassword: "btSm tMq4 pHvP pzcx RxjB 4mkT"
     },
     {
         id: "thecredittips",
-        label: "The Credit Tips",
-        baseUrl: "https://thecredittips.com",
+        name: "The Credit Tips",
+        url: "https://thecredittips.com",
         user: "adminwp2",
-        appPassword: "5hQ9 QyDd RNok CRGt 5p7a kxrX",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
+        appPassword: "5hQ9 QyDd RNok CRGt 5p7a kxrX"
     },
     {
         id: "emmeusbeneficios",
-        label: "Em Meus Benefícios",
-        baseUrl: "https://em.meusbeneficios.net",
+        name: "Em Meus Benefícios",
+        url: "https://em.meusbeneficios.net",
         user: "adminwp2",
-        appPassword: "Lw8A Ei0z ldxi casV Tp8F pnPx",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
+        appPassword: "Lw8A Ei0z ldxi casV Tp8F pnPx"
     }
 ];
 
