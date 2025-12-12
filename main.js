@@ -1,7 +1,4 @@
 // main.js
-// ===== OpenAI agora via BACKEND (/api/generate-article) =====
-// A chave real fica SOMENTE na variável de ambiente OPENAI_API_KEY no servidor (Vercel).
-// Este arquivo NÃO terá nenhuma chave sensível.
 
 // ===== Estado em memória =====
 let lastArticleJson = null;
@@ -9,7 +6,10 @@ let lastArticleHtml = "";
 
 // ===== Gerar artigo (via backend /api/generate-article) =====
 async function generateArticle() {
-    const model = document.getElementById("model").value.trim() || "gpt-5.1";
+    // --- ALTERAÇÃO AQUI: Modelo fixo no código, já que removemos o input ---
+    const model = "gpt-5.1";
+    // -----------------------------------------------------------------------
+
     const topic = document.getElementById("topic").value.trim();
     const language = document.getElementById("language").value;
     const articleType = document.getElementById("articleType").value;
@@ -139,9 +139,6 @@ Regras específicas deste pedido:
 
         lastArticleJson = articleJson;
         lastArticleHtml = buildHtmlFromArticle(articleJson);
-
-        // --- JSON REMOVIDO DA UI ---
-        // A linha que atualizava o jsonOutput foi retirada daqui.
 
         const previewEl = document.getElementById("htmlPreview");
         const previewHtml = buildPreviewHtmlFromArticle(articleJson);
@@ -385,12 +382,7 @@ function syncPreloaderTimeField() {
 
 // ===== Listeners =====
 document.addEventListener("DOMContentLoaded", () => {
-    const keyInput = document.getElementById("openaiKey");
-    if (keyInput) {
-        keyInput.value = "Configuração via servidor (Vercel)";
-        keyInput.readOnly = true;
-        keyInput.style.pointerEvents = "none";
-    }
+    // --- ALTERAÇÃO AQUI: Removi o código que tentava preencher o "openaiKey" ---
 
     const btnGenerate = document.getElementById("btnGenerate");
     if (btnGenerate) {
@@ -436,7 +428,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (sitePresetSelect) {
-        // depois que o preset preencher a URL, carrega categorias
         sitePresetSelect.addEventListener("change", () => {
             setTimeout(() => {
                 loadWpCategories();
@@ -444,7 +435,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Se já tiver URL preenchida ao abrir, tenta carregar
     if (wpBaseUrlInput && wpBaseUrlInput.value.trim()) {
         loadWpCategories();
     }
