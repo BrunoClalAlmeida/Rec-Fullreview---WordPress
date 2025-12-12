@@ -8,10 +8,8 @@
 
     <link rel="stylesheet" href="style.css" />
 
-    <!-- Presets de sites WordPress -->
     <script src="wp-sites-presets.js" defer></script>
 
-    <!-- Código separado -->
     <script src="article-schema.js" defer></script>
     <script src="article-utils.js" defer></script>
     <script src="blocks-wp.js" defer></script>
@@ -20,7 +18,6 @@
 
 <body>
     <div class="app-wrapper">
-        <!-- Cabeçalho -->
         <header class="app-header">
             <h1 class="app-title">
                 🧠 Gerador de Artigos
@@ -34,14 +31,12 @@
             </p>
         </header>
 
-        <!-- Card 1: Config da IA e tema -->
         <section class="card">
             <div class="card-header">
                 <h2 class="card-title">1. Configuração do Tema</h2>
             </div>
 
             <div class="row">
-                <!-- ESSE BLOCO FICA ESCONDIDO (apenas para manter o DOM) -->
                 <div class="col-6 dev-only">
                     <label for="openaiKey">OpenAI API Key</label>
                     <input type="password" id="openaiKey" placeholder="sk-..." />
@@ -50,7 +45,6 @@
                     </p>
                 </div>
 
-                <!-- ESSE BLOCO TAMBÉM FICA ESCONDIDO, MAS O INPUT EXISTE E O JS LÊ NORMAL -->
                 <div class="col-6 dev-only">
                     <label for="model">Modelo (OpenAI)</label>
                     <input type="text" id="model" value="gpt-5.1" />
@@ -62,7 +56,6 @@
                     <textarea id="topic" placeholder="Ex: Como Ganhar Robux no Roblox de Forma Segura"></textarea>
                 </div>
 
-                <!-- Linha alinhada: Idioma / Tipo de texto / Quantidade de palavras -->
                 <div class="col-4">
                     <label for="language">Idioma</label>
                     <select id="language">
@@ -95,23 +88,17 @@
             </div>
         </section>
 
-        <!-- Card 2: Resultado JSON + HTML -->
         <section class="card">
             <div class="card-header">
                 <h2 class="card-title">2. Resultado da IA</h2>
             </div>
 
             <p class="card-description">
-                Aqui você vê o JSON estruturado e o HTML que será enviado para o WordPress.
+                Visualize abaixo como o conteúdo ficará estruturado.
             </p>
 
             <div class="row">
-                <div class="col-6">
-                    <label>JSON gerado (estrutura REC / FULLREVIEW)</label>
-                    <pre id="jsonOutput">{ /* gere um texto primeiro */ }</pre>
-                </div>
-
-                <div class="col-6">
+                <div class="col-12">
                     <label>Preview do HTML (como ficará no WordPress)</label>
                     <div id="htmlPreview" class="preview">
                         <em>O conteúdo aparecerá aqui após gerar com a IA.</em>
@@ -120,7 +107,6 @@
             </div>
         </section>
 
-        <!-- Card 3: Config WordPress + Publicar -->
         <section class="card">
             <div class="card-header">
                 <h2 class="card-title">3. Publicar no WordPress</h2>
@@ -131,7 +117,6 @@
             </p>
 
             <div class="row">
-                <!-- Selecionar site: linha inteira -->
                 <div class="col-12">
                     <label for="wpSitePreset">Selecionar site WordPress</label>
                     <select id="wpSitePreset">
@@ -142,7 +127,6 @@
                     </p>
                 </div>
 
-                <!-- 1ª linha de campos: URL / Categoria / Status (3 colunas alinhadas) -->
                 <div class="col-4">
                     <label for="wpBaseUrl">URL base do WordPress</label>
                     <input type="text" id="wpBaseUrl" placeholder="https://seusite.com" readonly />
@@ -151,7 +135,6 @@
                     </p>
                 </div>
 
-                <!-- CATEGORIA POR NOME (select) -->
                 <div class="col-4">
                     <label for="wpCategorySelect">Categoria</label>
                     <select id="wpCategorySelect">
@@ -170,10 +153,8 @@
                     </select>
                 </div>
 
-                <!-- ID escondido, usado só na API -->
                 <input type="hidden" id="wpCategoryId" value="0" />
 
-                <!-- Campos sensíveis (dev-only) -->
                 <div class="col-4 dev-only">
                     <label for="wpUser">Usuário WordPress</label>
                     <input type="text" id="wpUser" placeholder="admin" />
@@ -185,7 +166,6 @@
                 </div>
             </div>
 
-            <!-- BLOCO ESPECÍFICO: Configurações do artigo (estilo meta box WP) -->
             <div class="article-settings-card">
                 <div class="article-settings-header">
                     <h3 class="article-settings-title">Configurações do artigo</h3>
@@ -195,7 +175,6 @@
                 </div>
 
                 <div class="wp-toggles-grid">
-                    <!-- Preloader -->
                     <div class="wp-toggle-row">
                         <div class="wp-toggle-text">
                             <span class="wp-toggle-label">Habilitar preloader</span>
@@ -217,7 +196,6 @@
                             step="100" />
                     </div>
 
-                    <!-- Imagem -->
                     <div class="wp-toggle-row">
                         <div class="wp-toggle-text">
                             <span class="wp-toggle-label">Habilitar imagem</span>
@@ -230,7 +208,6 @@
                         </label>
                     </div>
 
-                    <!-- Categoria / Autor / Data -->
                     <div class="wp-toggle-row">
                         <div class="wp-toggle-text">
                             <span class="wp-toggle-label">Ocultar categoria</span>
@@ -264,7 +241,6 @@
                         </label>
                     </div>
 
-                    <!-- Menu / Social / Rodapé -->
                     <div class="wp-toggle-row">
                         <div class="wp-toggle-text">
                             <span class="wp-toggle-label">Ocultar menu</span>
@@ -298,7 +274,6 @@
                         </label>
                     </div>
 
-                    <!-- Persistir parâmetros -->
                     <div class="wp-toggle-row">
                         <div class="wp-toggle-text">
                             <span class="wp-toggle-label">Persistir parâmetros de URL</span>

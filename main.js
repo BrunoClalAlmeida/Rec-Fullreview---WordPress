@@ -1,4 +1,4 @@
-// main.js esse codigo pertence
+// main.js
 // ===== OpenAI agora via BACKEND (/api/generate-article) =====
 // A chave real fica SOMENTE na variável de ambiente OPENAI_API_KEY no servidor (Vercel).
 // Este arquivo NÃO terá nenhuma chave sensível.
@@ -140,11 +140,8 @@ Regras específicas deste pedido:
         lastArticleJson = articleJson;
         lastArticleHtml = buildHtmlFromArticle(articleJson);
 
-        document.getElementById("jsonOutput").textContent = JSON.stringify(
-            articleJson,
-            null,
-            2
-        );
+        // --- JSON REMOVIDO DA UI ---
+        // A linha que atualizava o jsonOutput foi retirada daqui.
 
         const previewEl = document.getElementById("htmlPreview");
         const previewHtml = buildPreviewHtmlFromArticle(articleJson);
