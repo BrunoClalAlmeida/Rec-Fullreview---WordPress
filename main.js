@@ -1,4 +1,7 @@
-// main.js
+// main.js esse codigo pertence
+// ===== OpenAI agora via BACKEND (/api/generate-article) =====
+// A chave real fica SOMENTE na variável de ambiente OPENAI_API_KEY no servidor (Vercel).
+// Este arquivo NÃO terá nenhuma chave sensível.
 
 // ===== Estado em memória =====
 let lastArticleJson = null;
@@ -6,8 +9,7 @@ let lastArticleHtml = "";
 
 // ===== Gerar artigo (via backend /api/generate-article) =====
 async function generateArticle() {
-    const model = "gpt-5.1";
-
+    const model = document.getElementById("model").value.trim() || "gpt-5.1";
     const topic = document.getElementById("topic").value.trim();
     const language = document.getElementById("language").value;
     const articleType = document.getElementById("articleType").value;
@@ -22,10 +24,6 @@ async function generateArticle() {
 
     const statusEl = document.getElementById("statusGenerate");
     const btn = document.getElementById("btnGenerate");
-
-    // Elementos de Preview (Esquerda e Direita)
-    const previewREC = document.getElementById("previewREC");
-    const previewFULL = document.getElementById("previewFULL");
 
     if (!topic) {
         statusEl.classList.add("error");
@@ -142,25 +140,25 @@ Regras específicas deste pedido:
         lastArticleJson = articleJson;
         lastArticleHtml = buildHtmlFromArticle(articleJson);
 
-        // ===== LÓGICA DE DUPLA COLUNA (Esquerda = REC, Direita = FULL) =====
-        const previewHtml = buildPreviewHtmlFromArticle(articleJson) || "<em>Nenhum HTML gerado.</em>";
+        document.getElementById("jsonOutput").textContent = JSON.stringify(
+            articleJson,
+            null,
+            2
+        );
 
-        if (articleType === "REC") {
-            // Preenche o lado ESQUERDO (REC) e limpa o DIREITO
-            if (previewREC) previewREC.innerHTML = previewHtml;
-            if (previewFULL) previewFULL.innerHTML = "<em>(Vazio - Último gerado foi REC)</em>";
-        } else {
-            // Preenche o lado DIREITO (FULL) e limpa o ESQUERDO
-            if (previewFULL) previewFULL.innerHTML = previewHtml;
-            if (previewREC) previewREC.innerHTML = "<em>(Vazio - Último gerado foi FULLREVIEW)</em>";
-        }
+        const previewEl = document.getElementById("htmlPreview");
+        const previewHtml = buildPreviewHtmlFromArticle(articleJson);
+        previewEl.innerHTML =
+            previewHtml || "<em>Nenhum HTML gerado.</em>";
 
         document.getElementById("btnPublish").disabled = false;
 
         statusEl.classList.remove("error");
         statusEl.innerHTML =
-            "<strong>Sucesso:</strong> texto gerado (" + articleType + "). Estimativa: " +
-            totalWords + " palavras.";
+            "<strong>Sucesso:</strong> texto gerado. Revise abaixo antes de publicar. (Estimativa de palavras: " +
+            totalWords +
+            (hasLimit ? " | Limite: " + approxWordCount : "") +
+            ")";
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
@@ -390,6 +388,12 @@ function syncPreloaderTimeField() {
 
 // ===== Listeners =====
 document.addEventListener("DOMContentLoaded", () => {
+    const keyInput = document.getElementById("openaiKey");
+    if (keyInput) {
+        keyInput.value = "Configuração via servidor (Vercel)";
+        keyInput.readOnly = true;
+        keyInput.style.pointerEvents = "none";
+    }
 
     const btnGenerate = document.getElementById("btnGenerate");
     if (btnGenerate) {
@@ -435,6 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (sitePresetSelect) {
+        // depois que o preset preencher a URL, carrega categorias
         sitePresetSelect.addEventListener("change", () => {
             setTimeout(() => {
                 loadWpCategories();
@@ -442,6 +447,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Se já tiver URL preenchida ao abrir, tenta carregar
     if (wpBaseUrlInput && wpBaseUrlInput.value.trim()) {
         loadWpCategories();
     }
