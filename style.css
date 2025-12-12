@@ -1,10 +1,9 @@
-/* style.css */
-
+/* style.css*/
 /* ===== Reset básico ===== */
 * {
     box-sizing: border-box;
-    font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    -webkit-font-smoothing: antialiased;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
 }
 
 html,
@@ -16,11 +15,9 @@ body {
 /* ===== Fundo / página ===== */
 body {
     min-height: 100vh;
-    padding: 40px 16px;
-    background-color: #f1f5f9;
-    /* Slate 100 - Mais limpo */
-    color: #1e293b;
-    /* Slate 800 */
+    padding: 56px 16px 40px;
+    background: radial-gradient(circle at top left, #e0f2fe 0, #eef2ff 40%, #e5e7eb 100%);
+    color: #0f172a;
 }
 
 /* ===== Layout principal ===== */
@@ -31,30 +28,26 @@ body {
 
 /* ===== Cabeçalho ===== */
 .app-header {
-    margin-bottom: 32px;
+    margin-bottom: 28px;
     text-align: center;
 }
 
 .app-title {
-    font-size: 2.2rem;
-    font-weight: 800;
-    margin: 0 0 10px 0;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 8px 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 10px;
     color: #0f172a;
-    letter-spacing: -0.03em;
 }
 
 .app-subtitle {
     margin: 0;
     color: #64748b;
-    font-size: 1rem;
+    font-size: 0.94rem;
     text-align: center;
-    max-width: 600px;
-    margin: 0 auto;
-    line-height: 1.5;
 }
 
 /* ===== Chips / etiqueta ===== */
@@ -62,37 +55,31 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    background: #e0e7ff;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #4338ca;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    transform: translateY(-4px);
-    /* Leve ajuste visual */
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: 1px solid #4f46e5;
+    background: rgba(79, 70, 229, 0.06);
+    font-size: 0.78rem;
+    color: #4f46e5;
 }
 
 .chip-dot {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: #22c55e;
-    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
 }
 
 /* ===== Cards ===== */
 .card {
     background: #ffffff;
-    border-radius: 16px;
-    /* Bordas mais suaves */
-    padding: 24px;
-    margin-bottom: 24px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
-        0 2px 4px -1px rgba(0, 0, 0, 0.03);
-    /* Sombra moderna */
+    border-radius: 20px;
+    padding: 20px 22px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    box-shadow:
+        0 22px 45px rgba(15, 23, 42, 0.08),
+        0 0 0 1px rgba(148, 163, 184, 0.15);
 }
 
 .card-header {
@@ -100,45 +87,42 @@ body {
     justify-content: space-between;
     align-items: center;
     gap: 10px;
-    margin-bottom: 16px;
-    border-bottom: 1px solid #f1f5f9;
-    padding-bottom: 12px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+    padding-bottom: 6px;
 }
 
 .card-title {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #0f172a;
 }
 
 .card-description {
-    margin: 0 0 20px 0;
-    font-size: 0.9rem;
-    color: #64748b;
-    line-height: 1.5;
+    margin: 6px 0 14px 0;
+    font-size: 0.86rem;
+    color: #6b7280;
 }
 
 /* ===== Grid responsivo ===== */
 .row {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
-    /* Espaçamento unificado */
+    gap: 14px;
 }
 
 .col-3 {
-    flex: 0 0 calc(25% - 12px);
+    flex: 0 0 calc(25% - 11px);
     min-width: 0;
 }
 
 .col-4 {
-    flex: 0 0 calc(33.333% - 11px);
+    flex: 0 0 calc(33.333% - 10px);
     min-width: 0;
 }
 
 .col-6 {
-    flex: 0 0 calc(50% - 8px);
+    flex: 0 0 calc(50% - 7px);
     min-width: 0;
 }
 
@@ -149,10 +133,10 @@ body {
 /* ===== Labels / inputs ===== */
 label {
     display: block;
-    margin-bottom: 6px;
-    font-size: 0.85rem;
-    color: #334155;
-    font-weight: 600;
+    margin-bottom: 4px;
+    font-size: 0.83rem;
+    color: #475569;
+    font-weight: 500;
 }
 
 input[type="text"],
@@ -161,118 +145,140 @@ input[type="number"],
 select,
 textarea {
     width: 100%;
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    background: #fff;
+    padding: 9px 12px;
+    border-radius: 12px;
+    border: 1px solid #c7d2fe;
+    background: #f9fafb;
     color: #0f172a;
-    font-size: 0.95rem;
+    font-size: 0.93rem;
     outline: none;
-    transition: all 0.2s ease;
+    transition:
+        border 0.15s ease,
+        box-shadow 0.15s ease,
+        background 0.15s ease,
+        transform 0.08s ease;
 }
 
 input::placeholder,
 textarea::placeholder {
-    color: #94a3b8;
+    color: #9ca3af;
 }
 
 input:focus,
-textarea:focus,
-select:focus {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-    /* Anel de foco bonito */
+textarea:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.32);
+    background: #ffffff;
+    transform: translateY(-1px);
 }
 
-/* ===== Select estilizado ===== */
+/* ===== Select estilizado (mais bonito e arredondado) ===== */
 select {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%2364748b' d='M5.5 7.5l4.5 4.5 4.5-4.5-1.4-1.4L10 9.2 6.9 6.1z'/%3E%3C/svg%3E");
+
+    /* pill */
+    border-radius: 999px;
+    padding: 10px 44px 10px 14px;
+    border: 1px solid #c7d2fe;
+    background-color: #f9fafb;
+
+    background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%234f46e5' d='M5.5 7.5l4.5 4.5 4.5-4.5-1.4-1.4L10 9.2 6.9 6.1z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 14px center;
+    background-position: right 16px center;
     background-size: 14px 14px;
+
     cursor: pointer;
-    padding-right: 36px;
+}
+
+select:hover {
+    background-color: #ffffff;
+    border-color: #a5b4fc;
+    box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.35);
+}
+
+select:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.45);
+    background-color: #ffffff;
+    transform: translateY(-1px);
 }
 
 select option {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    background: #ffffff;
     color: #0f172a;
-    padding: 8px;
+}
+
+select option:checked {
+    background: #e5edff;
+    color: #0f172a;
 }
 
 /* ===== Textarea ===== */
 textarea {
-    min-height: 100px;
+    min-height: 80px;
     resize: vertical;
-    line-height: 1.5;
 }
 
 .hint {
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     color: #94a3b8;
-    margin-top: 5px;
+    margin-top: 3px;
 }
 
 /* ===== Botões ===== */
 button {
     border: none;
-    border-radius: 8px;
-    padding: 12px 24px;
+    border-radius: 999px;
+    padding: 10px 22px;
     font-size: 0.95rem;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
-    font-weight: 600;
-    transition: all 0.2s ease;
+    transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease,
+        background 0.12s ease,
+        opacity 0.1s ease;
 }
 
 button.primary {
-    background: #4f46e5;
+    background: linear-gradient(135deg, #4f46e5, #2563eb);
     color: #ffffff;
-}
-
-button.primary:hover {
-    background: #4338ca;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.35);
+    font-weight: 500;
 }
 
 button.secondary {
     background: #ffffff;
-    color: #334155;
-    border: 1px solid #cbd5e1;
-}
-
-button.secondary:hover {
-    background: #f8fafc;
-    border-color: #94a3b8;
-    color: #0f172a;
+    color: #111827;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 8px 20px rgba(148, 163, 184, 0.18);
 }
 
 button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    transform: none !important;
-    box-shadow: none !important;
+    box-shadow: none;
+    transform: none;
 }
 
-/* ===== Ações e Status ===== */
-.actions-row {
-    margin-top: 24px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 16px;
+button:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
 }
 
+/* ===== Status / mensagens ===== */
 .status {
-    font-size: 0.85rem;
-    color: #64748b;
-    line-height: 1.4;
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 6px;
+    min-height: 18px;
+    white-space: pre-line;
 }
 
 .status strong {
@@ -283,209 +289,203 @@ button:disabled {
     color: #dc2626;
 }
 
+/* ===== Código / preview ===== */
+pre,
+.preview {
+    background: #f9fafb;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    max-height: 340px;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    color: #0f172a;
+    overflow: auto;
+}
+
+/* Scrollbar leve – Chrome / Edge */
+pre::-webkit-scrollbar,
+.preview::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+pre::-webkit-scrollbar-thumb,
+.preview::-webkit-scrollbar-thumb {
+    background: #c7d2fe;
+    border-radius: 999px;
+}
+
+/* tira “bolinha” branca do canto */
+pre::-webkit-scrollbar-corner,
+.preview::-webkit-scrollbar-corner {
+    background: #f9fafb;
+    border-bottom-right-radius: 14px;
+}
+
+/* Firefox */
+pre,
+.preview {
+    scrollbar-width: thin;
+    scrollbar-color: #c7d2fe #f9fafb;
+}
+
+/* ===== Ações ===== */
+.actions-row {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
 /* ===== Link resultado WP ===== */
 .wp-result-link a {
     color: #2563eb;
     text-decoration: none;
-    font-weight: 600;
-    border-bottom: 1px dashed #2563eb;
+    font-weight: 500;
 }
 
 .wp-result-link a:hover {
-    border-bottom-style: solid;
+    text-decoration: underline;
 }
 
-/* ===== Campos somente dev ===== */
-.dev-only {
-    display: none;
+/* ===== Estilo leve FAQ / passo a passo ===== */
+.faq h2,
+.passo-a-passo h2 {
+    margin-top: 16px;
+    margin-bottom: 6px;
+    color: #0f172a;
 }
 
-/* =========================================
-   NOVOS ESTILOS: CHECKBOXES E PREVIEWS
-   (Já limpo e integrado)
-   ========================================= */
-
-/* 1. Grid de Checkboxes (Cards) */
-.sites-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-    gap: 12px;
-    margin-bottom: 20px;
+.faq p strong {
+    color: #0f172a;
 }
 
-.site-checkbox-label {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
+/* CTA visual da REC */
+.cta-rec {
+    margin: 12px 0;
+    padding: 10px 12px;
     border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #475569;
-    user-select: none;
+    background: #e0ecff;
+    border: 1px dashed #93c5fd;
 }
 
-.site-checkbox-label:hover {
-    border-color: #94a3b8;
-    background-color: #f8fafc;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+.cta-rec p {
+    margin: 2px 0;
 }
 
-/* Estado Marcado */
-.site-checkbox-label:has(input:checked) {
-    border-color: #4f46e5;
-    background-color: #eef2ff;
-    color: #4338ca;
-    box-shadow: 0 0 0 1px #4f46e5;
-    /* Borda dupla sutil */
-}
-
-/* Checkbox Escondido Customizado */
-.site-checkbox-label input[type="checkbox"] {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    border: 2px solid #cbd5e1;
-    border-radius: 6px;
-    background: #fff;
-    cursor: pointer;
-    display: grid;
-    place-content: center;
-    transition: 0.2s;
-    flex-shrink: 0;
-    margin: 0;
-    /* Reset */
-}
-
-.site-checkbox-label input[type="checkbox"]:checked {
-    background-color: #4f46e5;
-    border-color: #4f46e5;
-}
-
-/* O "check" (✔) */
-.site-checkbox-label input[type="checkbox"]::before {
-    content: "";
-    width: 10px;
-    height: 10px;
-    box-shadow: inset 1em 1em white;
-    transform-origin: center;
-    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-    transform: scale(0);
-    transition: 0.15s transform cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.site-checkbox-label input[type="checkbox"]:checked::before {
-    transform: scale(1);
-}
-
-/* 2. Estilo das Janelas de Preview */
-.preview-card-container {
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #cbd5e1;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    background: #fff;
-    height: 100%;
+/* Lista de CTAs do preview – estilo "pill" */
+.cta-preview-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 14px;
     display: flex;
-    flex-direction: column;
-}
-
-.preview-header-bar {
-    padding: 12px 16px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #fff;
-    display: flex;
-    align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
+    justify-content: center;
 }
 
-/* Cores dos Headers */
-.header-rec {
-    background: linear-gradient(135deg, #4f46e5, #6366f1);
+.cta-preview-list li {
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: #f5f4ff;
+    border: 1px solid #c7d2fe;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: #3730a3;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    box-shadow: 0 6px 14px rgba(79, 70, 229, 0.12);
+    white-space: nowrap;
 }
 
-.header-full {
-    background: linear-gradient(135deg, #059669, #10b981);
-}
-
-.header-log {
-    background: linear-gradient(135deg, #334155, #475569);
-}
-
-.preview-body {
-    padding: 20px;
-    flex: 1;
-    overflow-y: auto;
-    background: #f8fafc;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 0.95rem;
-    line-height: 1.6;
-    color: #334155;
-}
-
-/* Scrollbar Customizada (Fina) */
-.preview-body::-webkit-scrollbar,
-.sites-grid::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-.preview-body::-webkit-scrollbar-track,
-.sites-grid::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.preview-body::-webkit-scrollbar-thumb,
-.sites-grid::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1;
-    border-radius: 4px;
-}
-
-.preview-body::-webkit-scrollbar-thumb:hover {
-    background-color: #94a3b8;
-}
-
-/* ===== Toggles e Configurações Visuais ===== */
-.article-settings-card {
-    margin-top: 24px;
-    padding: 20px;
-    border-radius: 12px;
-    background: #f8fafc;
+/* Bloco de content preview */
+.content-block-preview {
+    margin: 14px 0;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: #f1f5f9;
     border: 1px solid #e2e8f0;
 }
 
+.content-block-preview .cb-tag {
+    font-size: 0.73rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #4f46e5;
+    margin-bottom: 4px;
+}
+
+.content-block-preview .cb-title {
+    font-size: 0.93rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.content-block-preview .cb-summary {
+    font-size: 0.86rem;
+    color: #6b7280;
+    margin: 0 0 6px;
+}
+
+.content-block-preview .cb-cta {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #2563eb;
+    margin-bottom: 4px;
+}
+
+.content-block-preview .cb-warning {
+    font-size: 0.74rem;
+    color: #9ca3af;
+}
+
+/* CTA preview do 7º título */
+.section-cta-preview {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    background: rgba(79, 70, 229, 0.06);
+    color: #4338ca;
+    font-size: 0.8rem;
+    display: inline-block;
+}
+
+/* ===== BLOCO ESPECÍFICO: Configurações do artigo (estilo meta box WP) ===== */
+.article-settings-card {
+    margin-top: 20px;
+    padding: 16px 16px 14px;
+    border-radius: 14px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+}
+
 .article-settings-header {
-    margin-bottom: 16px;
+    margin-bottom: 10px;
 }
 
 .article-settings-title {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #1e293b;
     margin: 0 0 4px;
+    font-size: 0.96rem;
+    font-weight: 600;
+    color: #111827;
 }
 
 .article-settings-subtitle {
     margin: 0;
-    font-size: 0.85rem;
-    color: #64748b;
+    font-size: 0.78rem;
+    color: #6b7280;
 }
 
+/* grid dos toggles */
 .wp-toggles-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    /* Grid nos toggles também */
-    gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
 }
 
 .wp-toggle-row {
@@ -493,30 +493,62 @@ button:disabled {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 10px 14px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    padding: 8px 6px;
+    border-radius: 10px;
 }
 
+.wp-toggle-row:nth-child(odd) {
+    background: rgba(249, 250, 251, 0.9);
+}
+
+.wp-toggle-row:nth-child(even) {
+    background: rgba(243, 244, 246, 0.9);
+}
+
+/* linha filha (tempo preloader) */
+.wp-toggle-row-nested {
+    padding-left: 18px;
+}
+
+/* textos do toggle */
 .wp-toggle-text {
     display: flex;
     flex-direction: column;
+    gap: 2px;
+    flex: 1;
 }
 
 .wp-toggle-label {
     font-size: 0.85rem;
-    font-weight: 600;
-    color: #334155;
+    font-weight: 500;
+    color: #111827;
 }
 
-/* Toggle Switch */
+.wp-toggle-description {
+    font-size: 0.76rem;
+    color: #6b7280;
+}
+
+/* input pequeno (tempo) */
+.wp-small-input {
+    max-width: 120px;
+    font-size: 0.82rem;
+}
+
+/* desabilitado */
+.wp-small-input:disabled {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* ===== Toggle estilo switch ===== */
 .wp-toggle {
     position: relative;
     display: inline-block;
-    width: 44px;
-    height: 24px;
-    flex-shrink: 0;
+    width: 42px;
+    height: 22px;
 }
 
 .wp-toggle input {
@@ -532,9 +564,9 @@ button:disabled {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #cbd5e1;
-    transition: .3s;
-    border-radius: 34px;
+    background-color: #d1d5db;
+    transition: 0.2s;
+    border-radius: 999px;
 }
 
 .wp-toggle-slider:before {
@@ -542,12 +574,12 @@ button:disabled {
     content: "";
     height: 18px;
     width: 18px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: .3s;
+    left: 2px;
+    top: 2px;
+    background-color: #ffffff;
+    transition: 0.2s;
     border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3);
 }
 
 .wp-toggle input:checked+.wp-toggle-slider {
@@ -558,10 +590,33 @@ button:disabled {
     transform: translateX(20px);
 }
 
-/* Ajuste Mobile */
+/* ===== MOBILE ===== */
 @media (max-width: 768px) {
     body {
-        padding: 20px 10px;
+        padding: 32px 12px 28px;
+    }
+
+    .app-header {
+        margin-bottom: 22px;
+    }
+
+    .card {
+        padding: 18px 16px;
+        margin-bottom: 16px;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .card-description {
+        text-align: center;
+    }
+
+    .actions-row {
+        justify-content: center;
     }
 
     .col-3,
@@ -570,15 +625,146 @@ button:disabled {
         flex: 0 0 100%;
     }
 
-    .sites-grid {
-        grid-template-columns: 1fr;
+    .article-settings-card {
+        padding: 14px 12px;
     }
+}
 
-    .wp-toggles-grid {
-        grid-template-columns: 1fr;
-    }
+/* ===== Campos somente dev (ocultos na UI) ===== */
+.dev-only {
+    display: none;
+}
 
-    .preview-card-container {
-        margin-bottom: 20px;
-    }
+/* ===== 1. Estilo Novo dos Checkboxes (Cards Selecionáveis) ===== */
+.sites-grid {
+    display: grid;
+    /* Colunas automáticas responsivas */
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.site-checkbox-label {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #475569;
+    user-select: none;
+}
+
+.site-checkbox-label:hover {
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.site-checkbox-label:has(input:checked) {
+    border-color: #4f46e5;
+    background-color: #eef2ff;
+    color: #4338ca;
+}
+
+.site-checkbox-label input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #cbd5e1;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    display: grid;
+    place-content: center;
+    transition: 0.2s;
+    flex-shrink: 0;
+}
+
+.site-checkbox-label input[type="checkbox"]:checked {
+    background-color: #4f46e5;
+    border-color: #4f46e5;
+}
+
+.site-checkbox-label input[type="checkbox"]::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    box-shadow: inset 1em 1em white;
+    transform-origin: center;
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    transform: scale(0);
+    transition: 0.1s transform ease-in-out;
+}
+
+.site-checkbox-label input[type="checkbox"]:checked::before {
+    transform: scale(1);
+}
+
+/* ===== 2. Estilo Novo dos Previews (Janelas Coloridas) ===== */
+.preview-card-container {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    background: #fff;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.preview-header-bar {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-rec {
+    background: linear-gradient(to right, #4f46e5, #6366f1);
+}
+
+.header-full {
+    background: linear-gradient(to right, #059669, #10b981);
+}
+
+.header-log {
+    background: linear-gradient(to right, #334155, #475569);
+}
+
+.preview-body {
+    padding: 16px;
+    flex: 1;
+    overflow-y: auto;
+    background: #f8fafc;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #334155;
+}
+
+/* Scrollbar */
+.preview-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.preview-body::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.preview-body::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 4px;
 }
