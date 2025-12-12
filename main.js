@@ -1,4 +1,3 @@
-// main.js esse codigo pertence
 // ===== OpenAI agora via BACKEND (/api/generate-article) =====
 // A chave real fica SOMENTE na variável de ambiente OPENAI_API_KEY no servidor (Vercel).
 // Este arquivo NÃO terá nenhuma chave sensível.
@@ -140,11 +139,14 @@ Regras específicas deste pedido:
         lastArticleJson = articleJson;
         lastArticleHtml = buildHtmlFromArticle(articleJson);
 
-        document.getElementById("jsonOutput").textContent = JSON.stringify(
-            articleJson,
-            null,
-            2
-        );
+        // ================================
+        // REMOVIDO: NÃO EXISTE MAIS JSONOUTPUT
+        // ================================
+        // document.getElementById("jsonOutput").textContent = JSON.stringify(
+        //     articleJson,
+        //     null,
+        //     2
+        // );
 
         const previewEl = document.getElementById("htmlPreview");
         const previewHtml = buildPreviewHtmlFromArticle(articleJson);
@@ -439,7 +441,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (sitePresetSelect) {
-        // depois que o preset preencher a URL, carrega categorias
         sitePresetSelect.addEventListener("change", () => {
             setTimeout(() => {
                 loadWpCategories();
@@ -447,7 +448,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Se já tiver URL preenchida ao abrir, tenta carregar
     if (wpBaseUrlInput && wpBaseUrlInput.value.trim()) {
         loadWpCategories();
     }
