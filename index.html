@@ -20,7 +20,6 @@
 
 <body>
     <div class="app-wrapper">
-
         <!-- Cabeçalho -->
         <header class="app-header">
             <h1 class="app-title">
@@ -42,12 +41,16 @@
             </div>
 
             <div class="row">
+                <!-- ESSE BLOCO FICA ESCONDIDO (apenas para manter o DOM) -->
                 <div class="col-6 dev-only">
                     <label for="openaiKey">OpenAI API Key</label>
                     <input type="password" id="openaiKey" placeholder="sk-..." />
-                    <p class="hint">A chave já está configurada no sistema. Este campo é apenas visual.</p>
+                    <p class="hint">
+                        A chave já está configurada no sistema. Este campo é apenas visual.
+                    </p>
                 </div>
 
+                <!-- ESSE BLOCO TAMBÉM FICA ESCONDIDO, MAS O INPUT EXISTE E O JS LÊ NORMAL -->
                 <div class="col-6 dev-only">
                     <label for="model">Modelo (OpenAI)</label>
                     <input type="text" id="model" value="gpt-5.1" />
@@ -59,6 +62,7 @@
                     <textarea id="topic" placeholder="Ex: Como Ganhar Robux no Roblox de Forma Segura"></textarea>
                 </div>
 
+                <!-- Linha alinhada: Idioma / Tipo de texto / Quantidade de palavras -->
                 <div class="col-4">
                     <label for="language">Idioma</label>
                     <select id="language">
@@ -79,7 +83,9 @@
                 <div class="col-4">
                     <label for="wordCount">Quantidade aproximada de palavras</label>
                     <input type="number" id="wordCount" min="300" max="3000" step="50" placeholder="0" />
-                    <p class="hint">Coloque a quantidade desejada. Ex.: REC – 650, FULLREVIEW – 1000.</p>
+                    <p class="hint">
+                        Coloque a quantidade desejada de palavras. Ex.: REC – 650, FULLREVIEW – 1000.
+                    </p>
                 </div>
             </div>
 
@@ -89,20 +95,23 @@
             </div>
         </section>
 
-        <!-- ========================= -->
-        <!-- CARD 2 (ATUALIZADO)       -->
-        <!-- ========================= -->
+        <!-- Card 2: Resultado JSON + HTML -->
         <section class="card">
             <div class="card-header">
                 <h2 class="card-title">2. Resultado da IA</h2>
             </div>
 
             <p class="card-description">
-                Aqui você vê o HTML que será enviado para o WordPress.
+                Aqui você vê o JSON estruturado e o HTML que será enviado para o WordPress.
             </p>
 
             <div class="row">
-                <div class="col-12">
+                <div class="col-6">
+                    <label>JSON gerado (estrutura REC / FULLREVIEW)</label>
+                    <pre id="jsonOutput">{ /* gere um texto primeiro */ }</pre>
+                </div>
+
+                <div class="col-6">
                     <label>Preview do HTML (como ficará no WordPress)</label>
                     <div id="htmlPreview" class="preview">
                         <em>O conteúdo aparecerá aqui após gerar com a IA.</em>
@@ -110,9 +119,8 @@
                 </div>
             </div>
         </section>
-        <!-- ========================= -->
 
-        <!-- Card 3: Publicação WordPress -->
+        <!-- Card 3: Config WordPress + Publicar -->
         <section class="card">
             <div class="card-header">
                 <h2 class="card-title">3. Publicar no WordPress</h2>
@@ -123,23 +131,35 @@
             </p>
 
             <div class="row">
+                <!-- Selecionar site: linha inteira -->
                 <div class="col-12">
                     <label for="wpSitePreset">Selecionar site WordPress</label>
                     <select id="wpSitePreset">
                         <option value="">Carregando sites...</option>
                     </select>
+                    <p class="hint">
+                        Escolha um site para preencher automaticamente a URL.
+                    </p>
                 </div>
 
+                <!-- 1ª linha de campos: URL / Categoria / Status (3 colunas alinhadas) -->
                 <div class="col-4">
                     <label for="wpBaseUrl">URL base do WordPress</label>
                     <input type="text" id="wpBaseUrl" placeholder="https://seusite.com" readonly />
+                    <p class="hint">
+                        Este campo é preenchido automaticamente ao selecionar um site.
+                    </p>
                 </div>
 
+                <!-- CATEGORIA POR NOME (select) -->
                 <div class="col-4">
                     <label for="wpCategorySelect">Categoria</label>
                     <select id="wpCategorySelect">
                         <option value="">Informe a URL do WordPress</option>
                     </select>
+                    <p class="hint">
+                        As categorias serão carregadas automaticamente do WordPress.
+                    </p>
                 </div>
 
                 <div class="col-4">
@@ -150,8 +170,10 @@
                     </select>
                 </div>
 
+                <!-- ID escondido, usado só na API -->
                 <input type="hidden" id="wpCategoryId" value="0" />
 
+                <!-- Campos sensíveis (dev-only) -->
                 <div class="col-4 dev-only">
                     <label for="wpUser">Usuário WordPress</label>
                     <input type="text" id="wpUser" placeholder="admin" />
@@ -163,18 +185,22 @@
                 </div>
             </div>
 
+            <!-- BLOCO ESPECÍFICO: Configurações do artigo (estilo meta box WP) -->
             <div class="article-settings-card">
                 <div class="article-settings-header">
                     <h3 class="article-settings-title">Configurações do artigo</h3>
                     <p class="article-settings-subtitle">
-                        Defina como este artigo será exibido no site.
+                        Defina como este artigo será exibido no site (preloader, imagem, cabeçalho, rodapé, etc.).
                     </p>
                 </div>
 
                 <div class="wp-toggles-grid">
+                    <!-- Preloader -->
                     <div class="wp-toggle-row">
                         <div class="wp-toggle-text">
                             <span class="wp-toggle-label">Habilitar preloader</span>
+                            <span class="wp-toggle-description">Mostra uma tela de carregamento antes do
+                                conteúdo.</span>
                         </div>
                         <label class="wp-toggle">
                             <input type="checkbox" id="cfgPreloaderEnable" checked />
@@ -185,65 +211,113 @@
                     <div class="wp-toggle-row wp-toggle-row-nested">
                         <div class="wp-toggle-text">
                             <span class="wp-toggle-label">Tempo do preloader (ms)</span>
+                            <span class="wp-toggle-description">Só é usado quando o preloader está habilitado.</span>
                         </div>
                         <input type="number" id="cfgPreloaderTime" class="wp-small-input" value="3500" min="0"
                             step="100" />
                     </div>
 
+                    <!-- Imagem -->
                     <div class="wp-toggle-row">
-                        <div class="wp-toggle-text"><span class="wp-toggle-label">Habilitar imagem</span></div>
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Habilitar imagem</span>
+                            <span class="wp-toggle-description">Controla a exibição da imagem principal do
+                                artigo.</span>
+                        </div>
                         <label class="wp-toggle">
                             <input type="checkbox" id="cfgEnableImage" />
                             <span class="wp-toggle-slider"></span>
                         </label>
                     </div>
 
+                    <!-- Categoria / Autor / Data -->
                     <div class="wp-toggle-row">
-                        <div class="wp-toggle-text"><span class="wp-toggle-label">Ocultar categoria</span></div>
-                        <label class="wp-toggle"><input type="checkbox" id="cfgHideCategory" /><span
-                                class="wp-toggle-slider"></span></label>
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Ocultar categoria</span>
+                            <span class="wp-toggle-description">Esconde a categoria no cabeçalho do artigo.</span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgHideCategory" />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
                     </div>
 
                     <div class="wp-toggle-row">
-                        <div class="wp-toggle-text"><span class="wp-toggle-label">Ocultar autor</span></div>
-                        <label class="wp-toggle"><input type="checkbox" id="cfgHideAuthor" /><span
-                                class="wp-toggle-slider"></span></label>
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Ocultar autor</span>
+                            <span class="wp-toggle-description">Esconde o nome do autor no cabeçalho.</span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgHideAuthor" />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
                     </div>
 
                     <div class="wp-toggle-row">
-                        <div class="wp-toggle-text"><span class="wp-toggle-label">Ocultar data</span></div>
-                        <label class="wp-toggle"><input type="checkbox" id="cfgHideDate" /><span
-                                class="wp-toggle-slider"></span></label>
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Ocultar data</span>
+                            <span class="wp-toggle-description">Esconde a data de publicação do artigo.</span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgHideDate" />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Menu / Social / Rodapé -->
+                    <div class="wp-toggle-row">
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Ocultar menu</span>
+                            <span class="wp-toggle-description">Esconde o menu principal nesse artigo.</span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgHideMenu" />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
                     </div>
 
                     <div class="wp-toggle-row">
-                        <div class="wp-toggle-text"><span class="wp-toggle-label">Ocultar menu</span></div>
-                        <label class="wp-toggle"><input type="checkbox" id="cfgHideMenu" /><span
-                                class="wp-toggle-slider"></span></label>
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Ocultar redes sociais</span>
+                            <span class="wp-toggle-description">Esconde os botões de compartilhamento.</span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgHideSocial" />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
                     </div>
 
                     <div class="wp-toggle-row">
-                        <div class="wp-toggle-text"><span class="wp-toggle-label">Ocultar redes sociais</span></div>
-                        <label class="wp-toggle"><input type="checkbox" id="cfgHideSocial" /><span
-                                class="wp-toggle-slider"></span></label>
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Ocultar rodapé</span>
+                            <span class="wp-toggle-description">Esconde o rodapé completo nesse artigo.</span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgHideFooter" />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
                     </div>
 
+                    <!-- Persistir parâmetros -->
                     <div class="wp-toggle-row">
-                        <div class="wp-toggle-text"><span class="wp-toggle-label">Ocultar rodapé</span></div>
-                        <label class="wp-toggle"><input type="checkbox" id="cfgHideFooter" /><span
-                                class="wp-toggle-slider"></span></label>
-                    </div>
-
-                    <div class="wp-toggle-row">
-                        <div class="wp-toggle-text"><span class="wp-toggle-label">Persistir parâmetros</span></div>
-                        <label class="wp-toggle"><input type="checkbox" id="cfgPersistParam" /><span
-                                class="wp-toggle-slider"></span></label>
+                        <div class="wp-toggle-text">
+                            <span class="wp-toggle-label">Persistir parâmetros de URL</span>
+                            <span class="wp-toggle-description">
+                                Mantém parâmetros (utm, id, etc.) ativos durante a navegação.
+                            </span>
+                        </div>
+                        <label class="wp-toggle">
+                            <input type="checkbox" id="cfgPersistParam" />
+                            <span class="wp-toggle-slider"></span>
+                        </label>
                     </div>
                 </div>
             </div>
 
             <div class="actions-row">
-                <button id="btnPublish" class="secondary" disabled>📤 Publicar no WordPress</button>
+                <button id="btnPublish" class="secondary" disabled>
+                    📤 Publicar no WordPress
+                </button>
                 <div id="statusPublish" class="status"></div>
                 <div id="wpResult" class="status wp-result-link"></div>
             </div>
