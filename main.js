@@ -197,6 +197,7 @@ Regras específicas deste pedido:
     if (articleJson.conclusion_html) totalWords += countWordsFromHtml(articleJson.conclusion_html);
     articleJson.word_count_estimate = totalWords;
 
+    // ✅ HTML padrão (sem links FULL injetados ainda)
     const html = buildHtmlFromArticle(articleJson);
     const previewHtml = buildPreviewHtmlFromArticle(articleJson);
 
@@ -394,7 +395,7 @@ async function resolveCategoryIdForSite({ baseUrl, authHeader, fallbackId, desir
     }
 }
 
-// ===== Publicar 1 site =====
+// ===== Publicar 1 post (usa DOM atual) =====
 async function publishToWordpress(articlePack, siteLabel = "") {
     if (!articlePack?.json || !articlePack?.html) {
         return {
@@ -498,130 +499,22 @@ async function publishToWordpress(articlePack, siteLabel = "") {
     }
 }
 
-// ✅ Publicar em TODOS os sites selecionados
-// ✅ Agora aceita options.render (default true). Quando render=false, NÃO mexe no #wpResult (não limpa / não escreve).
-async function publishToAllSelectedSites(articlePack, options = {}) {
-    const { render = true } = options;
-
+// ✅ Publicar TODOS (FULL primeiro por site, depois REC com links injetados nos blocos da REC)
+async function publishAllGeneratedArticles() {
     const statusEl = document.getElementById("statusPublish");
     const resultEl = document.getElementById("wpResult");
+    const btnAll = document.getElementById("btnPublishAll");
 
     const selectedIds = (typeof window.getSelectedWpSites === "function")
         ? window.getSelectedWpSites()
         : [];
 
     if (!selectedIds || selectedIds.length === 0) {
-        if (render) {
-            statusEl.classList.add("error");
-            statusEl.innerHTML = "<strong>Erro:</strong> selecione pelo menos 1 site para publicar.";
-            if (resultEl) resultEl.innerHTML = "";
-        }
-        return {
-            ok: false,
-            okCount: 0,
-            failCount: 0,
-            results: [],
-            html: "",
-            message: "Nenhum site selecionado."
-        };
-    }
-
-    if (render) {
-        statusEl.classList.remove("error");
+        statusEl.classList.add("error");
+        statusEl.innerHTML = "<strong>Erro:</strong> selecione pelo menos 1 site para publicar.";
         if (resultEl) resultEl.innerHTML = "";
+        return;
     }
-
-    // categoria escolhida no PRINCIPAL
-    const primaryCategoryId = parseInt(document.getElementById("wpCategoryId").value || "0", 10);
-    const primaryCategoryName = getPrimaryCategoryName();
-
-    const results = [];
-    let okCount = 0;
-    let failCount = 0;
-
-    for (let i = 0; i < selectedIds.length; i++) {
-        const siteId = selectedIds[i];
-        const site = (window.WP_SITES_PRESETS || WP_SITES_PRESETS || []).find((s) => s.id === siteId);
-        if (!site) continue;
-
-        // aplica credenciais/URL do site atual
-        document.getElementById("wpBaseUrl").value = site.baseUrl || "";
-        document.getElementById("wpUser").value = site.user || "";
-        document.getElementById("wpAppPassword").value = site.appPassword || "";
-
-        // resolve categoria por nome (melhor) ou fallback
-        const user = (site.user || "").trim();
-        const pass = (site.appPassword || "").trim();
-        const authHeader = "Basic " + btoa(user + ":" + pass);
-
-        const fallbackId =
-            (typeof site.defaultCategoryId === "number" && site.defaultCategoryId > 0)
-                ? site.defaultCategoryId
-                : primaryCategoryId;
-
-        const resolvedCatId = await resolveCategoryIdForSite({
-            baseUrl: site.baseUrl || "",
-            authHeader,
-            fallbackId,
-            desiredName: primaryCategoryName
-        });
-
-        document.getElementById("wpCategoryId").value = String(resolvedCatId || 0);
-
-        if (render) {
-            statusEl.innerHTML = `Publicando em: <strong>${site.label}</strong> (${i + 1}/${selectedIds.length})...`;
-        }
-
-        const r = await publishToWordpress(articlePack, site.label);
-        results.push(r);
-
-        if (r.ok) okCount++;
-        else failCount++;
-    }
-
-    // Render resumo (por site) somente quando render=true
-    const lines = results.map((r) => {
-        if (r.ok) {
-            const linkPart = r.link
-                ? ` — <a href="${r.link}" target="_blank" rel="noopener noreferrer">abrir</a>`
-                : " — (sem link)";
-            return `✅ <strong>${escapeHtml(r.siteLabel)}</strong> — ID: ${r.id || "-"} | slug: <strong>${escapeHtml(r.slug)}</strong>${linkPart}`;
-        }
-        const msg = (r.error || "").includes("rest_cannot_create")
-            ? "Sem permissão para criar posts com este usuário."
-            : (r.error || "Falhou.");
-        return `❌ <strong>${escapeHtml(r.siteLabel)}</strong> — ERRO: ${escapeHtml(stripHtml(msg))} | slug: <strong>${escapeHtml(r.slug)}</strong>`;
-    });
-
-    const html = lines.join("<br/>");
-
-    if (render) {
-        if (failCount > 0) {
-            statusEl.classList.add("error");
-            statusEl.innerHTML = `<strong>Atenção:</strong> ${okCount} publicado(s), ${failCount} falharam.`;
-        } else {
-            statusEl.classList.remove("error");
-            statusEl.innerHTML = `<strong>Sucesso:</strong> publicação finalizada em todos os sites selecionados.`;
-        }
-
-        if (resultEl) resultEl.innerHTML = html;
-    }
-
-    return {
-        ok: failCount === 0,
-        okCount,
-        failCount,
-        results,
-        html,
-        message: failCount === 0 ? "OK" : "Parcial"
-    };
-}
-
-// ✅ Publica REC + TODAS FULL e no final mostra TODOS os links publicados (por artigo + por site)
-async function publishAllGeneratedArticles() {
-    const statusEl = document.getElementById("statusPublish");
-    const resultEl = document.getElementById("wpResult");
-    const btnAll = document.getElementById("btnPublishAll");
 
     const hasRec = !!recPack;
     const hasFull = Array.isArray(fullPacks) && fullPacks.length > 0;
@@ -629,70 +522,135 @@ async function publishAllGeneratedArticles() {
     if (!hasRec && !hasFull) {
         statusEl.classList.add("error");
         statusEl.innerHTML = "<strong>Erro:</strong> gere pelo menos 1 artigo (REC ou FULLREVIEW) antes de publicar.";
+        if (resultEl) resultEl.innerHTML = "";
         return;
     }
 
     statusEl.classList.remove("error");
     if (resultEl) resultEl.innerHTML = "";
-
-    const queue = [];
-    if (hasRec) queue.push({ kind: "REC", pack: recPack });
-    if (hasFull) fullPacks.forEach((p, idx) => queue.push({ kind: `FULLREVIEW ${idx + 1}`, pack: p }));
-
     btnAll.disabled = true;
 
-    const publishedByArticle = []; // [{ kind, title, siteResults: [...] }]
+    // categoria escolhida no PRINCIPAL (por nome)
+    const primaryCategoryId = parseInt(document.getElementById("wpCategoryId").value || "0", 10);
+    const primaryCategoryName = getPrimaryCategoryName();
+
+    const siteSummaries = []; // [{siteLabel, articles:[{kind,title,ok,link,slug,error}]}]
 
     try {
-        for (let i = 0; i < queue.length; i++) {
-            const item = queue[i];
-            const title = item.pack?.json?.h1 || item.pack?.json?.topic || "Sem título";
+        for (let s = 0; s < selectedIds.length; s++) {
+            const siteId = selectedIds[s];
+            const site = (window.WP_SITES_PRESETS || WP_SITES_PRESETS || []).find((x) => x.id === siteId);
+            if (!site) continue;
 
-            statusEl.innerHTML =
-                `Publicando <strong>${escapeHtml(item.kind)}</strong> (${i + 1}/${queue.length})…` +
-                `<br/><span style="font-size:12px;opacity:.85">${escapeHtml(title)}</span>`;
+            // aplica credenciais/URL do site atual
+            document.getElementById("wpBaseUrl").value = site.baseUrl || "";
+            document.getElementById("wpUser").value = site.user || "";
+            document.getElementById("wpAppPassword").value = site.appPassword || "";
 
-            // ✅ IMPORTANTÍSSIMO: render=false para não sobrescrever #wpResult a cada artigo
-            const res = await publishToAllSelectedSites(item.pack, { render: false });
+            // resolve categoria por nome (melhor) ou fallback
+            const user = (site.user || "").trim();
+            const pass = (site.appPassword || "").trim();
+            const authHeader = "Basic " + btoa(user + ":" + pass);
 
-            publishedByArticle.push({
-                kind: item.kind,
-                title,
-                siteResults: res?.results || [],
-                okCount: res?.okCount || 0,
-                failCount: res?.failCount || 0
+            const fallbackId =
+                (typeof site.defaultCategoryId === "number" && site.defaultCategoryId > 0)
+                    ? site.defaultCategoryId
+                    : primaryCategoryId;
+
+            const resolvedCatId = await resolveCategoryIdForSite({
+                baseUrl: site.baseUrl || "",
+                authHeader,
+                fallbackId,
+                desiredName: primaryCategoryName
             });
+
+            document.getElementById("wpCategoryId").value = String(resolvedCatId || 0);
+
+            const siteRow = {
+                siteLabel: site.label,
+                baseUrl: site.baseUrl,
+                articles: []
+            };
+
+            // 1) PUBLICA FULLREVIEWS primeiro (neste site) e coleta links (até 3)
+            const fullLinks = [];
+            if (hasFull) {
+                for (let i = 0; i < fullPacks.length; i++) {
+                    const pack = fullPacks[i];
+                    const title = pack?.json?.h1 || pack?.json?.topic || "Sem título";
+                    statusEl.innerHTML =
+                        `Publicando em <strong>${escapeHtml(site.label)}</strong> — FULLREVIEW ${i + 1}/${fullPacks.length}...` +
+                        `<br/><span style="font-size:12px;opacity:.85">${escapeHtml(title)}</span>`;
+
+                    // FULL padrão (não injeta links)
+                    const r = await publishToWordpress(pack, site.label);
+                    siteRow.articles.push({
+                        kind: `FULLREVIEW ${i + 1}`,
+                        title,
+                        ...r
+                    });
+
+                    if (r.ok && r.link && fullLinks.length < 3) {
+                        fullLinks.push(r.link);
+                    }
+                }
+            }
+
+            // 2) PUBLICA REC (neste site) com links dos FULL injetados nos blocos ACF da REC
+            if (hasRec) {
+                const recTitle = recPack?.json?.h1 || recPack?.json?.topic || "Sem título";
+
+                statusEl.innerHTML =
+                    `Publicando em <strong>${escapeHtml(site.label)}</strong> — REC...` +
+                    `<br/><span style="font-size:12px;opacity:.85">${escapeHtml(recTitle)}</span>`;
+
+                // ✅ cria um pack temporário só pra este site, com HTML da REC linkado para FULLs
+                const recHtmlWithLinks = buildHtmlFromArticle(recPack.json, { fullLinks });
+
+                const tmpRecPack = {
+                    json: recPack.json,
+                    html: recHtmlWithLinks
+                };
+
+                const rRec = await publishToWordpress(tmpRecPack, site.label);
+                siteRow.articles.push({
+                    kind: "REC",
+                    title: recTitle,
+                    ...rRec
+                });
+            }
+
+            siteSummaries.push(siteRow);
         }
 
-        // ✅ RESUMO FINAL com TODOS os links de TODOS os posts publicados
-        const blocks = publishedByArticle.map((a) => {
-            const header =
-                `<div style="margin:14px 0 8px">` +
-                `  <div style="font-weight:800;color:#0f172a">📌 ${escapeHtml(a.kind)} — ${escapeHtml(a.title)}</div>` +
-                `  <div style="font-size:12px;opacity:.75;margin-top:2px">Resultado: ${a.okCount} ok / ${a.failCount} falhas</div>` +
-                `</div>`;
+        // ✅ Render FINAL: links de tudo, por SITE
+        const out = [];
+        siteSummaries.forEach((site) => {
+            out.push(
+                `<div style="margin:14px 0 8px;font-weight:900;color:#0f172a">🌐 ${escapeHtml(site.siteLabel)}</div>`
+            );
 
-            const list = (a.siteResults || []).map((r) => {
-                if (r.ok) {
-                    const link = r.link
-                        ? `<a href="${r.link}" target="_blank" rel="noopener noreferrer">abrir</a>`
+            (site.articles || []).forEach((a) => {
+                if (a.ok) {
+                    const link = a.link
+                        ? `<a href="${a.link}" target="_blank" rel="noopener noreferrer">abrir</a>`
                         : "(sem link)";
-                    return `✅ <strong>${escapeHtml(r.siteLabel)}</strong> — ${link} <span style="opacity:.8;font-size:12px">(slug: ${escapeHtml(r.slug || "")})</span>`;
+                    out.push(
+                        `✅ <strong>${escapeHtml(a.kind)}</strong> — ${escapeHtml(a.title)} — ${link} <span style="opacity:.8;font-size:12px">(slug: ${escapeHtml(a.slug || "")})</span>`
+                    );
+                } else {
+                    out.push(
+                        `❌ <strong>${escapeHtml(a.kind)}</strong> — ${escapeHtml(a.title)} — ${escapeHtml(stripHtml(a.error || "Falhou"))} <span style="opacity:.8;font-size:12px">(slug: ${escapeHtml(a.slug || "")})</span>`
+                    );
                 }
-                return `❌ <strong>${escapeHtml(r.siteLabel)}</strong> — <span style="opacity:.85">${escapeHtml(stripHtml(r.error || "Falhou"))}</span> <span style="opacity:.8;font-size:12px">(slug: ${escapeHtml(r.slug || "")})</span>`;
-            }).join("<br/>");
+            });
 
-            return `${header}<div style="padding-left:2px">${list}</div><hr style="border:none;border-top:1px solid #e5e7eb;margin:12px 0" />`;
+            out.push(`<hr style="border:none;border-top:1px solid #e5e7eb;margin:12px 0" />`);
         });
 
-        if (resultEl) {
-            resultEl.innerHTML =
-                `<div style="margin-bottom:10px;font-weight:800">✅ Links de todas as publicações</div>` +
-                blocks.join("");
-        }
-
+        if (resultEl) resultEl.innerHTML = out.join("<br/>");
         statusEl.classList.remove("error");
-        statusEl.innerHTML = `<strong>Sucesso:</strong> finalizado. Veja abaixo os links de cada artigo publicado.`;
+        statusEl.innerHTML = `<strong>Sucesso:</strong> publicado. (REC já foi enviada com links dos FULL nos blocos)`;
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");

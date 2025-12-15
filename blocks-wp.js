@@ -1,4 +1,4 @@
-//blocks-wp.js esse codigo pertence
+//blocks-wp.js
 // ===== HTML -> blocos Gutenberg =====
 function convertHtmlToBlocks(html) {
     if (!html) return "";
@@ -65,16 +65,34 @@ function htmlToBlocks(html) {
     return convertHtmlToBlocks(html);
 }
 
+// ✅ Normaliza e pega até 3 links (FULL links)
+function normalizeFullLinks(fullLinks) {
+    if (!Array.isArray(fullLinks)) return [];
+    return fullLinks
+        .map((x) => (x || "").trim())
+        .filter((x) => x.length > 0)
+        .slice(0, 3);
+}
+
+function pickAnyFullLink(fullLinks) {
+    const links = normalizeFullLinks(fullLinks);
+    return links[0] || "";
+}
+
 // ===== Bloco de lista de CTAs (3 CTAs iniciais) =====
-function buildCtaAcfBlock(ctasArray) {
+// ✅ Agora recebe fullLinks: cada CTA vira um link de FULL diferente (1,2,3)
+function buildCtaAcfBlock(ctasArray, fullLinks = []) {
     if (!Array.isArray(ctasArray) || ctasArray.length === 0) return "";
 
+    const links = normalizeFullLinks(fullLinks);
+
     const rows = {};
-    ctasArray.slice(0, 3).forEach((ctaText) => {
+    ctasArray.slice(0, 3).forEach((ctaText, idx) => {
         const id = generateRowId();
         rows[id] = {
             field_6634ebe08b3bb: ctaText || "",
-            field_6634ebe08bc5a: "",
+            // ✅ LINK do botão (cada um aponta para um FULL diferente)
+            field_6634ebe08bc5a: links[idx] || "",
             field_6634ebe08f76e: "0",
         };
     });
@@ -103,10 +121,13 @@ function buildSectionCtaLabel(article) {
     return words.join(" ");
 }
 
-function buildMiddleSectionCtaBlock(label) {
+function buildMiddleSectionCtaBlock(label, fullLinks = []) {
+    const link = pickAnyFullLink(fullLinks);
+
     const data = {
         field_6613fe14eb5ae: label || "",
-        field_6613fe1deb5af: "",
+        // ✅ LINK do CTA do meio (qualquer 1 dos 3 FULL)
+        field_6613fe1deb5af: link,
         field_6613fe26eb5b0: "0",
         field_6633f9ad87030: "0",
     };
@@ -116,11 +137,11 @@ function buildMiddleSectionCtaBlock(label) {
     )},"mode":"edit"} /-->`;
 }
 
-function injectSeventhHeadingCta(blocks, article) {
+function injectSeventhHeadingCta(blocks, article, fullLinks = []) {
     const label = buildSectionCtaLabel(article);
     if (!label) return blocks;
 
-    const ctaBlock = "\n" + buildMiddleSectionCtaBlock(label) + "\n";
+    const ctaBlock = "\n" + buildMiddleSectionCtaBlock(label, fullLinks) + "\n";
 
     const markerH2 = '<!-- wp:heading {"level":2}';
     const h2Positions = [];
@@ -151,10 +172,9 @@ function injectSeventhHeadingCta(blocks, article) {
         return blocks.slice(0, insertPos) + ctaBlock + blocks.slice(insertPos);
     }
 
-    // Se NÃO tiver H2 nenhum: injeta depois do último parágrafo do body_html
+    // Se NÃO tiver H2 nenhum: injeta depois do último parágrafo
     let lastParaStart = blocks.lastIndexOf(paraStartMarker);
     if (lastParaStart === -1) {
-        // Se nem parágrafo achar, joga o CTA no final mesmo
         return blocks + ctaBlock;
     }
 
@@ -167,6 +187,7 @@ function injectSeventhHeadingCta(blocks, article) {
     return blocks.slice(0, insertPos) + ctaBlock + blocks.slice(insertPos);
 }
 
+// ===== Preview (mantém como estava, não precisa link) =====
 function injectPreviewSeventhCtaIntoBodyHtml(bodyHtml, article) {
     if (!bodyHtml) return bodyHtml;
 
@@ -180,7 +201,6 @@ function injectPreviewSeventhCtaIntoBodyHtml(bodyHtml, article) {
     let firstPara = null;
 
     if (headings.length > 0) {
-        // Usa o 7º h2 se existir, senão o último h2
         const targetHeading =
             headings.length >= 7 ? headings[6] : headings[headings.length - 1];
 
@@ -193,7 +213,6 @@ function injectPreviewSeventhCtaIntoBodyHtml(bodyHtml, article) {
             node = node.nextSibling;
         }
     } else {
-        // Sem h2: pega o último parágrafo do body_html
         const allParas = wrapper.querySelectorAll("p");
         if (allParas.length > 0) {
             firstPara = allParas[allParas.length - 1];
@@ -207,15 +226,15 @@ function injectPreviewSeventhCtaIntoBodyHtml(bodyHtml, article) {
     if (firstPara && firstPara.parentNode) {
         firstPara.parentNode.insertBefore(ctaEl, firstPara.nextSibling);
     } else {
-        // fallback: adiciona no final do body
         wrapper.appendChild(ctaEl);
     }
 
     return wrapper.innerHTML;
 }
 
-// ===== BLOCO CONTENT (3º título) – mapeado igual ao WordPress =====
-function buildContentAcfBlock(article) {
+// ===== BLOCO CONTENT (3º título) =====
+// ✅ Agora injeta link: qualquer 1 dos 3 FULL
+function buildContentAcfBlock(article, fullLinks = []) {
     if (!article) return "";
 
     const tag = article.content_block_tag || "";
@@ -228,7 +247,6 @@ function buildContentAcfBlock(article) {
     const hasMain = tag || title || summary || ctaLabel || warning;
     if (!hasMain) return "";
 
-    // fallback de aviso, se vier vazio (isso é só pra não quebrar UX; GPT continua responsável pelo principal)
     if (!warning || !warning.trim()) {
         if (topic && topic.toLowerCase().includes("robux")) {
             warning = "Informações sujeitas às regras da plataforma.";
@@ -238,6 +256,8 @@ function buildContentAcfBlock(article) {
             warning = "Conteúdo sujeito a mudanças.";
         }
     }
+
+    const link = pickAnyFullLink(fullLinks);
 
     const data = {
         imagem: 0,
@@ -255,7 +275,8 @@ function buildContentAcfBlock(article) {
         label: ctaLabel,
         _label: "field_661541621c612",
 
-        link: "",
+        // ✅ LINK do bloco content (qualquer 1 dos 3 FULL)
+        link: link,
         _link: "field_6615416b1c613",
 
         aviso: warning,
@@ -276,8 +297,8 @@ function buildContentAcfBlock(article) {
     )},"mode":"edit"} /-->`;
 }
 
-function injectThirdHeadingContentBlock(blocks, article) {
-    const contentBlock = buildContentAcfBlock(article);
+function injectThirdHeadingContentBlock(blocks, article, fullLinks = []) {
+    const contentBlock = buildContentAcfBlock(article, fullLinks);
     if (!contentBlock) return blocks;
 
     const markerH2 = '<!-- wp:heading {"level":2}';
@@ -313,6 +334,7 @@ function injectThirdHeadingContentBlock(blocks, article) {
     return blocks.slice(0, insertPos) + blockToInsert + blocks.slice(insertPos);
 }
 
+// ===== Preview do content block =====
 function injectPreviewContentBlockIntoBodyHtml(bodyHtml, article) {
     if (!bodyHtml) return bodyHtml;
 
@@ -363,7 +385,8 @@ function injectPreviewContentBlockIntoBodyHtml(bodyHtml, article) {
 }
 
 // ===== HTML final para WordPress =====
-function buildHtmlFromArticle(article) {
+// ✅ Agora recebe options.fullLinks (só usado na REC)
+function buildHtmlFromArticle(article, options = {}) {
     if (!article) return "";
     const type = article.type;
     const parts = [];
@@ -375,13 +398,16 @@ function buildHtmlFromArticle(article) {
     const stepsTitle =
         (article.steps_title && article.steps_title.trim()) || "";
 
+    const fullLinks = options?.fullLinks || [];
+
     if (type === "REC") {
         if (article.subtitle_html) {
             parts.push(htmlToBlocks(article.subtitle_html));
         }
 
         if (Array.isArray(article.ctas) && article.ctas.length > 0) {
-            parts.push(buildCtaAcfBlock(article.ctas));
+            // ✅ CTAs linkados para FULL 1/2/3
+            parts.push(buildCtaAcfBlock(article.ctas, fullLinks));
         }
 
         if (article.intro_html) {
@@ -390,8 +416,13 @@ function buildHtmlFromArticle(article) {
 
         if (article.body_html) {
             let bodyBlocks = htmlToBlocks(article.body_html);
-            bodyBlocks = injectThirdHeadingContentBlock(bodyBlocks, article);
-            bodyBlocks = injectSeventhHeadingCta(bodyBlocks, article);
+
+            // ✅ bloco content recebe qualquer link (primeiro disponível)
+            bodyBlocks = injectThirdHeadingContentBlock(bodyBlocks, article, fullLinks);
+
+            // ✅ bloco CTA do meio recebe qualquer link (primeiro disponível)
+            bodyBlocks = injectSeventhHeadingCta(bodyBlocks, article, fullLinks);
+
             parts.push(bodyBlocks);
         }
 
@@ -418,11 +449,11 @@ function buildHtmlFromArticle(article) {
         return parts.join("\n\n");
     }
 
-    // FULLREVIEW
+    // FULLREVIEW (sem links automáticos)
     if (article.intro_html) parts.push(htmlToBlocks(article.intro_html));
     if (article.body_html) {
         let bodyBlocks = htmlToBlocks(article.body_html);
-        bodyBlocks = injectThirdHeadingContentBlock(bodyBlocks, article);
+        bodyBlocks = injectThirdHeadingContentBlock(bodyBlocks, article, []); // sem links
         parts.push(bodyBlocks);
     }
 
