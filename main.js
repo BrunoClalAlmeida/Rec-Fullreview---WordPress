@@ -43,22 +43,32 @@ function getFullTopicsFromFields() {
         .filter((t) => t.length > 0);
 }
 
+// ===== Botão único: habilita/desabilita =====
+function syncPublishAllButton() {
+    const btnAll = document.getElementById("btnPublishAll");
+    if (!btnAll) return;
+
+    const hasRec = !!recPack;
+    const hasFull = Array.isArray(fullPacks) && fullPacks.length > 0;
+
+    btnAll.disabled = !(hasRec || hasFull);
+}
+
 // ===== Preview render =====
 function renderRecPreview() {
     const previewEl = document.getElementById("htmlPreviewRec");
     const infoEl = document.getElementById("previewInfoRec");
-    const btnPublish = document.getElementById("btnPublishRec");
 
     if (!recPack) {
         if (previewEl) previewEl.innerHTML = "<em>Nenhum REC gerado ainda.</em>";
         if (infoEl) infoEl.textContent = "";
-        if (btnPublish) btnPublish.disabled = true;
+        syncPublishAllButton();
         return;
     }
 
     previewEl.innerHTML = recPack.previewHtml || "<em>Nenhum HTML gerado.</em>";
     infoEl.innerHTML = `<strong>REC:</strong> palavras ~ ${recPack.totalWords || 0}`;
-    btnPublish.disabled = false;
+    syncPublishAllButton();
 }
 
 function getSelectedFullPack() {
@@ -71,7 +81,6 @@ function renderFullPreview() {
     const infoEl = document.getElementById("previewInfoFull");
     const btnPrev = document.getElementById("btnPrevFull");
     const btnNext = document.getElementById("btnNextFull");
-    const btnPublish = document.getElementById("btnPublishFull");
 
     const pack = getSelectedFullPack();
 
@@ -80,7 +89,7 @@ function renderFullPreview() {
         if (infoEl) infoEl.textContent = "";
         btnPrev.disabled = true;
         btnNext.disabled = true;
-        btnPublish.disabled = true;
+        syncPublishAllButton();
         return;
     }
 
@@ -89,12 +98,14 @@ function renderFullPreview() {
 
     btnPrev.disabled = selectedFullIndex <= 0;
     btnNext.disabled = selectedFullIndex >= fullPacks.length - 1;
-    btnPublish.disabled = false;
+
+    syncPublishAllButton();
 }
 
 function renderAll() {
     renderRecPreview();
     renderFullPreview();
+    syncPublishAllButton();
 }
 
 // ===== Gerar 1 artigo =====
@@ -251,6 +262,7 @@ async function generateAllArticles() {
         statusEl.innerHTML = "<strong>Erro ao gerar:</strong> " + err.message;
     } finally {
         btn.disabled = false;
+        syncPublishAllButton();
     }
 }
 
@@ -372,7 +384,7 @@ async function resolveCategoryIdForSite({ baseUrl, authHeader, fallbackId, desir
     }
 }
 
-// ===== Publicar 1 site (AGORA retorna resultado, não “engole” erro) =====
+// ===== Publicar 1 site =====
 async function publishToWordpress(articlePack, siteLabel = "") {
     if (!articlePack?.json || !articlePack?.html) {
         return {
@@ -512,9 +524,6 @@ async function publishToAllSelectedSites(articlePack) {
         document.getElementById("wpUser").value = site.user || "";
         document.getElementById("wpAppPassword").value = site.appPassword || "";
 
-        // status mantém UI; se quiser default do preset, descomente:
-        // if (site.defaultStatus) document.getElementById("wpStatus").value = site.defaultStatus;
-
         // resolve categoria por nome (melhor) ou fallback
         const user = (site.user || "").trim();
         const pass = (site.appPassword || "").trim();
@@ -566,6 +575,75 @@ async function publishToAllSelectedSites(articlePack) {
     resultEl.innerHTML = lines.join("<br/>");
 }
 
+// ===== Publish ALL (REC + todas FULL) =====
+function escapeHtml(str) {
+    return (str || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+async function publishAllGeneratedArticles() {
+    const statusEl = document.getElementById("statusPublish");
+    const resultEl = document.getElementById("wpResult");
+    const btnAll = document.getElementById("btnPublishAll");
+
+    const hasRec = !!recPack;
+    const hasFull = Array.isArray(fullPacks) && fullPacks.length > 0;
+
+    if (!hasRec && !hasFull) {
+        statusEl.classList.add("error");
+        statusEl.innerHTML = "<strong>Erro:</strong> gere pelo menos 1 artigo (REC ou FULLREVIEW) antes de publicar.";
+        return;
+    }
+
+    statusEl.classList.remove("error");
+    resultEl.innerHTML = "";
+
+    const queue = [];
+    if (hasRec) queue.push({ kind: "REC", pack: recPack });
+    if (hasFull) {
+        fullPacks.forEach((p, idx) => queue.push({ kind: `FULLREVIEW ${idx + 1}`, pack: p }));
+    }
+
+    btnAll.disabled = true;
+
+    const summaryLines = [];
+
+    try {
+        for (let i = 0; i < queue.length; i++) {
+            const item = queue[i];
+            const title = item.pack?.json?.h1 || item.pack?.json?.topic || "Sem título";
+
+            statusEl.innerHTML =
+                `Publicando <strong>${item.kind}</strong> (${i + 1}/${queue.length})…` +
+                `<br/><span style="font-size:12px;opacity:.85">${escapeHtml(title)}</span>`;
+
+            // Importante: essa função já exige site selecionado
+            await publishToAllSelectedSites(item.pack);
+
+            summaryLines.push(`📌 <strong>${item.kind}</strong>: ${escapeHtml(title)}`);
+        }
+
+        // Mostra resumo geral + mantém o resultado do último envio
+        resultEl.innerHTML =
+            `<div style="margin-bottom:10px">${summaryLines.join("<br/>")}</div>` +
+            `<hr style="border:none;border-top:1px solid #e5e7eb;margin:10px 0" />` +
+            resultEl.innerHTML;
+
+        statusEl.classList.remove("error");
+        statusEl.innerHTML = `<strong>Sucesso:</strong> todos os artigos gerados foram enviados para os sites selecionados.`;
+    } catch (err) {
+        console.error(err);
+        statusEl.classList.add("error");
+        statusEl.innerHTML = "<strong>Erro ao publicar todos:</strong> " + (err?.message || "erro desconhecido");
+    } finally {
+        btnAll.disabled = false;
+    }
+}
+
 // ===== Toggle preloader time =====
 function syncPreloaderTimeField() {
     const checkbox = document.getElementById("cfgPreloaderEnable");
@@ -597,14 +675,10 @@ document.addEventListener("DOMContentLoaded", () => {
         renderFullPreview();
     });
 
-    document.getElementById("btnPublishRec")?.addEventListener("click", (e) => {
+    // ✅ NOVO BOTÃO ÚNICO
+    document.getElementById("btnPublishAll")?.addEventListener("click", (e) => {
         e.preventDefault();
-        publishToAllSelectedSites(recPack);
-    });
-
-    document.getElementById("btnPublishFull")?.addEventListener("click", (e) => {
-        e.preventDefault();
-        publishToAllSelectedSites(getSelectedFullPack());
+        publishAllGeneratedArticles();
     });
 
     document.getElementById("cfgPreloaderEnable")?.addEventListener("change", syncPreloaderTimeField);
