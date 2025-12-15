@@ -107,7 +107,6 @@ const WP_SITES_PRESETS = [
 
         if (!baseUrlInput || !userInput || !passInput) return;
 
-        // monta UI moderna
         multi.innerHTML = "";
 
         (WP_SITES_PRESETS || []).forEach((site) => {
@@ -138,25 +137,34 @@ const WP_SITES_PRESETS = [
             badge.className = "site-pill-badge";
             badge.textContent = "Principal";
 
+            // ✅ SWITCH
+            const switchLabel = document.createElement("label");
+            switchLabel.className = "site-switch";
+
             const cb = document.createElement("input");
             cb.type = "checkbox";
             cb.value = site.id;
 
+            const slider = document.createElement("span");
+            slider.className = "site-switch-slider";
+
+            switchLabel.appendChild(cb);
+            switchLabel.appendChild(slider);
+
             right.appendChild(badge);
-            right.appendChild(cb);
+            right.appendChild(switchLabel);
 
             item.appendChild(left);
             item.appendChild(right);
 
-            // click no card marca/desmarca (exceto no checkbox)
+            // clicar no card liga/desliga (mas se clicou no switch, deixa normal)
             item.addEventListener("click", (e) => {
-                if (e.target === cb) return;
+                if (e.target === cb || e.target === slider) return;
                 cb.checked = !cb.checked;
                 cb.dispatchEvent(new Event("change"));
             });
 
             cb.addEventListener("change", () => {
-                // ✅ marca visual de selecionado
                 item.classList.toggle("is-selected", cb.checked);
                 syncPrimaryFromSelection();
             });
@@ -204,7 +212,7 @@ const WP_SITES_PRESETS = [
 
             setPrimaryUi(siteId);
 
-            // carrega categorias do site principal
+            // carrega categorias do principal
             if (typeof window.loadWpCategories === "function") {
                 setTimeout(() => window.loadWpCategories(), 150);
             }
@@ -213,18 +221,19 @@ const WP_SITES_PRESETS = [
         function syncPrimaryFromSelection() {
             const selected = getSelectedIds();
 
-            // se não tem nada, limpa baseUrl/categorias
             if (selected.length === 0) {
                 baseUrlInput.value = "";
                 setPrimaryUi(null);
 
                 const categorySelect = document.getElementById("wpCategorySelect");
-                if (categorySelect) categorySelect.innerHTML = '<option value="">Informe a URL do WordPress</option>';
+                if (categorySelect) {
+                    categorySelect.innerHTML = '<option value="">Informe a URL do WordPress</option>';
+                }
                 if (categoryInput) categoryInput.value = "0";
                 return;
             }
 
-            // primeiro marcado vira o principal
+            // primeiro marcado vira principal
             applySiteAsPrimary(selected[0]);
         }
     });

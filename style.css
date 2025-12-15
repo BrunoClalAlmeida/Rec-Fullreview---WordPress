@@ -513,7 +513,7 @@ button:not(:disabled):hover {
     cursor: not-allowed;
 }
 
-/* ===== Toggle switch ===== */
+/* ===== Toggle switch (configs do artigo) ===== */
 .wp-toggle {
     position: relative;
     display: inline-block;
@@ -597,9 +597,8 @@ button:not(:disabled):hover {
 }
 
 /* =========================================================
-   ✅ WORDPRESS SITES (BATE COM O JS: .site-pill)
+   ✅ WORDPRESS SITES (MODELO FINAL: site-pill + SWITCH)
    ========================================================= */
-
 .sites-multi {
     border-radius: 16px;
     border: 1px solid rgba(148, 163, 184, 0.28);
@@ -662,14 +661,14 @@ button:not(:disabled):hover {
 .site-pill-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     flex-shrink: 0;
 }
 
-/* badge "Principal" só aparece no principal */
+/* Badge Principal */
 .site-pill-badge {
     display: none;
-    font-size: 0.70rem;
+    font-size: .70rem;
     font-weight: 800;
     letter-spacing: .02em;
     padding: 4px 10px;
@@ -684,16 +683,55 @@ button:not(:disabled):hover {
     display: inline-flex;
 }
 
-/* selecionado */
+/* Selecionado */
 .site-pill.is-selected {
-    border-color: rgba(79, 70, 229, 0.45);
-    box-shadow: 0 18px 34px rgba(79, 70, 229, 0.18);
+    border-color: rgba(37, 99, 235, .40);
+    box-shadow: 0 18px 34px rgba(37, 99, 235, .16);
 }
 
-.site-pill-right input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+/* Switch */
+.site-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.site-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.site-switch-slider {
+    position: absolute;
     cursor: pointer;
+    inset: 0;
+    background-color: #d1d5db;
+    transition: 0.2s;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.25);
+}
+
+.site-switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    top: 2px;
+    background-color: #ffffff;
+    transition: 0.2s;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.30);
+}
+
+.site-switch input:checked+.site-switch-slider {
+    background-color: #2563eb;
+}
+
+.site-switch input:checked+.site-switch-slider:before {
+    transform: translateX(20px);
 }
 
 /* =========================================================
