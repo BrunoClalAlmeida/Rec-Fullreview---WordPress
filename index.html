@@ -129,30 +129,32 @@
             </div>
 
             <p class="card-description">
-                Selecione o site e publique a REC e FULLREVIEW
+                Selecione os Sites e Publique a REC e FULLREVIEW
             </p>
 
             <div class="row">
                 <div class="col-12">
-                    <label for="wpSitePreset">Selecionar site WordPress</label>
-                    <select id="wpSitePreset">
-                        <option value="">Carregando sites...</option>
-                    </select>
-                    <p class="hint">Escolha um site para preencher automaticamente a URL.</p>
+                    <label>Selecionar sites para postar</label>
+                    <div id="wpSitesMulti" class="sites-multi"></div>
+
+                    <p class="hint">
+                        O primeiro site selecionado vira o <strong>Principal</strong> (é ele que carrega as categorias).
+                        Os artigos serão publicados em <strong>Todos</strong> os sites selecionados.
+                    </p>
                 </div>
 
                 <div class="col-4">
-                    <label for="wpBaseUrl">URL base do WordPress</label>
+                    <label for="wpBaseUrl">URL base do WordPress (principal)</label>
                     <input type="text" id="wpBaseUrl" placeholder="https://seusite.com" readonly />
-                    <p class="hint">Preenchido automaticamente ao selecionar um site.</p>
+                    <p class="hint">Preenchido automaticamente pelo 1º site marcado.</p>
                 </div>
 
                 <div class="col-4">
-                    <label for="wpCategorySelect">Categoria</label>
+                    <label for="wpCategorySelect">Categoria (do site principal)</label>
                     <select id="wpCategorySelect">
                         <option value="">Informe a URL do WordPress</option>
                     </select>
-                    <p class="hint">As categorias serão carregadas automaticamente.</p>
+                    <p class="hint">As categorias serão carregadas automaticamente do site principal.</p>
                 </div>
 
                 <div class="col-4">
@@ -165,6 +167,7 @@
 
                 <input type="hidden" id="wpCategoryId" value="0" />
 
+                <!-- Campos sensíveis (ocultos) -->
                 <div class="col-4 dev-only">
                     <label for="wpUser">Usuário WordPress</label>
                     <input type="text" id="wpUser" placeholder="admin" />

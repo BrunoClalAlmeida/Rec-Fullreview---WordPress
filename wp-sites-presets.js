@@ -1,4 +1,4 @@
-// wp-sites-presets.js esse codigo pertence
+// wp-sites-presets.js
 // Lista de sites pré-configurados para publicação no WordPress
 
 const WP_SITES_PRESETS = [
@@ -7,7 +7,7 @@ const WP_SITES_PRESETS = [
         label: "O Universo dos Cartões",
         baseUrl: "https://ouniversodoscartoes.com",
         user: "admin",
-        appPassword: "MsBl 9FTg 1yqA sbzF 72c6 BV1K",
+        appPassword: "TROQUE_ESSE_PASSWORD",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -16,7 +16,7 @@ const WP_SITES_PRESETS = [
         label: "Investe Digital",
         baseUrl: "https://investedigital.com.br",
         user: "admininvestedigital",
-        appPassword: "Bufa eADD g5Yz BUtv 6er6 Q3EG",
+        appPassword: "TROQUE_ESSE_PASSWORD",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -25,7 +25,7 @@ const WP_SITES_PRESETS = [
         label: "Aprov",
         baseUrl: "https://aprov.app",
         user: "admin2",
-        appPassword: "uekb KlWF s2Ij DnjC HDDH U1KA",
+        appPassword: "TROQUE_ESSE_PASSWORD",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -34,7 +34,7 @@ const WP_SITES_PRESETS = [
         label: "X Tudo Receitas",
         baseUrl: "https://xtudoreceitas.com",
         user: "xtudoreceitas.com",
-        appPassword: "fZCO MxIk qBUA 1eWO JCyj kOuF",
+        appPassword: "TROQUE_ESSE_PASSWORD",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -43,7 +43,7 @@ const WP_SITES_PRESETS = [
         label: "Cartão Certo",
         baseUrl: "https://cartaocerto.com.br",
         user: "adminwp2",
-        appPassword: "WQM4 bXk9 WcHL f8hQ s0uL CaxD",
+        appPassword: "TROQUE_ESSE_PASSWORD",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -52,7 +52,7 @@ const WP_SITES_PRESETS = [
         label: "Curiosidade Finanças",
         baseUrl: "https://curiosidadefinancas.com",
         user: "admin",
-        appPassword: "Qxpw 9f5y V41Q UicY NRLa T11r",
+        appPassword: "TROQUE_ESSE_PASSWORD",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -61,7 +61,7 @@ const WP_SITES_PRESETS = [
         label: "Meus Benefícios",
         baseUrl: "https://meusbeneficios.net",
         user: "adminwp2",
-        appPassword: "sixE YFRy ZcWj 6qii pRej W3Qz",
+        appPassword: "TROQUE_ESSE_PASSWORD",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -70,7 +70,7 @@ const WP_SITES_PRESETS = [
         label: "Maquininha",
         baseUrl: "https://www.maquininha.com.br",
         user: "adminwp2",
-        appPassword: "btSm tMq4 pHvP pzcx RxjB 4mkT",
+        appPassword: "TROQUE_ESSE_PASSWORD",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -79,7 +79,7 @@ const WP_SITES_PRESETS = [
         label: "The Credit Tips",
         baseUrl: "https://thecredittips.com",
         user: "adminwp2",
-        appPassword: "5hQ9 QyDd RNok CRGt 5p7a kxrX",
+        appPassword: "TROQUE_ESSE_PASSWORD",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -88,7 +88,7 @@ const WP_SITES_PRESETS = [
         label: "Em Meus Benefícios",
         baseUrl: "https://em.meusbeneficios.net",
         user: "adminwp2",
-        appPassword: "Lw8A Ei0z ldxi casV Tp8F pnPx",
+        appPassword: "TROQUE_ESSE_PASSWORD",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     }
@@ -96,8 +96,8 @@ const WP_SITES_PRESETS = [
 
 (function () {
     document.addEventListener("DOMContentLoaded", () => {
-        const select = document.getElementById("wpSitePreset");
-        if (!select) return;
+        const multi = document.getElementById("wpSitesMulti");
+        if (!multi) return;
 
         const baseUrlInput = document.getElementById("wpBaseUrl");
         const userInput = document.getElementById("wpUser");
@@ -107,56 +107,86 @@ const WP_SITES_PRESETS = [
 
         if (!baseUrlInput || !userInput || !passInput) return;
 
-        // por padrão: travado e sem interação
-        baseUrlInput.readOnly = true;
-        baseUrlInput.style.pointerEvents = "none";
+        // monta UI moderna
+        multi.innerHTML = "";
 
-        // Limpa opções atuais e adiciona padrão
-        select.innerHTML = "";
-        const optDefault = document.createElement("option");
-        optDefault.value = "";
-        optDefault.textContent = "Selecione um Site Pré-Configurado";
-        select.appendChild(optDefault);
+        (WP_SITES_PRESETS || []).forEach((site) => {
+            if (!site || !site.id || !site.label) return;
 
+            const item = document.createElement("div");
+            item.className = "site-pill";
+            item.dataset.siteId = site.id;
 
-        // Adiciona opções da lista
-        if (Array.isArray(WP_SITES_PRESETS)) {
-            WP_SITES_PRESETS.forEach((site) => {
-                if (!site || !site.id || !site.label) return;
-                const opt = document.createElement("option");
-                opt.value = site.id;
-                opt.textContent = site.label;
-                select.appendChild(opt);
+            const left = document.createElement("div");
+            left.className = "site-pill-left";
+
+            const title = document.createElement("div");
+            title.className = "site-pill-title";
+            title.textContent = site.label;
+
+            const sub = document.createElement("div");
+            sub.className = "site-pill-sub";
+            sub.textContent = site.baseUrl || "";
+
+            left.appendChild(title);
+            left.appendChild(sub);
+
+            const right = document.createElement("div");
+            right.className = "site-pill-right";
+
+            const badge = document.createElement("span");
+            badge.className = "site-pill-badge";
+            badge.textContent = "Principal";
+
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.value = site.id;
+
+            right.appendChild(badge);
+            right.appendChild(cb);
+
+            item.appendChild(left);
+            item.appendChild(right);
+
+            // click no card marca/desmarca (exceto no checkbox)
+            item.addEventListener("click", (e) => {
+                if (e.target === cb) return;
+                cb.checked = !cb.checked;
+                cb.dispatchEvent(new Event("change"));
+            });
+
+            cb.addEventListener("change", () => {
+                // ✅ marca visual de selecionado
+                item.classList.toggle("is-selected", cb.checked);
+                syncPrimaryFromSelection();
+            });
+
+            multi.appendChild(item);
+        });
+
+        function getSelectedIds() {
+            return Array.from(multi.querySelectorAll("input[type=checkbox]:checked"))
+                .map((c) => c.value);
+        }
+
+        // expõe para o main.js
+        window.getSelectedWpSites = function () {
+            return getSelectedIds();
+        };
+
+        function setPrimaryUi(primaryId) {
+            Array.from(multi.querySelectorAll(".site-pill")).forEach((pill) => {
+                const pid = pill.dataset.siteId;
+                pill.classList.toggle("primary", pid === primaryId);
             });
         }
 
-        // Ao selecionar um site, preenche os campos
-        select.addEventListener("change", () => {
-            const value = select.value;
-
-            // Modo manual: destrava o campo para digitação
-            if (value === "__manual") {
-                baseUrlInput.readOnly = false;
-                baseUrlInput.style.pointerEvents = "auto";
-                baseUrlInput.focus();
-                return;
-            }
-
-            // Nenhum site selecionado: trava e limpa
-            if (!value) {
-                baseUrlInput.readOnly = true;
-                baseUrlInput.style.pointerEvents = "none";
-                baseUrlInput.value = "";
-                return;
-            }
-
-            // Site pré-configurado: preenche e trava
-            const site = (WP_SITES_PRESETS || []).find((s) => s.id === value);
+        function applySiteAsPrimary(siteId) {
+            const site = (WP_SITES_PRESETS || []).find((s) => s.id === siteId);
             if (!site) return;
 
             baseUrlInput.value = site.baseUrl || "";
             baseUrlInput.readOnly = true;
-            baseUrlInput.style.pointerEvents = "none";
 
             if (site.user) userInput.value = site.user;
             if (site.appPassword) passInput.value = site.appPassword;
@@ -171,6 +201,31 @@ const WP_SITES_PRESETS = [
                     statusSelect.value = site.defaultStatus;
                 }
             }
-        });
+
+            setPrimaryUi(siteId);
+
+            // carrega categorias do site principal
+            if (typeof window.loadWpCategories === "function") {
+                setTimeout(() => window.loadWpCategories(), 150);
+            }
+        }
+
+        function syncPrimaryFromSelection() {
+            const selected = getSelectedIds();
+
+            // se não tem nada, limpa baseUrl/categorias
+            if (selected.length === 0) {
+                baseUrlInput.value = "";
+                setPrimaryUi(null);
+
+                const categorySelect = document.getElementById("wpCategorySelect");
+                if (categorySelect) categorySelect.innerHTML = '<option value="">Informe a URL do WordPress</option>';
+                if (categoryInput) categoryInput.value = "0";
+                return;
+            }
+
+            // primeiro marcado vira o principal
+            applySiteAsPrimary(selected[0]);
+        }
     });
 })();

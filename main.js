@@ -186,7 +186,7 @@ Regras específicas deste pedido:
     return { json: articleJson, html, previewHtml, type, totalWords };
 }
 
-// ===== Gerar REC + FULL (temas e palavras separados) =====
+// ===== Gerar REC + FULL =====
 async function generateAllArticles() {
     const statusEl = document.getElementById("statusGenerate");
     const btn = document.getElementById("btnGenerate");
@@ -213,7 +213,6 @@ async function generateAllArticles() {
     statusEl.classList.remove("error");
     btn.disabled = true;
 
-    // reset estado
     recPack = null;
     fullPacks = [];
     selectedFullIndex = -1;
@@ -223,7 +222,6 @@ async function generateAllArticles() {
         let done = 0;
         const total = (topicRec ? 1 : 0) + fullTopics.length;
 
-        // REC
         if (topicRec) {
             statusEl.innerHTML = `Gerando REC… (${done + 1}/${total})`;
             recPack = await generateOneArticle({
@@ -236,7 +234,6 @@ async function generateAllArticles() {
             renderRecPreview();
         }
 
-        // FULLS
         for (let i = 0; i < fullTopics.length; i++) {
             statusEl.innerHTML = `Gerando FULLREVIEW ${i + 1}/${fullTopics.length}… (${done + 1}/${total})`;
             const pack = await generateOneArticle({
@@ -261,7 +258,7 @@ async function generateAllArticles() {
     }
 }
 
-// ===== Lê as configs do artigo e monta config_artigo =====
+// ===== Lê as configs do artigo =====
 function readArticleSettingsFromForm() {
     const preloaderEnableEl = document.getElementById("cfgPreloaderEnable");
     const preloaderTimeEl = document.getElementById("cfgPreloaderTime");
@@ -301,7 +298,7 @@ function readArticleSettingsFromForm() {
     };
 }
 
-// ===== Carregar categorias =====
+// ===== Carregar categorias (EXATAMENTE como você tinha) =====
 async function loadWpCategories() {
     const baseUrlInput = document.getElementById("wpBaseUrl");
     const categorySelect = document.getElementById("wpCategorySelect");
@@ -344,7 +341,10 @@ async function loadWpCategories() {
     }
 }
 
-// ===== Publicar =====
+// expõe para wp-sites-presets.js
+window.loadWpCategories = loadWpCategories;
+
+// ===== Publicar (EXATAMENTE como você tinha) =====
 async function publishToWordpress(articlePack) {
     const statusEl = document.getElementById("statusPublish");
     const resultEl = document.getElementById("wpResult");
@@ -436,6 +436,56 @@ async function publishToWordpress(articlePack) {
     }
 }
 
+// ✅ NOVO: publicar em TODOS os sites selecionados (APENAS ISSO)
+async function publishToAllSelectedSites(articlePack) {
+    const statusEl = document.getElementById("statusPublish");
+    const resultEl = document.getElementById("wpResult");
+
+    const selectedIds = (typeof window.getSelectedWpSites === "function")
+        ? window.getSelectedWpSites()
+        : [];
+
+    if (!selectedIds || selectedIds.length === 0) {
+        statusEl.classList.add("error");
+        statusEl.innerHTML = "<strong>Erro:</strong> selecione pelo menos 1 site para publicar.";
+        return;
+    }
+
+    // categoria escolhida do site principal (dropdown)
+    const primaryCategoryId = parseInt(document.getElementById("wpCategoryId").value || "0", 10);
+
+    statusEl.classList.remove("error");
+    resultEl.innerHTML = "";
+
+    for (let i = 0; i < selectedIds.length; i++) {
+        const siteId = selectedIds[i];
+        const site = (window.WP_SITES_PRESETS || WP_SITES_PRESETS || []).find((s) => s.id === siteId);
+
+        if (!site) continue;
+
+        // aplica credenciais/URL do site atual (sem mudar nada do publish)
+        document.getElementById("wpBaseUrl").value = site.baseUrl || "";
+        document.getElementById("wpUser").value = site.user || "";
+        document.getElementById("wpAppPassword").value = site.appPassword || "";
+
+        // mantém o status como está na UI (se você mudou manualmente)
+        // mas se quiser usar defaultStatus do preset, descomente:
+        // if (site.defaultStatus) document.getElementById("wpStatus").value = site.defaultStatus;
+
+        // categoria: usa a selecionada do principal; se o preset tiver defaultCategoryId > 0, usa ele
+        const useCat = (typeof site.defaultCategoryId === "number" && site.defaultCategoryId > 0)
+            ? site.defaultCategoryId
+            : primaryCategoryId;
+
+        document.getElementById("wpCategoryId").value = String(useCat || 0);
+
+        statusEl.innerHTML = `Publicando em: <strong>${site.label}</strong> (${i + 1}/${selectedIds.length})...`;
+        await publishToWordpress(articlePack);
+    }
+
+    statusEl.innerHTML = "<strong>Sucesso:</strong> publicação finalizada em todos os sites selecionados.";
+}
+
 // ===== Toggle preloader time =====
 function syncPreloaderTimeField() {
     const checkbox = document.getElementById("cfgPreloaderEnable");
@@ -468,15 +518,15 @@ document.addEventListener("DOMContentLoaded", () => {
         renderFullPreview();
     });
 
-    // publicar
+    // publicar (AGORA EM TODOS OS SITES SELECIONADOS)
     document.getElementById("btnPublishRec")?.addEventListener("click", (e) => {
         e.preventDefault();
-        publishToWordpress(recPack);
+        publishToAllSelectedSites(recPack);
     });
 
     document.getElementById("btnPublishFull")?.addEventListener("click", (e) => {
         e.preventDefault();
-        publishToWordpress(getSelectedFullPack());
+        publishToAllSelectedSites(getSelectedFullPack());
     });
 
     // preloader
@@ -489,13 +539,10 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("wpCategorySelect").value || "0";
     });
 
+    // quando baseUrl muda (principal), carrega categorias
     const wpBaseUrlInput = document.getElementById("wpBaseUrl");
     wpBaseUrlInput?.addEventListener("change", loadWpCategories);
     wpBaseUrlInput?.addEventListener("blur", loadWpCategories);
-
-    document.getElementById("wpSitePreset")?.addEventListener("change", () => {
-        setTimeout(loadWpCategories, 150);
-    });
 
     if (wpBaseUrlInput?.value?.trim()) loadWpCategories();
 
