@@ -7,7 +7,7 @@ const WP_SITES_PRESETS = [
         label: "O Universo dos Cartões",
         baseUrl: "https://ouniversodoscartoes.com",
         user: "admin",
-        appPassword: "TROQUE_ESSE_PASSWORD",
+        appPassword: "COLOQUE_A_SENHA_NOVA_AQUI",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -137,35 +137,23 @@ const WP_SITES_PRESETS = [
             badge.className = "site-pill-badge";
             badge.textContent = "Principal";
 
-            // ✅ SWITCH
-            const switchLabel = document.createElement("label");
-            switchLabel.className = "site-switch";
-
             const cb = document.createElement("input");
             cb.type = "checkbox";
             cb.value = site.id;
 
-            const slider = document.createElement("span");
-            slider.className = "site-switch-slider";
-
-            switchLabel.appendChild(cb);
-            switchLabel.appendChild(slider);
-
             right.appendChild(badge);
-            right.appendChild(switchLabel);
+            right.appendChild(cb);
 
             item.appendChild(left);
             item.appendChild(right);
 
-            // clicar no card liga/desliga (mas se clicou no switch, deixa normal)
             item.addEventListener("click", (e) => {
-                if (e.target === cb || e.target === slider) return;
+                if (e.target === cb) return;
                 cb.checked = !cb.checked;
                 cb.dispatchEvent(new Event("change"));
             });
 
             cb.addEventListener("change", () => {
-                item.classList.toggle("is-selected", cb.checked);
                 syncPrimaryFromSelection();
             });
 
@@ -177,7 +165,6 @@ const WP_SITES_PRESETS = [
                 .map((c) => c.value);
         }
 
-        // expõe para o main.js
         window.getSelectedWpSites = function () {
             return getSelectedIds();
         };
@@ -212,7 +199,6 @@ const WP_SITES_PRESETS = [
 
             setPrimaryUi(siteId);
 
-            // carrega categorias do principal
             if (typeof window.loadWpCategories === "function") {
                 setTimeout(() => window.loadWpCategories(), 150);
             }
@@ -226,14 +212,11 @@ const WP_SITES_PRESETS = [
                 setPrimaryUi(null);
 
                 const categorySelect = document.getElementById("wpCategorySelect");
-                if (categorySelect) {
-                    categorySelect.innerHTML = '<option value="">Informe a URL do WordPress</option>';
-                }
+                if (categorySelect) categorySelect.innerHTML = '<option value="">Informe a URL do WordPress</option>';
                 if (categoryInput) categoryInput.value = "0";
                 return;
             }
 
-            // primeiro marcado vira principal
             applySiteAsPrimary(selected[0]);
         }
     });

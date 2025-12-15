@@ -13,9 +13,7 @@ function buildFullTopicFields() {
     if (isNaN(n) || n < 0) n = 0;
     if (n > 10) n = 10;
 
-    // mantém valores atuais
     const existing = Array.from(container.querySelectorAll("textarea")).map((t) => t.value || "");
-
     container.innerHTML = "";
 
     for (let i = 0; i < n; i++) {
@@ -99,6 +97,38 @@ function renderAll() {
     renderFullPreview();
 }
 
+// ===== Helpers =====
+function safeJsonParse(text) {
+    try { return JSON.parse(text); } catch { return null; }
+}
+
+function getOrigin(url) {
+    try { return new URL(url).origin; } catch { return ""; }
+}
+
+function normalizeBaseUrl(url) {
+    return (url || "").trim().replace(/\/+$/, "");
+}
+
+function buildPostsEndpoint(baseUrl) {
+    return normalizeBaseUrl(baseUrl) + "/wp-json/wp/v2/posts";
+}
+
+// se baseUrl for sem www, tenta com www; se for com www, tenta sem www
+function toggleWww(baseUrl) {
+    try {
+        const u = new URL(baseUrl);
+        if (u.hostname.startsWith("www.")) {
+            u.hostname = u.hostname.replace(/^www\./, "");
+        } else {
+            u.hostname = "www." + u.hostname;
+        }
+        return u.origin;
+    } catch {
+        return baseUrl;
+    }
+}
+
 // ===== Gerar 1 artigo =====
 async function generateOneArticle({ topic, language, type, approxWordCount }) {
     const hasLimit = typeof approxWordCount === "number" && approxWordCount > 0;
@@ -142,7 +172,6 @@ Regras específicas deste pedido:
     const data = await response.json();
     let content = (data.choices?.[0]?.message?.content || "").trim();
 
-    // remove ```json ... ```
     if (content.startsWith("```")) {
         const firstNewline = content.indexOf("\n");
         const lastTicks = content.lastIndexOf("```");
@@ -165,7 +194,6 @@ Regras específicas deste pedido:
     articleJson.word_count_target = approxWordCount;
     if (!articleJson.h1 || !articleJson.h1.trim()) articleJson.h1 = topic;
 
-    // estima palavras
     let totalWords = 0;
     if (articleJson.subtitle_html) totalWords += countWordsFromHtml(articleJson.subtitle_html);
     if (articleJson.intro_html) totalWords += countWordsFromHtml(articleJson.intro_html);
@@ -313,7 +341,7 @@ async function loadWpCategories() {
         return;
     }
 
-    const url = baseUrl.replace(/\/$/, "") + "/wp-json/wp/v2/categories?per_page=100";
+    const url = normalizeBaseUrl(baseUrl) + "/wp-json/wp/v2/categories?per_page=100";
     categorySelect.innerHTML = '<option value="">Carregando categorias...</option>';
     hiddenCategoryId.value = "0";
 
@@ -344,8 +372,7 @@ async function loadWpCategories() {
 window.loadWpCategories = loadWpCategories;
 
 /* =========================================================
-   ✅ PUBLICAR NO WORDPRESS (CORRIGIDO)
-   - retorna resultado e não “finge sucesso”
+   ✅ PUBLICAR NO WORDPRESS (retry redirect/401 + retorna slug)
    ========================================================= */
 async function publishToWordpress(articlePack) {
     const statusEl = document.getElementById("statusPublish");
@@ -357,7 +384,7 @@ async function publishToWordpress(articlePack) {
         return { ok: false, error: "no-article" };
     }
 
-    const baseUrl = document.getElementById("wpBaseUrl").value.trim();
+    const baseUrl = normalizeBaseUrl(document.getElementById("wpBaseUrl").value);
     const user = document.getElementById("wpUser").value.trim();
     const appPassword = document.getElementById("wpAppPassword").value.trim();
 
@@ -397,13 +424,10 @@ async function publishToWordpress(articlePack) {
         config_artigo: articleConfig,
     };
 
-    statusEl.classList.remove("error");
-    resultEl.innerHTML = "";
+    const authHeader = "Basic " + btoa(user + ":" + appPassword);
 
-    try {
-        const authHeader = "Basic " + btoa(user + ":" + appPassword);
-
-        const response = await fetch(baseUrl.replace(/\/$/, "") + "/wp-json/wp/v2/posts", {
+    async function doPost(endpointUrl) {
+        const resp = await fetch(endpointUrl, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -412,21 +436,55 @@ async function publishToWordpress(articlePack) {
             body: JSON.stringify(body),
         });
 
-        const rawText = await response.text();
-        let data = null;
-        try {
-            data = JSON.parse(rawText);
-        } catch {
-            data = { raw: rawText };
+        const rawText = await resp.text();
+        const parsed = safeJsonParse(rawText);
+        return { resp, rawText, data: parsed };
+    }
+
+    try {
+        statusEl.classList.remove("error");
+        resultEl.innerHTML = "";
+
+        const firstEndpoint = buildPostsEndpoint(baseUrl);
+        let { resp, rawText, data } = await doPost(firstEndpoint);
+
+        // ✅ Caso de redirect (www vs sem www): tenta de novo no endpoint final
+        // OBS: fetch segue redirect, e resp.url mostra o URL final.
+        if ((!resp.ok && resp.status === 401) || resp.redirected) {
+            const finalUrl = resp.url || "";
+            const firstOrigin = getOrigin(firstEndpoint);
+            const finalOrigin = getOrigin(finalUrl);
+
+            // Se redirecionou para outro host/origin, tenta repostar no final endpoint com Authorization
+            if (finalUrl && finalOrigin && firstOrigin && finalOrigin !== firstOrigin) {
+                const finalEndpoint = finalUrl; // já é /wp-json/wp/v2/posts
+                ({ resp, rawText, data } = await doPost(finalEndpoint));
+
+                // atualiza baseUrl do input para o origin correto (pra próximas chamadas)
+                if (resp.ok) {
+                    const newBase = finalOrigin;
+                    document.getElementById("wpBaseUrl").value = newBase;
+                }
+            }
+
+            // Se ainda 401, tenta a troca www <-> sem www
+            if (!resp.ok && resp.status === 401) {
+                const altBase = toggleWww(baseUrl);
+                if (altBase && altBase !== baseUrl) {
+                    ({ resp, rawText, data } = await doPost(buildPostsEndpoint(altBase)));
+
+                    if (resp.ok) {
+                        document.getElementById("wpBaseUrl").value = altBase;
+                    }
+                }
+            }
         }
 
-        if (!response.ok) {
-            // ✅ erro real do WP
-            const wpMsg = data?.message || rawText || ("Status " + response.status);
+        if (!resp.ok) {
+            const wpMsg = data?.message || rawText || ("Status " + resp.status);
             throw new Error(wpMsg);
         }
 
-        // ✅ sucesso real
         if (data?.link) {
             resultEl.innerHTML =
                 '🔗 <strong>Link do post:</strong> <a href="' +
@@ -436,17 +494,17 @@ async function publishToWordpress(articlePack) {
                 "</a>";
         }
 
-        return { ok: true, data };
+        return { ok: true, data, slug };
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
         statusEl.innerHTML = "<strong>Erro ao publicar:</strong> " + (err?.message || err);
-        return { ok: false, error: err?.message || String(err) };
+        return { ok: false, error: err?.message || String(err), slug };
     }
 }
 
 /* =========================================================
-   ✅ PUBLICAR EM TODOS OS SITES (RELATÓRIO REAL)
+   ✅ PUBLICAR EM TODOS OS SITES (relatório real + slug)
    ========================================================= */
 async function publishToAllSelectedSites(articlePack) {
     const statusEl = document.getElementById("statusPublish");
@@ -474,15 +532,12 @@ async function publishToAllSelectedSites(articlePack) {
     for (let i = 0; i < selectedIds.length; i++) {
         const siteId = selectedIds[i];
         const site = (window.WP_SITES_PRESETS || WP_SITES_PRESETS || []).find((s) => s.id === siteId);
-
         if (!site) continue;
 
-        // aplica credenciais/URL do site atual
         document.getElementById("wpBaseUrl").value = site.baseUrl || "";
         document.getElementById("wpUser").value = site.user || "";
         document.getElementById("wpAppPassword").value = site.appPassword || "";
 
-        // categoria: usa a selecionada do principal; se o preset tiver defaultCategoryId > 0, usa ele
         const useCat = (typeof site.defaultCategoryId === "number" && site.defaultCategoryId > 0)
             ? site.defaultCategoryId
             : primaryCategoryId;
@@ -494,16 +549,17 @@ async function publishToAllSelectedSites(articlePack) {
 
         const r = await publishToWordpress(articlePack);
 
+        const slugInfo = r?.slug ? ` | slug: <strong>${r.slug}</strong>` : "";
+
         if (r.ok) {
             successCount++;
-            results.push(`✅ ${site.label} — OK (post ID: ${r.data?.id || "?"})`);
+            results.push(`✅ ${site.label} — OK (post ID: ${r.data?.id || "?"})${slugInfo}`);
         } else {
             failCount++;
-            results.push(`❌ ${site.label} — ERRO: ${r.error || "falha"}`);
+            results.push(`❌ ${site.label} — ERRO: ${r.error || "falha"}${slugInfo}`);
         }
     }
 
-    // ✅ status final verdadeiro
     if (failCount > 0) {
         statusEl.classList.add("error");
         statusEl.innerHTML =
@@ -536,7 +592,6 @@ document.addEventListener("DOMContentLoaded", () => {
         generateAllArticles();
     });
 
-    // FULL nav
     document.getElementById("btnPrevFull")?.addEventListener("click", (e) => {
         e.preventDefault();
         if (selectedFullIndex > 0) selectedFullIndex--;
@@ -549,7 +604,6 @@ document.addEventListener("DOMContentLoaded", () => {
         renderFullPreview();
     });
 
-    // publicar em todos os sites selecionados
     document.getElementById("btnPublishRec")?.addEventListener("click", (e) => {
         e.preventDefault();
         publishToAllSelectedSites(recPack);
@@ -560,11 +614,9 @@ document.addEventListener("DOMContentLoaded", () => {
         publishToAllSelectedSites(getSelectedFullPack());
     });
 
-    // preloader
     document.getElementById("cfgPreloaderEnable")?.addEventListener("change", syncPreloaderTimeField);
     syncPreloaderTimeField();
 
-    // categorias
     document.getElementById("wpCategorySelect")?.addEventListener("change", () => {
         document.getElementById("wpCategoryId").value =
             document.getElementById("wpCategorySelect").value || "0";
