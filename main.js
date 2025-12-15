@@ -499,8 +499,10 @@ async function publishToWordpress(articlePack, siteLabel = "") {
 }
 
 // ✅ Publicar em TODOS os sites selecionados
-// ✅ AGORA: retorna também um objeto com resultados (incluindo links) para o "Publicar Todos"
-async function publishToAllSelectedSites(articlePack) {
+// ✅ Agora aceita options.render (default true). Quando render=false, NÃO mexe no #wpResult (não limpa / não escreve).
+async function publishToAllSelectedSites(articlePack, options = {}) {
+    const { render = true } = options;
+
     const statusEl = document.getElementById("statusPublish");
     const resultEl = document.getElementById("wpResult");
 
@@ -509,8 +511,11 @@ async function publishToAllSelectedSites(articlePack) {
         : [];
 
     if (!selectedIds || selectedIds.length === 0) {
-        statusEl.classList.add("error");
-        statusEl.innerHTML = "<strong>Erro:</strong> selecione pelo menos 1 site para publicar.";
+        if (render) {
+            statusEl.classList.add("error");
+            statusEl.innerHTML = "<strong>Erro:</strong> selecione pelo menos 1 site para publicar.";
+            if (resultEl) resultEl.innerHTML = "";
+        }
         return {
             ok: false,
             okCount: 0,
@@ -521,8 +526,10 @@ async function publishToAllSelectedSites(articlePack) {
         };
     }
 
-    statusEl.classList.remove("error");
-    resultEl.innerHTML = "";
+    if (render) {
+        statusEl.classList.remove("error");
+        if (resultEl) resultEl.innerHTML = "";
+    }
 
     // categoria escolhida no PRINCIPAL
     const primaryCategoryId = parseInt(document.getElementById("wpCategoryId").value || "0", 10);
@@ -561,7 +568,9 @@ async function publishToAllSelectedSites(articlePack) {
 
         document.getElementById("wpCategoryId").value = String(resolvedCatId || 0);
 
-        statusEl.innerHTML = `Publicando em: <strong>${site.label}</strong> (${i + 1}/${selectedIds.length})...`;
+        if (render) {
+            statusEl.innerHTML = `Publicando em: <strong>${site.label}</strong> (${i + 1}/${selectedIds.length})...`;
+        }
 
         const r = await publishToWordpress(articlePack, site.label);
         results.push(r);
@@ -570,7 +579,7 @@ async function publishToAllSelectedSites(articlePack) {
         else failCount++;
     }
 
-    // Render resumo (por site)
+    // Render resumo (por site) somente quando render=true
     const lines = results.map((r) => {
         if (r.ok) {
             const linkPart = r.link
@@ -586,15 +595,17 @@ async function publishToAllSelectedSites(articlePack) {
 
     const html = lines.join("<br/>");
 
-    if (failCount > 0) {
-        statusEl.classList.add("error");
-        statusEl.innerHTML = `<strong>Atenção:</strong> ${okCount} publicado(s), ${failCount} falharam.`;
-    } else {
-        statusEl.classList.remove("error");
-        statusEl.innerHTML = `<strong>Sucesso:</strong> publicação finalizada em todos os sites selecionados.`;
-    }
+    if (render) {
+        if (failCount > 0) {
+            statusEl.classList.add("error");
+            statusEl.innerHTML = `<strong>Atenção:</strong> ${okCount} publicado(s), ${failCount} falharam.`;
+        } else {
+            statusEl.classList.remove("error");
+            statusEl.innerHTML = `<strong>Sucesso:</strong> publicação finalizada em todos os sites selecionados.`;
+        }
 
-    resultEl.innerHTML = html;
+        if (resultEl) resultEl.innerHTML = html;
+    }
 
     return {
         ok: failCount === 0,
@@ -606,7 +617,7 @@ async function publishToAllSelectedSites(articlePack) {
     };
 }
 
-// ✅ Publica REC + TODAS FULL e no final mostra TODOS os links publicados
+// ✅ Publica REC + TODAS FULL e no final mostra TODOS os links publicados (por artigo + por site)
 async function publishAllGeneratedArticles() {
     const statusEl = document.getElementById("statusPublish");
     const resultEl = document.getElementById("wpResult");
@@ -622,17 +633,14 @@ async function publishAllGeneratedArticles() {
     }
 
     statusEl.classList.remove("error");
-    resultEl.innerHTML = "";
+    if (resultEl) resultEl.innerHTML = "";
 
     const queue = [];
     if (hasRec) queue.push({ kind: "REC", pack: recPack });
-    if (hasFull) {
-        fullPacks.forEach((p, idx) => queue.push({ kind: `FULLREVIEW ${idx + 1}`, pack: p }));
-    }
+    if (hasFull) fullPacks.forEach((p, idx) => queue.push({ kind: `FULLREVIEW ${idx + 1}`, pack: p }));
 
     btnAll.disabled = true;
 
-    // Aqui vamos acumular TODOS os links: por artigo -> resultados por site
     const publishedByArticle = []; // [{ kind, title, siteResults: [...] }]
 
     try {
@@ -644,7 +652,8 @@ async function publishAllGeneratedArticles() {
                 `Publicando <strong>${escapeHtml(item.kind)}</strong> (${i + 1}/${queue.length})…` +
                 `<br/><span style="font-size:12px;opacity:.85">${escapeHtml(title)}</span>`;
 
-            const res = await publishToAllSelectedSites(item.pack);
+            // ✅ IMPORTANTÍSSIMO: render=false para não sobrescrever #wpResult a cada artigo
+            const res = await publishToAllSelectedSites(item.pack, { render: false });
 
             publishedByArticle.push({
                 kind: item.kind,
@@ -676,12 +685,14 @@ async function publishAllGeneratedArticles() {
             return `${header}<div style="padding-left:2px">${list}</div><hr style="border:none;border-top:1px solid #e5e7eb;margin:12px 0" />`;
         });
 
-        resultEl.innerHTML =
-            `<div style="margin-bottom:10px;font-weight:800">✅ Links de todas as publicações</div>` +
-            blocks.join("");
+        if (resultEl) {
+            resultEl.innerHTML =
+                `<div style="margin-bottom:10px;font-weight:800">✅ Links de todas as publicações</div>` +
+                blocks.join("");
+        }
 
         statusEl.classList.remove("error");
-        statusEl.innerHTML = `<strong>Sucesso:</strong> finalizado. Veja abaixo todos os links publicados.`;
+        statusEl.innerHTML = `<strong>Sucesso:</strong> finalizado. Veja abaixo os links de cada artigo publicado.`;
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
