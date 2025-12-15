@@ -1,4 +1,4 @@
-//article-schema.js esse codigo pertence
+//article-schema.js
 // ===== Schema por tipo (REC ou FULLREVIEW) =====
 // Aqui é só estrutura de campos. Quem define conteúdo, idioma, títulos etc. é o GPT.
 function getArticleSchema(articleType, languageCode, approxWordCount) {
@@ -34,6 +34,7 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
       conclusion_title: "string",
       conclusion_html: "string (HTML)",
 
+      // ✅ BLOCO (3º título) - FULL também tem bloco e PRECISA link
       content_block_tag: "string",
       content_block_title: "string",
       content_block_summary: "string",
@@ -62,6 +63,7 @@ function getArticleSchema(articleType, languageCode, approxWordCount) {
 
     section_cta_label: "string",
 
+    // ✅ BLOCO (3º título) - REC também tem bloco
     content_block_tag: "string",
     content_block_title: "string",
     content_block_summary: "string",
@@ -197,7 +199,6 @@ ${wordLimitGeneral}
   - Nunca deixe section_cta_label vazio ou ausente.
   - Deve ser um CTA curto, em MAIÚSCULAS, com até 6 palavras, diretamente ligado ao tema e no mesmo idioma do campo "language".`.trim();
 
-  // === AQUI ESTÁ A REGRA VISUAL DE SIMETRIA (TEXTO APENAS) ===
   const recRules = `
 REC:
 
@@ -249,6 +250,8 @@ ${recWordRule}
   - content_block_title: título chamativo e direto sobre o tema.
   - content_block_summary: 1 frase curta explicando por que esse bloco é relevante para quem se interessa pelo tema.
   - content_block_cta_label: CTA curto (até 4 palavras), específico do tema.
+  - content_block_cta_link:
+    - Pode ser deixado vazio no REC, pois o sistema pode injetar links das FULLs automaticamente.
   - content_block_warning: aviso curto consistente com o tema.
 `.trim();
 
@@ -295,7 +298,13 @@ ${fullWordRule}
 
 - Bloco CONTENT (3º título) em FULLREVIEW:
   - Siga as mesmas regras do REC.
-  - Todos os textos do bloco devem estar no mesmo idioma indicado em "language" e ligados diretamente ao tema.
+
+- LINK OFICIAL (OBRIGATÓRIO NA FULLREVIEW):
+  - O campo content_block_cta_link deve conter o LINK DO SITE OFICIAL do serviço/plataforma/marca citada no topic.
+  - Deve ser uma URL completa começando com "https://".
+  - Não use links de terceiros, encurtadores ou afiliados.
+  - Não adicione parâmetros de tracking (utm, ref, etc.).
+  - Exemplo: se o tema for Roblox, use o site oficial do Roblox; se for Shein, use o site oficial da Shein.
 `.trim();
 
   const typeSpecific = articleType === "REC" ? recRules : fullRules;
@@ -304,7 +313,6 @@ ${fullWordRule}
 Você é uma IA redatora experiente.
 
 O sistema cliente envia:
-- Topic: ${articleType === 'REC' ? 'Explicação sobre' : 'Review de'} ${schema.topic || "Tema enviado"}
 - Idioma: ${languageCode}
 - Tipo: ${articleType}
 ${hasLimit ? `- ALVO DE PALAVRAS (TARGET): ${resolvedApprox} palavras.` : ""}

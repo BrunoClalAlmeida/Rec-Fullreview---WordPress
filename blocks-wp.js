@@ -233,7 +233,8 @@ function injectPreviewSeventhCtaIntoBodyHtml(bodyHtml, article) {
 }
 
 // ===== BLOCO CONTENT (3º título) =====
-// ✅ Agora injeta link: qualquer 1 dos 3 FULL
+// ✅ REC: usa fullLinks (quando existir)
+// ✅ FULLREVIEW: usa article.content_block_cta_link (site oficial do tema)
 function buildContentAcfBlock(article, fullLinks = []) {
     if (!article) return "";
 
@@ -257,7 +258,9 @@ function buildContentAcfBlock(article, fullLinks = []) {
         }
     }
 
-    const link = pickAnyFullLink(fullLinks);
+    const linkFromFulls = pickAnyFullLink(fullLinks);
+    const linkFromJson = (article.content_block_cta_link || "").trim();
+    const link = linkFromFulls || linkFromJson;
 
     const data = {
         imagem: 0,
@@ -275,7 +278,7 @@ function buildContentAcfBlock(article, fullLinks = []) {
         label: ctaLabel,
         _label: "field_661541621c612",
 
-        // ✅ LINK do bloco content (qualquer 1 dos 3 FULL)
+        // ✅ LINK do bloco content
         link: link,
         _link: "field_6615416b1c613",
 
@@ -449,11 +452,11 @@ function buildHtmlFromArticle(article, options = {}) {
         return parts.join("\n\n");
     }
 
-    // FULLREVIEW (sem links automáticos)
+    // FULLREVIEW (usa o link oficial vindo do JSON no content block)
     if (article.intro_html) parts.push(htmlToBlocks(article.intro_html));
     if (article.body_html) {
         let bodyBlocks = htmlToBlocks(article.body_html);
-        bodyBlocks = injectThirdHeadingContentBlock(bodyBlocks, article, []); // sem links
+        bodyBlocks = injectThirdHeadingContentBlock(bodyBlocks, article, []); // sem fullLinks, pega content_block_cta_link
         parts.push(bodyBlocks);
     }
 
