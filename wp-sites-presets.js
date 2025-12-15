@@ -7,7 +7,7 @@ const WP_SITES_PRESETS = [
         label: "O Universo dos Cartões",
         baseUrl: "https://ouniversodoscartoes.com",
         user: "admin",
-        appPassword: "COLOQUE_A_SENHA_NOVA_AQUI",
+        appPassword: "BVvW V7JI 5tr3 d9hK l91H y8t3",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
