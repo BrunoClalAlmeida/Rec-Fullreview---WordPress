@@ -298,7 +298,7 @@ function readArticleSettingsFromForm() {
     };
 }
 
-// ===== Carregar categorias (EXATAMENTE como você tinha) =====
+// ===== Carregar categorias =====
 async function loadWpCategories() {
     const baseUrlInput = document.getElementById("wpBaseUrl");
     const categorySelect = document.getElementById("wpCategorySelect");
@@ -341,10 +341,12 @@ async function loadWpCategories() {
     }
 }
 
-// expõe para wp-sites-presets.js
 window.loadWpCategories = loadWpCategories;
 
-// ===== Publicar (EXATAMENTE como você tinha) =====
+/* =========================================================
+   ✅ PUBLICAR NO WORDPRESS (CORRIGIDO)
+   - retorna resultado e não “finge sucesso”
+   ========================================================= */
 async function publishToWordpress(articlePack) {
     const statusEl = document.getElementById("statusPublish");
     const resultEl = document.getElementById("wpResult");
@@ -352,7 +354,7 @@ async function publishToWordpress(articlePack) {
     if (!articlePack?.json || !articlePack?.html) {
         statusEl.classList.add("error");
         statusEl.innerHTML = "<strong>Erro:</strong> gere um texto antes de publicar.";
-        return;
+        return { ok: false, error: "no-article" };
     }
 
     const baseUrl = document.getElementById("wpBaseUrl").value.trim();
@@ -365,7 +367,7 @@ async function publishToWordpress(articlePack) {
     if (!baseUrl || !user || !appPassword) {
         statusEl.classList.add("error");
         statusEl.innerHTML = "<strong>Erro:</strong> preencha URL, usuário e application password do WordPress.";
-        return;
+        return { ok: false, error: "missing-credentials" };
     }
 
     const title = articlePack.json.h1 || "Texto IA";
@@ -396,7 +398,6 @@ async function publishToWordpress(articlePack) {
     };
 
     statusEl.classList.remove("error");
-    statusEl.innerHTML = "Publicando no WordPress...";
     resultEl.innerHTML = "";
 
     try {
@@ -411,17 +412,22 @@ async function publishToWordpress(articlePack) {
             body: JSON.stringify(body),
         });
 
-        if (!response.ok) {
-            const errText = await response.text();
-            throw new Error("Erro da API WordPress: " + errText);
+        const rawText = await response.text();
+        let data = null;
+        try {
+            data = JSON.parse(rawText);
+        } catch {
+            data = { raw: rawText };
         }
 
-        const data = await response.json();
+        if (!response.ok) {
+            // ✅ erro real do WP
+            const wpMsg = data?.message || rawText || ("Status " + response.status);
+            throw new Error(wpMsg);
+        }
 
-        statusEl.classList.remove("error");
-        statusEl.innerHTML = "<strong>Sucesso:</strong> post criado com ID " + data.id;
-
-        if (data.link) {
+        // ✅ sucesso real
+        if (data?.link) {
             resultEl.innerHTML =
                 '🔗 <strong>Link do post:</strong> <a href="' +
                 data.link +
@@ -429,14 +435,19 @@ async function publishToWordpress(articlePack) {
                 data.link +
                 "</a>";
         }
+
+        return { ok: true, data };
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
-        statusEl.innerHTML = "<strong>Erro ao publicar:</strong> " + err.message;
+        statusEl.innerHTML = "<strong>Erro ao publicar:</strong> " + (err?.message || err);
+        return { ok: false, error: err?.message || String(err) };
     }
 }
 
-// ✅ NOVO: publicar em TODOS os sites selecionados (APENAS ISSO)
+/* =========================================================
+   ✅ PUBLICAR EM TODOS OS SITES (RELATÓRIO REAL)
+   ========================================================= */
 async function publishToAllSelectedSites(articlePack) {
     const statusEl = document.getElementById("statusPublish");
     const resultEl = document.getElementById("wpResult");
@@ -451,11 +462,14 @@ async function publishToAllSelectedSites(articlePack) {
         return;
     }
 
-    // categoria escolhida do site principal (dropdown)
     const primaryCategoryId = parseInt(document.getElementById("wpCategoryId").value || "0", 10);
 
     statusEl.classList.remove("error");
     resultEl.innerHTML = "";
+
+    const results = [];
+    let successCount = 0;
+    let failCount = 0;
 
     for (let i = 0; i < selectedIds.length; i++) {
         const siteId = selectedIds[i];
@@ -463,14 +477,10 @@ async function publishToAllSelectedSites(articlePack) {
 
         if (!site) continue;
 
-        // aplica credenciais/URL do site atual (sem mudar nada do publish)
+        // aplica credenciais/URL do site atual
         document.getElementById("wpBaseUrl").value = site.baseUrl || "";
         document.getElementById("wpUser").value = site.user || "";
         document.getElementById("wpAppPassword").value = site.appPassword || "";
-
-        // mantém o status como está na UI (se você mudou manualmente)
-        // mas se quiser usar defaultStatus do preset, descomente:
-        // if (site.defaultStatus) document.getElementById("wpStatus").value = site.defaultStatus;
 
         // categoria: usa a selecionada do principal; se o preset tiver defaultCategoryId > 0, usa ele
         const useCat = (typeof site.defaultCategoryId === "number" && site.defaultCategoryId > 0)
@@ -479,11 +489,32 @@ async function publishToAllSelectedSites(articlePack) {
 
         document.getElementById("wpCategoryId").value = String(useCat || 0);
 
+        statusEl.classList.remove("error");
         statusEl.innerHTML = `Publicando em: <strong>${site.label}</strong> (${i + 1}/${selectedIds.length})...`;
-        await publishToWordpress(articlePack);
+
+        const r = await publishToWordpress(articlePack);
+
+        if (r.ok) {
+            successCount++;
+            results.push(`✅ ${site.label} — OK (post ID: ${r.data?.id || "?"})`);
+        } else {
+            failCount++;
+            results.push(`❌ ${site.label} — ERRO: ${r.error || "falha"}`);
+        }
     }
 
-    statusEl.innerHTML = "<strong>Sucesso:</strong> publicação finalizada em todos os sites selecionados.";
+    // ✅ status final verdadeiro
+    if (failCount > 0) {
+        statusEl.classList.add("error");
+        statusEl.innerHTML =
+            `<strong>Atenção:</strong> ${successCount} publicado(s), ${failCount} falharam.\n\n` +
+            results.join("\n");
+    } else {
+        statusEl.classList.remove("error");
+        statusEl.innerHTML =
+            `<strong>Sucesso:</strong> publicado em ${successCount} site(s).\n\n` +
+            results.join("\n");
+    }
 }
 
 // ===== Toggle preloader time =====
@@ -518,7 +549,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderFullPreview();
     });
 
-    // publicar (AGORA EM TODOS OS SITES SELECIONADOS)
+    // publicar em todos os sites selecionados
     document.getElementById("btnPublishRec")?.addEventListener("click", (e) => {
         e.preventDefault();
         publishToAllSelectedSites(recPack);
@@ -539,7 +570,6 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("wpCategorySelect").value || "0";
     });
 
-    // quando baseUrl muda (principal), carrega categorias
     const wpBaseUrlInput = document.getElementById("wpBaseUrl");
     wpBaseUrlInput?.addEventListener("change", loadWpCategories);
     wpBaseUrlInput?.addEventListener("blur", loadWpCategories);
