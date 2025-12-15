@@ -54,6 +54,16 @@ function syncPublishAllButton() {
     btnAll.disabled = !(hasRec || hasFull);
 }
 
+// ===== Escape HTML (para strings em UI) =====
+function escapeHtml(str) {
+    return (str || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
 // ===== Preview render =====
 function renderRecPreview() {
     const previewEl = document.getElementById("htmlPreviewRec");
@@ -488,7 +498,8 @@ async function publishToWordpress(articlePack, siteLabel = "") {
     }
 }
 
-// ✅ Publicar em TODOS os sites selecionados (com resumo real + slug)
+// ✅ Publicar em TODOS os sites selecionados
+// ✅ AGORA: retorna também um objeto com resultados (incluindo links) para o "Publicar Todos"
 async function publishToAllSelectedSites(articlePack) {
     const statusEl = document.getElementById("statusPublish");
     const resultEl = document.getElementById("wpResult");
@@ -500,7 +511,14 @@ async function publishToAllSelectedSites(articlePack) {
     if (!selectedIds || selectedIds.length === 0) {
         statusEl.classList.add("error");
         statusEl.innerHTML = "<strong>Erro:</strong> selecione pelo menos 1 site para publicar.";
-        return;
+        return {
+            ok: false,
+            okCount: 0,
+            failCount: 0,
+            results: [],
+            html: "",
+            message: "Nenhum site selecionado."
+        };
     }
 
     statusEl.classList.remove("error");
@@ -552,17 +570,21 @@ async function publishToAllSelectedSites(articlePack) {
         else failCount++;
     }
 
-    // Render resumo
+    // Render resumo (por site)
     const lines = results.map((r) => {
         if (r.ok) {
-            const linkPart = r.link ? ` — <a href="${r.link}" target="_blank" rel="noopener noreferrer">abrir</a>` : "";
-            return `✅ <strong>${r.siteLabel}</strong> — ID: ${r.id || "-"} | slug: <strong>${r.slug}</strong>${linkPart}`;
+            const linkPart = r.link
+                ? ` — <a href="${r.link}" target="_blank" rel="noopener noreferrer">abrir</a>`
+                : " — (sem link)";
+            return `✅ <strong>${escapeHtml(r.siteLabel)}</strong> — ID: ${r.id || "-"} | slug: <strong>${escapeHtml(r.slug)}</strong>${linkPart}`;
         }
         const msg = (r.error || "").includes("rest_cannot_create")
             ? "Sem permissão para criar posts com este usuário."
             : (r.error || "Falhou.");
-        return `❌ <strong>${r.siteLabel}</strong> — ERRO: ${stripHtml(msg)} | slug: <strong>${r.slug}</strong>`;
+        return `❌ <strong>${escapeHtml(r.siteLabel)}</strong> — ERRO: ${escapeHtml(stripHtml(msg))} | slug: <strong>${escapeHtml(r.slug)}</strong>`;
     });
+
+    const html = lines.join("<br/>");
 
     if (failCount > 0) {
         statusEl.classList.add("error");
@@ -572,19 +594,19 @@ async function publishToAllSelectedSites(articlePack) {
         statusEl.innerHTML = `<strong>Sucesso:</strong> publicação finalizada em todos os sites selecionados.`;
     }
 
-    resultEl.innerHTML = lines.join("<br/>");
+    resultEl.innerHTML = html;
+
+    return {
+        ok: failCount === 0,
+        okCount,
+        failCount,
+        results,
+        html,
+        message: failCount === 0 ? "OK" : "Parcial"
+    };
 }
 
-// ===== Publish ALL (REC + todas FULL) =====
-function escapeHtml(str) {
-    return (str || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
+// ✅ Publica REC + TODAS FULL e no final mostra TODOS os links publicados
 async function publishAllGeneratedArticles() {
     const statusEl = document.getElementById("statusPublish");
     const resultEl = document.getElementById("wpResult");
@@ -610,7 +632,8 @@ async function publishAllGeneratedArticles() {
 
     btnAll.disabled = true;
 
-    const summaryLines = [];
+    // Aqui vamos acumular TODOS os links: por artigo -> resultados por site
+    const publishedByArticle = []; // [{ kind, title, siteResults: [...] }]
 
     try {
         for (let i = 0; i < queue.length; i++) {
@@ -618,23 +641,47 @@ async function publishAllGeneratedArticles() {
             const title = item.pack?.json?.h1 || item.pack?.json?.topic || "Sem título";
 
             statusEl.innerHTML =
-                `Publicando <strong>${item.kind}</strong> (${i + 1}/${queue.length})…` +
+                `Publicando <strong>${escapeHtml(item.kind)}</strong> (${i + 1}/${queue.length})…` +
                 `<br/><span style="font-size:12px;opacity:.85">${escapeHtml(title)}</span>`;
 
-            // Importante: essa função já exige site selecionado
-            await publishToAllSelectedSites(item.pack);
+            const res = await publishToAllSelectedSites(item.pack);
 
-            summaryLines.push(`📌 <strong>${item.kind}</strong>: ${escapeHtml(title)}`);
+            publishedByArticle.push({
+                kind: item.kind,
+                title,
+                siteResults: res?.results || [],
+                okCount: res?.okCount || 0,
+                failCount: res?.failCount || 0
+            });
         }
 
-        // Mostra resumo geral + mantém o resultado do último envio
+        // ✅ RESUMO FINAL com TODOS os links de TODOS os posts publicados
+        const blocks = publishedByArticle.map((a) => {
+            const header =
+                `<div style="margin:14px 0 8px">` +
+                `  <div style="font-weight:800;color:#0f172a">📌 ${escapeHtml(a.kind)} — ${escapeHtml(a.title)}</div>` +
+                `  <div style="font-size:12px;opacity:.75;margin-top:2px">Resultado: ${a.okCount} ok / ${a.failCount} falhas</div>` +
+                `</div>`;
+
+            const list = (a.siteResults || []).map((r) => {
+                if (r.ok) {
+                    const link = r.link
+                        ? `<a href="${r.link}" target="_blank" rel="noopener noreferrer">abrir</a>`
+                        : "(sem link)";
+                    return `✅ <strong>${escapeHtml(r.siteLabel)}</strong> — ${link} <span style="opacity:.8;font-size:12px">(slug: ${escapeHtml(r.slug || "")})</span>`;
+                }
+                return `❌ <strong>${escapeHtml(r.siteLabel)}</strong> — <span style="opacity:.85">${escapeHtml(stripHtml(r.error || "Falhou"))}</span> <span style="opacity:.8;font-size:12px">(slug: ${escapeHtml(r.slug || "")})</span>`;
+            }).join("<br/>");
+
+            return `${header}<div style="padding-left:2px">${list}</div><hr style="border:none;border-top:1px solid #e5e7eb;margin:12px 0" />`;
+        });
+
         resultEl.innerHTML =
-            `<div style="margin-bottom:10px">${summaryLines.join("<br/>")}</div>` +
-            `<hr style="border:none;border-top:1px solid #e5e7eb;margin:10px 0" />` +
-            resultEl.innerHTML;
+            `<div style="margin-bottom:10px;font-weight:800">✅ Links de todas as publicações</div>` +
+            blocks.join("");
 
         statusEl.classList.remove("error");
-        statusEl.innerHTML = `<strong>Sucesso:</strong> todos os artigos gerados foram enviados para os sites selecionados.`;
+        statusEl.innerHTML = `<strong>Sucesso:</strong> finalizado. Veja abaixo todos os links publicados.`;
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
@@ -675,7 +722,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderFullPreview();
     });
 
-    // ✅ NOVO BOTÃO ÚNICO
+    // ✅ BOTÃO ÚNICO
     document.getElementById("btnPublishAll")?.addEventListener("click", (e) => {
         e.preventDefault();
         publishAllGeneratedArticles();
