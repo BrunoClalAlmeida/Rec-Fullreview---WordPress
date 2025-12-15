@@ -2,8 +2,7 @@
 /* ===== Reset básico ===== */
 * {
     box-sizing: border-box;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 html,
@@ -172,13 +171,12 @@ textarea:focus {
     transform: translateY(-1px);
 }
 
-/* ===== Select estilizado (mais bonito e arredondado) ===== */
+/* ===== Select estilizado ===== */
 select {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
 
-    /* pill */
     border-radius: 999px;
     padding: 10px 44px 10px 14px;
     border: 1px solid #c7d2fe;
@@ -289,8 +287,7 @@ button:not(:disabled):hover {
     color: #dc2626;
 }
 
-/* ===== Código / preview ===== */
-pre,
+/* ===== Preview ===== */
 .preview {
     background: #f9fafb;
     padding: 12px;
@@ -306,27 +303,22 @@ pre,
 }
 
 /* Scrollbar leve – Chrome / Edge */
-pre::-webkit-scrollbar,
 .preview::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
 
-pre::-webkit-scrollbar-thumb,
 .preview::-webkit-scrollbar-thumb {
     background: #c7d2fe;
     border-radius: 999px;
 }
 
-/* tira “bolinha” branca do canto */
-pre::-webkit-scrollbar-corner,
 .preview::-webkit-scrollbar-corner {
     background: #f9fafb;
     border-bottom-right-radius: 14px;
 }
 
 /* Firefox */
-pre,
 .preview {
     scrollbar-width: thin;
     scrollbar-color: #c7d2fe #f9fafb;
@@ -352,32 +344,7 @@ pre,
     text-decoration: underline;
 }
 
-/* ===== Estilo leve FAQ / passo a passo ===== */
-.faq h2,
-.passo-a-passo h2 {
-    margin-top: 16px;
-    margin-bottom: 6px;
-    color: #0f172a;
-}
-
-.faq p strong {
-    color: #0f172a;
-}
-
-/* CTA visual da REC */
-.cta-rec {
-    margin: 12px 0;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: #e0ecff;
-    border: 1px dashed #93c5fd;
-}
-
-.cta-rec p {
-    margin: 2px 0;
-}
-
-/* Lista de CTAs do preview – estilo "pill" */
+/* ===== CTA visual da REC ===== */
 .cta-preview-list {
     list-style: none;
     padding: 0;
@@ -402,7 +369,6 @@ pre,
     white-space: nowrap;
 }
 
-/* Bloco de content preview */
 .content-block-preview {
     margin: 14px 0;
     padding: 12px 14px;
@@ -443,7 +409,6 @@ pre,
     color: #9ca3af;
 }
 
-/* CTA preview do 7º título */
 .section-cta-preview {
     margin-top: 8px;
     padding: 8px 10px;
@@ -454,7 +419,7 @@ pre,
     display: inline-block;
 }
 
-/* ===== BLOCO ESPECÍFICO: Configurações do artigo (estilo meta box WP) ===== */
+/* ===== Configurações do artigo ===== */
 .article-settings-card {
     margin-top: 20px;
     padding: 16px 16px 14px;
@@ -480,7 +445,6 @@ pre,
     color: #6b7280;
 }
 
-/* grid dos toggles */
 .wp-toggles-grid {
     display: flex;
     flex-direction: column;
@@ -505,12 +469,10 @@ pre,
     background: rgba(243, 244, 246, 0.9);
 }
 
-/* linha filha (tempo preloader) */
 .wp-toggle-row-nested {
     padding-left: 18px;
 }
 
-/* textos do toggle */
 .wp-toggle-text {
     display: flex;
     flex-direction: column;
@@ -529,13 +491,11 @@ pre,
     color: #6b7280;
 }
 
-/* input pequeno (tempo) */
 .wp-small-input {
     max-width: 120px;
     font-size: 0.82rem;
 }
 
-/* desabilitado */
 .wp-small-input:disabled {
     background: #e5e7eb;
     border-color: #d1d5db;
@@ -543,7 +503,7 @@ pre,
     cursor: not-allowed;
 }
 
-/* ===== Toggle estilo switch ===== */
+/* ===== Toggle switch ===== */
 .wp-toggle {
     position: relative;
     display: inline-block;
@@ -633,4 +593,16 @@ pre,
 /* ===== Campos somente dev (ocultos na UI) ===== */
 .dev-only {
     display: none;
+}
+
+/* ===== Preview actions (navegação nos previews) ===== */
+.preview-actions {
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.preview-actions .status {
+    margin-top: 0;
+    flex: 1;
+    text-align: right;
 }
