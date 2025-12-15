@@ -20,7 +20,6 @@
 
 <body>
     <div class="app-wrapper">
-        <!-- Cabeçalho -->
         <header class="app-header">
             <h1 class="app-title">
                 🧠 Gerador de Artigos
@@ -30,22 +29,17 @@
                 </span>
             </h1>
             <p class="app-subtitle">
-                Digite o tema, escolha as quantidades e publique direto no WordPress.
+                Tema e palavras separados para REC e FULLREVIEW. Gere vários FULLs de uma vez.
             </p>
         </header>
 
-        <!-- Card 1: Tema -->
+        <!-- Card 1 -->
         <section class="card">
             <div class="card-header">
-                <h2 class="card-title">1. Configuração do Tema</h2>
+                <h2 class="card-title">1. Configuração dos Temas</h2>
             </div>
 
             <div class="row">
-                <div class="col-12">
-                    <label for="topic">Tema / Palavra-chave do texto</label>
-                    <textarea id="topic" placeholder="Ex: Como Ganhar Robux no Roblox de Forma Segura"></textarea>
-                </div>
-
                 <div class="col-4">
                     <label for="language">Idioma</label>
                     <select id="language">
@@ -56,9 +50,20 @@
                 </div>
 
                 <div class="col-4">
-                    <label for="recCount">Quantidade de REC</label>
-                    <input type="number" id="recCount" min="0" max="10" step="1" value="0" />
-                    <p class="hint">Ex.: 1</p>
+                    <label for="wordCountRec">Palavras do REC</label>
+                    <input type="number" id="wordCountRec" min="300" max="3000" step="50" value="0" />
+                    <p class="hint">Ex.: 650</p>
+                </div>
+
+                <div class="col-4">
+                    <label for="wordCountFull">Palavras da FULLREVIEW</label>
+                    <input type="number" id="wordCountFull" min="500" max="4000" step="100" value="0" />
+                    <p class="hint">Ex.: 1000</p>
+                </div>
+
+                <div class="col-12">
+                    <label for="topicRec">Tema do REC</label>
+                    <textarea id="topicRec" placeholder="Ex: Como Ganhar Robux no Roblox de Forma Segura"></textarea>
                 </div>
 
                 <div class="col-4">
@@ -67,44 +72,40 @@
                     <p class="hint">Ex.: 3</p>
                 </div>
 
-                <div class="col-4">
-                    <label for="wordCount">Quantidade aproximada de palavras</label>
-                    <input type="number" id="wordCount" min="300" max="3000" step="50" placeholder="0" />
+                <div class="col-12">
+                    <label>Temas da FULLREVIEW</label>
+                    <div id="fullTopicsContainer" class="topics-box"></div>
                     <p class="hint">
-                        Coloque a quantidade desejada de palavras. Ex.: REC – 650, FULLREVIEW – 1000.
+                        O sistema cria automaticamente os campos de tema conforme a “Quantidade de FULLREVIEW”.
                     </p>
                 </div>
             </div>
 
             <div class="actions-row">
-                <button id="btnGenerate" class="primary">🚀 Gerar Textos com IA</button>
+                <button id="btnGenerate" class="primary">🚀 Gerar REC + FULLREVIEW</button>
                 <div id="statusGenerate" class="status"></div>
             </div>
         </section>
 
-        <!-- Card 2: Resultado (REC | FULLREVIEW) -->
+        <!-- Card 2 -->
         <section class="card">
             <div class="card-header">
                 <h2 class="card-title">2. Resultado da IA</h2>
             </div>
 
             <div class="row">
-                <!-- REC (ESQUERDA) -->
+                <!-- REC esquerda -->
                 <div class="col-6">
                     <label>Preview REC (esquerda)</label>
-
                     <div class="actions-row preview-actions">
-                        <button id="btnPrevRec" class="secondary" disabled>⬅️ Anterior</button>
-                        <button id="btnNextRec" class="secondary" disabled>Próximo ➡️</button>
                         <div id="previewInfoRec" class="status"></div>
                     </div>
-
                     <div id="htmlPreviewRec" class="preview">
                         <em>Nenhum REC gerado ainda.</em>
                     </div>
                 </div>
 
-                <!-- FULLREVIEW (DIREITA) -->
+                <!-- FULL direita -->
                 <div class="col-6">
                     <label>Preview FULLREVIEW (direita)</label>
 
@@ -121,14 +122,14 @@
             </div>
         </section>
 
-        <!-- Card 3: Config WordPress + Publicar -->
+        <!-- Card 3 -->
         <section class="card">
             <div class="card-header">
                 <h2 class="card-title">3. Publicar no WordPress</h2>
             </div>
 
             <p class="card-description">
-                Selecione o site e publique o REC ou FULLREVIEW que estiver no preview.
+                Selecione o site e publique o REC (esquerda) ou o FULLREVIEW selecionado (direita).
             </p>
 
             <div class="row">
@@ -164,7 +165,6 @@
 
                 <input type="hidden" id="wpCategoryId" value="0" />
 
-                <!-- Campos sensíveis (ocultos) -->
                 <div class="col-4 dev-only">
                     <label for="wpUser">Usuário WordPress</label>
                     <input type="text" id="wpUser" placeholder="admin" />
@@ -298,13 +298,8 @@
             </div>
 
             <div class="actions-row">
-                <button id="btnPublishRec" class="secondary" disabled>
-                    📤 Publicar REC (selecionado)
-                </button>
-                <button id="btnPublishFull" class="secondary" disabled>
-                    📤 Publicar FULLREVIEW (selecionado)
-                </button>
-
+                <button id="btnPublishRec" class="secondary" disabled>📤 Publicar REC</button>
+                <button id="btnPublishFull" class="secondary" disabled>📤 Publicar FULLREVIEW</button>
                 <div id="statusPublish" class="status"></div>
                 <div id="wpResult" class="status wp-result-link"></div>
             </div>

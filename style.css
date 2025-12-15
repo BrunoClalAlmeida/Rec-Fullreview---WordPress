@@ -1,4 +1,4 @@
-/* style.css*/
+/* style.css */
 /* ===== Reset básico ===== */
 * {
     box-sizing: border-box;
@@ -38,6 +38,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-wrap: wrap;
+    /* evita quebrar feio em telas menores */
     gap: 10px;
     color: #0f172a;
 }
@@ -60,6 +62,7 @@ body {
     background: rgba(79, 70, 229, 0.06);
     font-size: 0.78rem;
     color: #4f46e5;
+    white-space: nowrap;
 }
 
 .chip-dot {
@@ -103,30 +106,34 @@ body {
     color: #6b7280;
 }
 
-/* ===== Grid responsivo ===== */
+/* =========================================================
+   GRID (mais alinhado: troca flex/calc por grid)
+   ========================================================= */
 .row {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
     gap: 14px;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
+/* colunas por span (mantém suas classes) */
 .col-3 {
-    flex: 0 0 calc(25% - 11px);
+    grid-column: span 3;
     min-width: 0;
 }
 
 .col-4 {
-    flex: 0 0 calc(33.333% - 10px);
+    grid-column: span 4;
     min-width: 0;
 }
 
 .col-6 {
-    flex: 0 0 calc(50% - 7px);
+    grid-column: span 6;
     min-width: 0;
 }
 
 .col-12 {
-    flex: 0 0 100%;
+    grid-column: span 12;
+    min-width: 0;
 }
 
 /* ===== Labels / inputs ===== */
@@ -210,14 +217,9 @@ select option {
     color: #0f172a;
 }
 
-select option:checked {
-    background: #e5edff;
-    color: #0f172a;
-}
-
 /* ===== Textarea ===== */
 textarea {
-    min-height: 80px;
+    min-height: 84px;
     resize: vertical;
 }
 
@@ -225,6 +227,7 @@ textarea {
     font-size: 0.74rem;
     color: #94a3b8;
     margin-top: 3px;
+    line-height: 1.3;
 }
 
 /* ===== Botões ===== */
@@ -236,6 +239,7 @@ button {
     cursor: pointer;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     transition:
         transform 0.12s ease,
@@ -277,6 +281,7 @@ button:not(:disabled):hover {
     margin-top: 6px;
     min-height: 18px;
     white-space: pre-line;
+    line-height: 1.35;
 }
 
 .status strong {
@@ -293,13 +298,20 @@ button:not(:disabled):hover {
     padding: 12px;
     border-radius: 14px;
     border: 1px solid #e5e7eb;
-    max-height: 340px;
-    max-width: 100%;
+    max-height: 360px;
     width: 100%;
-    box-sizing: border-box;
     margin: 0;
     color: #0f172a;
     overflow: auto;
+}
+
+/* deixa os dois previews com altura parecida no PC */
+@media (min-width: 769px) {
+
+    #htmlPreviewRec,
+    #htmlPreviewFull {
+        min-height: 340px;
+    }
 }
 
 /* Scrollbar leve – Chrome / Edge */
@@ -550,6 +562,49 @@ button:not(:disabled):hover {
     transform: translateX(20px);
 }
 
+/* ===== Temas FULL (container) ===== */
+.topics-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.full-topic-item textarea {
+    min-height: 70px;
+}
+
+/* =========================================================
+   PREVIEW ACTIONS (FIX DEFINITIVO DO ALINHAMENTO)
+   - garante mesma altura da faixa acima dos previews
+   ========================================================= */
+.preview-actions {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    /* 🔥 isso impede o FULL de “empurrar” o preview pra baixo */
+    min-height: 44px;
+}
+
+.preview-actions .status {
+    margin-top: 0 !important;
+    margin-left: auto;
+    text-align: right;
+    min-height: 0 !important;
+    line-height: 1.2;
+}
+
+/* padroniza altura dos botões (Anterior/Próximo) */
+.preview-actions button {
+    height: 36px;
+    padding: 0 14px;
+}
+
 /* ===== MOBILE ===== */
 @media (max-width: 768px) {
     body {
@@ -575,14 +630,43 @@ button:not(:disabled):hover {
         text-align: center;
     }
 
-    .actions-row {
-        justify-content: center;
+    /* grid vira 1 coluna */
+    .row {
+        grid-template-columns: 1fr;
     }
 
     .col-3,
     .col-4,
-    .col-6 {
-        flex: 0 0 100%;
+    .col-6,
+    .col-12 {
+        grid-column: span 1;
+    }
+
+    .actions-row {
+        justify-content: center;
+    }
+
+    /* previews + navegação */
+    .preview-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+        min-height: 0;
+        /* no mobile não precisa reservar */
+    }
+
+    .preview-actions button {
+        width: 100%;
+        height: 40px;
+    }
+
+    .preview-actions .status {
+        width: 100%;
+        text-align: center;
+        margin-left: 0;
+    }
+
+    .preview {
+        max-height: 320px;
     }
 
     .article-settings-card {
@@ -593,16 +677,4 @@ button:not(:disabled):hover {
 /* ===== Campos somente dev (ocultos na UI) ===== */
 .dev-only {
     display: none;
-}
-
-/* ===== Preview actions (navegação nos previews) ===== */
-.preview-actions {
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.preview-actions .status {
-    margin-top: 0;
-    flex: 1;
-    text-align: right;
 }

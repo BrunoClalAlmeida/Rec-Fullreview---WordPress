@@ -1,42 +1,71 @@
 // ===== Estado em memória =====
-let recArticles = [];
-let fullArticles = [];
-let selectedRecIndex = -1;
+let recPack = null;      // { json, html, previewHtml, type, totalWords }
+let fullPacks = [];      // array de packs FULL
 let selectedFullIndex = -1;
 
-// ===== Helpers =====
-function getSelectedRec() {
-    if (selectedRecIndex < 0 || selectedRecIndex >= recArticles.length) return null;
-    return recArticles[selectedRecIndex];
-}
-function getSelectedFull() {
-    if (selectedFullIndex < 0 || selectedFullIndex >= fullArticles.length) return null;
-    return fullArticles[selectedFullIndex];
+// ===== Util: cria campos FULL conforme fullCount =====
+function buildFullTopicFields() {
+    const container = document.getElementById("fullTopicsContainer");
+    const fullCountEl = document.getElementById("fullCount");
+    if (!container || !fullCountEl) return;
+
+    let n = parseInt(fullCountEl.value || "0", 10);
+    if (isNaN(n) || n < 0) n = 0;
+    if (n > 10) n = 10;
+
+    // mantém valores atuais
+    const existing = Array.from(container.querySelectorAll("textarea")).map((t) => t.value || "");
+
+    container.innerHTML = "";
+
+    for (let i = 0; i < n; i++) {
+        const wrap = document.createElement("div");
+        wrap.className = "full-topic-item";
+
+        const label = document.createElement("label");
+        label.setAttribute("for", `topicFull_${i}`);
+        label.textContent = `Tema FULLREVIEW ${i + 1}`;
+
+        const ta = document.createElement("textarea");
+        ta.id = `topicFull_${i}`;
+        ta.placeholder = `Ex: Tema do FULLREVIEW ${i + 1}`;
+        ta.value = existing[i] || "";
+
+        wrap.appendChild(label);
+        wrap.appendChild(ta);
+        container.appendChild(wrap);
+    }
 }
 
-// ===== Render Previews =====
+function getFullTopicsFromFields() {
+    const container = document.getElementById("fullTopicsContainer");
+    if (!container) return [];
+    return Array.from(container.querySelectorAll("textarea"))
+        .map((t) => (t.value || "").trim())
+        .filter((t) => t.length > 0);
+}
+
+// ===== Preview render =====
 function renderRecPreview() {
     const previewEl = document.getElementById("htmlPreviewRec");
     const infoEl = document.getElementById("previewInfoRec");
-    const btnPrev = document.getElementById("btnPrevRec");
-    const btnNext = document.getElementById("btnNextRec");
     const btnPublish = document.getElementById("btnPublishRec");
 
-    const a = getSelectedRec();
-    if (!a) {
+    if (!recPack) {
         if (previewEl) previewEl.innerHTML = "<em>Nenhum REC gerado ainda.</em>";
         if (infoEl) infoEl.textContent = "";
-        if (btnPrev) btnPrev.disabled = true;
-        if (btnNext) btnNext.disabled = true;
         if (btnPublish) btnPublish.disabled = true;
         return;
     }
 
-    previewEl.innerHTML = a.previewHtml || "<em>Nenhum HTML gerado.</em>";
-    infoEl.innerHTML = `<strong>REC:</strong> ${selectedRecIndex + 1} / ${recArticles.length}`;
-    btnPrev.disabled = selectedRecIndex <= 0;
-    btnNext.disabled = selectedRecIndex >= recArticles.length - 1;
+    previewEl.innerHTML = recPack.previewHtml || "<em>Nenhum HTML gerado.</em>";
+    infoEl.innerHTML = `<strong>REC:</strong> palavras ~ ${recPack.totalWords || 0}`;
     btnPublish.disabled = false;
+}
+
+function getSelectedFullPack() {
+    if (selectedFullIndex < 0 || selectedFullIndex >= fullPacks.length) return null;
+    return fullPacks[selectedFullIndex];
 }
 
 function renderFullPreview() {
@@ -46,31 +75,33 @@ function renderFullPreview() {
     const btnNext = document.getElementById("btnNextFull");
     const btnPublish = document.getElementById("btnPublishFull");
 
-    const a = getSelectedFull();
-    if (!a) {
+    const pack = getSelectedFullPack();
+
+    if (!pack) {
         if (previewEl) previewEl.innerHTML = "<em>Nenhum FULLREVIEW gerado ainda.</em>";
         if (infoEl) infoEl.textContent = "";
-        if (btnPrev) btnPrev.disabled = true;
-        if (btnNext) btnNext.disabled = true;
-        if (btnPublish) btnPublish.disabled = true;
+        btnPrev.disabled = true;
+        btnNext.disabled = true;
+        btnPublish.disabled = true;
         return;
     }
 
-    previewEl.innerHTML = a.previewHtml || "<em>Nenhum HTML gerado.</em>";
-    infoEl.innerHTML = `<strong>FULLREVIEW:</strong> ${selectedFullIndex + 1} / ${fullArticles.length}`;
+    previewEl.innerHTML = pack.previewHtml || "<em>Nenhum HTML gerado.</em>";
+    infoEl.innerHTML = `<strong>FULL:</strong> ${selectedFullIndex + 1} / ${fullPacks.length} (palavras ~ ${pack.totalWords || 0})`;
+
     btnPrev.disabled = selectedFullIndex <= 0;
-    btnNext.disabled = selectedFullIndex >= fullArticles.length - 1;
+    btnNext.disabled = selectedFullIndex >= fullPacks.length - 1;
     btnPublish.disabled = false;
 }
 
-function renderAllPreviews() {
+function renderAll() {
     renderRecPreview();
     renderFullPreview();
 }
 
 // ===== Gerar 1 artigo =====
 async function generateOneArticle({ topic, language, type, approxWordCount }) {
-    const hasLimit = approxWordCount > 0;
+    const hasLimit = typeof approxWordCount === "number" && approxWordCount > 0;
     const maxTokens = hasLimit ? Math.round(approxWordCount * 1.8) : 2048;
 
     const systemPrompt = buildSystemPrompt(type, language, approxWordCount);
@@ -83,7 +114,7 @@ Crie um texto do tipo "${type}" usando o schema dado, no idioma "${language}", s
 
 Regras específicas deste pedido:
 - Não mude o assunto central do topic. Não troque por um tema parecido ou genérico.
-- Todo o conteúdo (títulos, parágrafos, comparações, bloco especial, passo a passo, FAQ e conclusão) deve falar diretamente sobre esse tema e suas variações naturais.
+- Todo o conteúdo deve falar diretamente sobre esse tema e suas variações naturais.
 - O texto deve ter NO MÁXIMO ${approxWordCount} palavras (soma de todos os campos de conteúdo). Se precisar errar, erre para menos.
 `.trim()
         : `
@@ -109,8 +140,7 @@ Regras específicas deste pedido:
     }
 
     const data = await response.json();
-    let content = data.choices?.[0]?.message?.content || "";
-    content = content.trim();
+    let content = (data.choices?.[0]?.message?.content || "").trim();
 
     // remove ```json ... ```
     if (content.startsWith("```")) {
@@ -129,7 +159,6 @@ Regras específicas deste pedido:
         throw new Error("Falha ao interpretar o JSON retornado pela IA. Veja o console.");
     }
 
-    // normaliza
     articleJson.type = type;
     articleJson.language = language;
     articleJson.topic = topic;
@@ -157,77 +186,72 @@ Regras específicas deste pedido:
     return { json: articleJson, html, previewHtml, type, totalWords };
 }
 
-// ===== Gerar em lote =====
-async function generateBatch() {
-    const topic = document.getElementById("topic").value.trim();
-    const language = document.getElementById("language").value;
-
-    const recCount = parseInt(document.getElementById("recCount")?.value || "0", 10) || 0;
-    const fullCount = parseInt(document.getElementById("fullCount")?.value || "0", 10) || 0;
-
-    const wordCountRaw = document.getElementById("wordCount")?.value || "";
-    let approxWordCount = parseInt(wordCountRaw, 10);
-    if (isNaN(approxWordCount) || approxWordCount <= 0) approxWordCount = 0;
-
-    const totalToGenerate = recCount + fullCount;
-
+// ===== Gerar REC + FULL (temas e palavras separados) =====
+async function generateAllArticles() {
     const statusEl = document.getElementById("statusGenerate");
     const btn = document.getElementById("btnGenerate");
 
-    if (!topic) {
+    const language = document.getElementById("language").value;
+
+    const topicRec = (document.getElementById("topicRec").value || "").trim();
+    const fullTopics = getFullTopicsFromFields();
+
+    const wordRecRaw = document.getElementById("wordCountRec")?.value || "";
+    let wordRec = parseInt(wordRecRaw, 10);
+    if (isNaN(wordRec) || wordRec <= 0) wordRec = 0;
+
+    const wordFullRaw = document.getElementById("wordCountFull")?.value || "";
+    let wordFull = parseInt(wordFullRaw, 10);
+    if (isNaN(wordFull) || wordFull <= 0) wordFull = 0;
+
+    if (!topicRec && fullTopics.length === 0) {
         statusEl.classList.add("error");
-        statusEl.innerHTML = "<strong>Erro:</strong> informe um tema para o texto.";
-        return;
-    }
-    if (totalToGenerate <= 0) {
-        statusEl.classList.add("error");
-        statusEl.innerHTML = "<strong>Erro:</strong> informe a quantidade de REC e/ou FULLREVIEW.";
+        statusEl.innerHTML = "<strong>Erro:</strong> informe o tema do REC e/ou pelo menos 1 tema de FULLREVIEW.";
         return;
     }
 
     statusEl.classList.remove("error");
     btn.disabled = true;
 
-    // reset
-    recArticles = [];
-    fullArticles = [];
-    selectedRecIndex = -1;
+    // reset estado
+    recPack = null;
+    fullPacks = [];
     selectedFullIndex = -1;
-    renderAllPreviews();
+    renderAll();
 
     try {
         let done = 0;
+        const total = (topicRec ? 1 : 0) + fullTopics.length;
 
-        // REC primeiro (vai aparecer na esquerda)
-        for (let i = 0; i < recCount; i++) {
-            statusEl.innerHTML = `Gerando REC ${i + 1}/${recCount}… (total ${done + 1}/${totalToGenerate})`;
-            const result = await generateOneArticle({ topic, language, type: "REC", approxWordCount });
-            recArticles.push(result);
+        // REC
+        if (topicRec) {
+            statusEl.innerHTML = `Gerando REC… (${done + 1}/${total})`;
+            recPack = await generateOneArticle({
+                topic: topicRec,
+                language,
+                type: "REC",
+                approxWordCount: wordRec,
+            });
             done++;
-            if (selectedRecIndex === -1) selectedRecIndex = 0;
             renderRecPreview();
         }
 
-        // FULLREVIEW (vai aparecer na direita)
-        for (let i = 0; i < fullCount; i++) {
-            statusEl.innerHTML = `Gerando FULLREVIEW ${i + 1}/${fullCount}… (total ${done + 1}/${totalToGenerate})`;
-            const result = await generateOneArticle({ topic, language, type: "FULLREVIEW", approxWordCount });
-            fullArticles.push(result);
+        // FULLS
+        for (let i = 0; i < fullTopics.length; i++) {
+            statusEl.innerHTML = `Gerando FULLREVIEW ${i + 1}/${fullTopics.length}… (${done + 1}/${total})`;
+            const pack = await generateOneArticle({
+                topic: fullTopics[i],
+                language,
+                type: "FULLREVIEW",
+                approxWordCount: wordFull,
+            });
+            fullPacks.push(pack);
             done++;
             if (selectedFullIndex === -1) selectedFullIndex = 0;
             renderFullPreview();
         }
 
-        const totalWords =
-            recArticles.reduce((s, a) => s + (a.totalWords || 0), 0) +
-            fullArticles.reduce((s, a) => s + (a.totalWords || 0), 0);
-
-        statusEl.innerHTML =
-            `<strong>Sucesso:</strong> gerados ${totalToGenerate} textos ` +
-            `(REC: ${recCount} | FULLREVIEW: ${fullCount}). ` +
-            `Palavras estimadas (soma): ${totalWords}.`;
-
-        renderAllPreviews();
+        statusEl.innerHTML = `<strong>Sucesso:</strong> gerado(s) ${total} texto(s).`;
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
@@ -277,7 +301,7 @@ function readArticleSettingsFromForm() {
     };
 }
 
-// ===== Carregar categorias do WordPress =====
+// ===== Carregar categorias =====
 async function loadWpCategories() {
     const baseUrlInput = document.getElementById("wpBaseUrl");
     const categorySelect = document.getElementById("wpCategorySelect");
@@ -293,7 +317,6 @@ async function loadWpCategories() {
     }
 
     const url = baseUrl.replace(/\/$/, "") + "/wp-json/wp/v2/categories?per_page=100";
-
     categorySelect.innerHTML = '<option value="">Carregando categorias...</option>';
     hiddenCategoryId.value = "0";
 
@@ -321,7 +344,7 @@ async function loadWpCategories() {
     }
 }
 
-// ===== Publicar (REC ou FULL selecionado) =====
+// ===== Publicar =====
 async function publishToWordpress(articlePack) {
     const statusEl = document.getElementById("statusPublish");
     const resultEl = document.getElementById("wpResult");
@@ -346,8 +369,8 @@ async function publishToWordpress(articlePack) {
     }
 
     const title = articlePack.json.h1 || "Texto IA";
-
     const baseSlug = slugify(title);
+
     let typePrefix = (articlePack.json.type || "").toString().toLowerCase();
     if (typePrefix !== "rec" && typePrefix !== "fullreview") typePrefix = "";
     const slug = typePrefix ? `${typePrefix}-${baseSlug}` : baseSlug;
@@ -423,55 +446,47 @@ function syncPreloaderTimeField() {
 
 // ===== Listeners =====
 document.addEventListener("DOMContentLoaded", () => {
+    buildFullTopicFields();
+
+    document.getElementById("fullCount")?.addEventListener("input", buildFullTopicFields);
+
     document.getElementById("btnGenerate")?.addEventListener("click", (e) => {
         e.preventDefault();
-        generateBatch();
+        generateAllArticles();
     });
 
-    // Navegação REC (esquerda)
-    document.getElementById("btnPrevRec")?.addEventListener("click", (e) => {
-        e.preventDefault();
-        if (selectedRecIndex > 0) selectedRecIndex--;
-        renderRecPreview();
-    });
-    document.getElementById("btnNextRec")?.addEventListener("click", (e) => {
-        e.preventDefault();
-        if (selectedRecIndex < recArticles.length - 1) selectedRecIndex++;
-        renderRecPreview();
-    });
-
-    // Navegação FULLREVIEW (direita)
+    // FULL nav
     document.getElementById("btnPrevFull")?.addEventListener("click", (e) => {
         e.preventDefault();
         if (selectedFullIndex > 0) selectedFullIndex--;
         renderFullPreview();
     });
+
     document.getElementById("btnNextFull")?.addEventListener("click", (e) => {
         e.preventDefault();
-        if (selectedFullIndex < fullArticles.length - 1) selectedFullIndex++;
+        if (selectedFullIndex < fullPacks.length - 1) selectedFullIndex++;
         renderFullPreview();
     });
 
-    // Publish botões separados
+    // publicar
     document.getElementById("btnPublishRec")?.addEventListener("click", (e) => {
         e.preventDefault();
-        publishToWordpress(getSelectedRec());
+        publishToWordpress(recPack);
     });
 
     document.getElementById("btnPublishFull")?.addEventListener("click", (e) => {
         e.preventDefault();
-        publishToWordpress(getSelectedFull());
+        publishToWordpress(getSelectedFullPack());
     });
 
-    // preloader time toggle
+    // preloader
     document.getElementById("cfgPreloaderEnable")?.addEventListener("change", syncPreloaderTimeField);
     syncPreloaderTimeField();
 
     // categorias
-    const wpCategorySelect = document.getElementById("wpCategorySelect");
-    const hiddenCategoryId = document.getElementById("wpCategoryId");
-    wpCategorySelect?.addEventListener("change", () => {
-        hiddenCategoryId.value = wpCategorySelect.value || "0";
+    document.getElementById("wpCategorySelect")?.addEventListener("change", () => {
+        document.getElementById("wpCategoryId").value =
+            document.getElementById("wpCategorySelect").value || "0";
     });
 
     const wpBaseUrlInput = document.getElementById("wpBaseUrl");
@@ -484,5 +499,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (wpBaseUrlInput?.value?.trim()) loadWpCategories();
 
-    renderAllPreviews();
+    renderAll();
 });
