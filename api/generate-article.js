@@ -18,7 +18,8 @@ module.exports = (req, res) => {
     try {
       const parsed = body ? JSON.parse(body) : {};
       const { model, systemPrompt, userPrompt } = parsed;
-
+      const valor = process.env.WP_SITES_PRESETS;
+      console.log(valor)
       const apiKey = process.env.OPENAI_API_KEY;
       if (!apiKey) {
         res.statusCode = 500;
