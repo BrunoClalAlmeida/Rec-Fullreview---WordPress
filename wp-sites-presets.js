@@ -1,110 +1,17 @@
-// wp-sites-presets.js
-// Lista de sites pré-configurados para publicação no WordPress
 
-const WP_SITES_PRESETS = [
-    {
-        id: "ouniversodoscartoes",
-        label: "O Universo dos Cartões",
-        baseUrl: "https://ouniversodoscartoes.com",
-        user: "admin",
-        appPassword: "BVvW V7JI 5tr3 d9hK l91H y8t3",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
-    },
-    {
-        id: "investedigital",
-        label: "Investe Digital",
-        baseUrl: "https://investedigital.com.br",
-        user: "admininvestedigital",
-        appPassword: "IxCj UOQK gsiL 1Xpe xJHL 4kVI",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
-    },
-    {
-        id: "aprovapp",
-        label: "Aprov",
-        baseUrl: "https://aprov.app",
-        user: "admin2",
-        appPassword: "PgsS hE8E MF38 TQri F7tO AVRt",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
-    },
-    {
-        id: "xtudoreceitas",
-        label: "X Tudo Receitas",
-        baseUrl: "https://xtudoreceitas.com",
-        user: "xtudoreceitas.com",
-        appPassword: "BeeF kBLR TTU3 uthG c1aX Q6AJ",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
-    },
-    {
-        id: "cartaocerto",
-        label: "Cartão Certo",
-        baseUrl: "https://cartaocerto.com.br",
-        user: "adminwp2",
-        appPassword: "ceqw bqNR pRhd 6QLM s1Xh 83Q5",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
-    },
-    {
-        id: "curiosidadefinancas",
-        label: "Curiosidade Finanças",
-        baseUrl: "https://curiosidadefinancas.com",
-        user: "admin",
-        appPassword: "Kf8A bgVs hygv xGc2 Ze4g g8ZZ",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
-    },
-    {
-        id: "meusbeneficios",
-        label: "Meus Benefícios",
-        baseUrl: "https://meusbeneficios.net",
-        user: "adminwp2",
-        appPassword: "v3vk UBnh dulN mE6F mn26 MKaY",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
-    },
-    {
-        id: "maquininha",
-        label: "Maquininha",
-        baseUrl: "https://www.maquininha.com.br",
-        user: "adminwp2",
-        appPassword: "cHIk IndW NJkT PvhQ bzbZ KSu5",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
-    },
-    {
-        id: "thecredittips",
-        label: "The Credit Tips",
-        baseUrl: "https://thecredittips.com",
-        user: "adminwp2",
-        appPassword: "3CqS Hh5A vSCT Y4kU DftO C9S3",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
-    },
-    {
-        id: "emmeusbeneficios",
-        label: "Em Meus Benefícios",
-        baseUrl: "https://em.meusbeneficios.net",
-        user: "adminwp2",
-        appPassword: "TxwJ btDs 6e3N JvSi SwXN Vh2g",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
-    },
-    {
-        id: "creditfinder",
-        label: "CreditFinder",
-        baseUrl: "https://creditfinder.app",
-        user: "adminwp2",
-        appPassword: "qeS7 DPuJ EiXi tUkA cSq1 CrVE",
-        defaultCategoryId: 0,
-        defaultStatus: "draft"
+async function loadWpSites() {
+    try {
+        const response = await fetch('/api/sites');
+        WP_SITES_PRESETS = await response.json();
+        return WP_SITES_PRESETS;
+    } catch (err) {
+        console.error('Erro ao carregar sites', err);
+        return [];
     }
-];
+}
 
 (function () {
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
         const multi = document.getElementById("wpSitesMulti");
         if (!multi) return;
 
@@ -114,11 +21,14 @@ const WP_SITES_PRESETS = [
         const categoryInput = document.getElementById("wpCategoryId");
         const statusSelect = document.getElementById("wpStatus");
 
+        const sites = await loadWpSites();
+        
         if (!baseUrlInput || !userInput || !passInput) return;
 
         multi.innerHTML = "";
 
-        (WP_SITES_PRESETS || []).forEach((site) => {
+        (sites || []).forEach((site) => {
+
             if (!site || !site.id || !site.label) return;
 
             const item = document.createElement("div");
