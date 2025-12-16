@@ -146,6 +146,12 @@ Regras gerais (valem para REC e FULLREVIEW):
   - Títulos, parágrafos, listas, tabelas, CTAs, FAQ, avisos e qualquer outro texto devem estar nesse mesmo idioma.
   - Se o topic vier em outro idioma, adapte o texto para o idioma indicado em "language", mantendo o mesmo assunto.
 
+- REGRA CRÍTICA (ANTI-VAZAMENTO DE IDIOMA DO TOPIC):
+  - Se o topic original estiver em um idioma diferente do campo "language", você DEVE traduzir o topic para o idioma de "language" e usar SOMENTE a versão traduzida no texto.
+  - É PROIBIDO manter palavras, expressões ou trechos do topic no idioma original dentro do conteúdo final.
+  - Isso vale para TODOS os campos: h1, subtitle_html, intro_html, body_html, steps_html, FAQ, conclusion_html, section_cta_label e TODOS os content_block_*.
+  - Se perceber que incluiu qualquer palavra fora do idioma de "language", reescreva a frase inteira no idioma correto.
+
 - Títulos fixos por idioma (VOCÊ DEVE USAR EXATAMENTE ESTES TEXTOS):
   - Se o campo "language" do JSON final for "pt-BR":
     - faq_title: "Perguntas frequentes"
@@ -341,3 +347,4 @@ Regras específicas do tipo "${articleType}":
 ${typeSpecific}
 `.trim();
 }
+

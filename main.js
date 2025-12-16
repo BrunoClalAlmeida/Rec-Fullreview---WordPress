@@ -147,6 +147,11 @@ Crie um texto do tipo "${type}" usando o schema dado, no idioma "${language}", s
 
 "${topic}"
 
+REGRA CRÍTICA DE IDIOMA:
+- Se o topic estiver em português e o idioma for "${language}" (ex: en-US), TRADUZA o topic e use apenas a versão traduzida.
+- É PROIBIDO deixar palavras do topic no idioma original dentro do texto final.
+- Não misture idiomas em nenhum campo do JSON.
+
 Regras específicas deste pedido:
 - Não mude o assunto central do topic. Não troque por um tema parecido ou genérico.
 - Todo o conteúdo deve falar diretamente sobre esse tema e suas variações naturais.
@@ -162,6 +167,11 @@ Crie um texto do tipo "${type}" usando o schema dado, no idioma "${language}", s
 
 "${topic}"
 
+REGRA CRÍTICA DE IDIOMA:
+- Se o topic estiver em português e o idioma for "${language}" (ex: en-US), TRADUZA o topic e use apenas a versão traduzida.
+- É PROIBIDO deixar palavras do topic no idioma original dentro do texto final.
+- Não misture idiomas em nenhum campo do JSON.
+
 Regras específicas deste pedido:
 - Não mude o assunto central do topic. Não troque por um tema parecido ou genérico.
 - Todo o conteúdo deve falar diretamente sobre esse tema e variações naturais dele.
@@ -172,6 +182,7 @@ IMPORTANTE (FULLREVIEW):
 - O LINK deve ser o site oficial da entidade/serviço/tema citado (fonte primária).
 - O LABEL deve ser um CTA chamativo e NÃO deve dizer "site oficial".
 `.trim();
+
 
     const response = await fetch("/api/generate-article", {
         method: "POST",
