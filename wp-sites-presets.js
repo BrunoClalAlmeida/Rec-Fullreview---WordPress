@@ -16,7 +16,7 @@ const WP_SITES_PRESETS = [
         label: "Investe Digital",
         baseUrl: "https://investedigital.com.br",
         user: "admininvestedigital",
-        appPassword: "TROQUE_ESSE_PASSWORD",
+        appPassword: "IxCj UOQK gsiL 1Xpe xJHL 4kVI",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -25,7 +25,7 @@ const WP_SITES_PRESETS = [
         label: "Aprov",
         baseUrl: "https://aprov.app",
         user: "admin2",
-        appPassword: "TROQUE_ESSE_PASSWORD",
+        appPassword: "PgsS hE8E MF38 TQri F7tO AVRt",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -34,7 +34,7 @@ const WP_SITES_PRESETS = [
         label: "X Tudo Receitas",
         baseUrl: "https://xtudoreceitas.com",
         user: "xtudoreceitas.com",
-        appPassword: "TROQUE_ESSE_PASSWORD",
+        appPassword: "BeeF kBLR TTU3 uthG c1aX Q6AJ",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -43,7 +43,7 @@ const WP_SITES_PRESETS = [
         label: "Cartão Certo",
         baseUrl: "https://cartaocerto.com.br",
         user: "adminwp2",
-        appPassword: "TROQUE_ESSE_PASSWORD",
+        appPassword: "ceqw bqNR pRhd 6QLM s1Xh 83Q5",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -52,7 +52,7 @@ const WP_SITES_PRESETS = [
         label: "Curiosidade Finanças",
         baseUrl: "https://curiosidadefinancas.com",
         user: "admin",
-        appPassword: "TROQUE_ESSE_PASSWORD",
+        appPassword: "Kf8A bgVs hygv xGc2 Ze4g g8ZZ",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -61,7 +61,7 @@ const WP_SITES_PRESETS = [
         label: "Meus Benefícios",
         baseUrl: "https://meusbeneficios.net",
         user: "adminwp2",
-        appPassword: "TROQUE_ESSE_PASSWORD",
+        appPassword: "v3vk UBnh dulN mE6F mn26 MKaY",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -70,7 +70,7 @@ const WP_SITES_PRESETS = [
         label: "Maquininha",
         baseUrl: "https://www.maquininha.com.br",
         user: "adminwp2",
-        appPassword: "TROQUE_ESSE_PASSWORD",
+        appPassword: "cHIk IndW NJkT PvhQ bzbZ KSu5",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -79,7 +79,7 @@ const WP_SITES_PRESETS = [
         label: "The Credit Tips",
         baseUrl: "https://thecredittips.com",
         user: "adminwp2",
-        appPassword: "TROQUE_ESSE_PASSWORD",
+        appPassword: "3CqS Hh5A vSCT Y4kU DftO C9S3",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
@@ -88,7 +88,7 @@ const WP_SITES_PRESETS = [
         label: "Em Meus Benefícios",
         baseUrl: "https://em.meusbeneficios.net",
         user: "adminwp2",
-        appPassword: "TROQUE_ESSE_PASSWORD",
+        appPassword: "TxwJ btDs 6e3N JvSi SwXN Vh2g",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     }
