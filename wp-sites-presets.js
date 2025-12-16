@@ -96,8 +96,8 @@ const WP_SITES_PRESETS = [
         id: "creditfinder",
         label: "CreditFinder",
         baseUrl: "https://creditfinder.app",
-        user: "admincreditfinder",
-        appPassword: "COLOQUE_AQUI_O_APPLICATION_PASSWORD",
+        user: "adminwp2",
+        appPassword: "qeS7 DPuJ EiXi tUkA cSq1 CrVE",
         defaultCategoryId: 0,
         defaultStatus: "draft"
     }
