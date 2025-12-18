@@ -100,7 +100,16 @@ const WP_SITES_PRESETS = [
         appPassword: "qeS7 DPuJ EiXi tUkA cSq1 CrVE",
         defaultCategoryId: 0,
         defaultStatus: "draft"
-    }
+    },
+    {
+        id: "cartaocerto_portal",
+        label: "Cartão Certo (Portal)",
+        baseUrl: "https://portal.cartaocerto.com.br",
+        user: "adminwp2",
+        appPassword: "a76p lOAI jMKM bOzV LGq6 N3qw",
+        defaultCategoryId: 0,
+        defaultStatus: "draft"
+    },
 ];
 
 (function () {
