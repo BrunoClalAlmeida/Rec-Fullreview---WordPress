@@ -105,6 +105,50 @@ function escapeHtml(str) {
         .replaceAll("'", "&#039;");
 }
 
+// ✅ FIX: garante exatamente 3 CTAs em REC (se a IA mandar 0/1/2, completa)
+function getDefaultRecCtas(language) {
+    const lang = (language || "").toLowerCase();
+
+    if (lang.startsWith("en")) {
+        return ["SEE OPTIONS", "CONTINUE", "CHECK NOW"];
+    }
+    if (lang.startsWith("es")) {
+        return ["VER OPCIONES", "CONTINUAR", "COMPROBAR AHORA"];
+    }
+    // pt-BR padrão
+    return ["VER OPÇÕES", "CONTINUAR", "CONFERIR AGORA"];
+}
+
+function ensureThreeRecCtas(articleJson) {
+    if (!articleJson) return;
+
+    let arr = Array.isArray(articleJson.ctas) ? articleJson.ctas : [];
+    arr = arr
+        .map((x) => (x || "").toString().trim())
+        .filter((x) => x.length > 0);
+
+    const defaults = getDefaultRecCtas(articleJson.language);
+
+    // completa até 3
+    for (let i = 0; i < defaults.length && arr.length < 3; i++) {
+        // evita duplicar exatamente igual
+        if (!arr.some((a) => a.toLowerCase() === defaults[i].toLowerCase())) {
+            arr.push(defaults[i]);
+        } else {
+            // se já tem igual, tenta o próximo; se todos repetirem, cai no fallback abaixo
+            continue;
+        }
+    }
+
+    // se ainda faltar (caso raro de repetição total), duplica o último ou usa defaults
+    while (arr.length < 3) {
+        arr.push(defaults[arr.length] || defaults[defaults.length - 1] || "CONTINUAR");
+    }
+
+    // corta para 3
+    articleJson.ctas = arr.slice(0, 3);
+}
+
 // ===== Preview render =====
 function getSelectedRecPack() {
     if (selectedRecIndex < 0 || selectedRecIndex >= recPacks.length) return null;
@@ -277,6 +321,11 @@ IMPORTANTE (FULLREVIEW):
     // ✅ FULL: garante label chamativo (o LINK oficial vem do JSON)
     if ((type || "").toUpperCase() === "FULLREVIEW") {
         articleJson.content_block_cta_label = getAttractiveFullCtaLabel(articleJson);
+    }
+
+    // ✅ FIX: REC sempre com 3 CTAs
+    if ((type || "").toUpperCase() === "REC") {
+        ensureThreeRecCtas(articleJson);
     }
 
     let totalWords = 0;
@@ -599,8 +648,7 @@ async function publishToWordpress(articlePack, siteLabel = "") {
 }
 
 /**
- * ✅ NOVO: decide quais links FULL vão dentro de uma REC
- * Regras:
+ * ✅ Decide quais links FULL vão dentro de uma REC
  * - Se fullLinks.length >= recCount: 1 link único por REC (REC i usa FULL i)
  * - Se fullLinks.length < recCount: round-robin (REC i usa FULL (i % fullLinks.length))
  * - Se não houver FULLs: retorna []
@@ -609,18 +657,15 @@ function pickFullLinksForRec(fullLinks, recIndex, recCount) {
     const links = Array.isArray(fullLinks) ? fullLinks.filter(Boolean) : [];
     if (links.length === 0) return [];
 
-    // 1 pra 1 (espalhar)
     if (links.length >= recCount) {
-        return [links[recIndex]]; // REC i usa FULL i
+        return [links[recIndex]];
     }
 
-    // round-robin
     return [links[recIndex % links.length]];
 }
 
-// ✅ Publica FULLs primeiro (pega links), depois publica TODAS as RECs distribuindo FULLs por REC
+// ✅ Publica FULLs primeiro, depois RECs distribuindo FULLs por REC
 async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCategoryName, statusEl) {
-    // aplica credenciais/URL do site atual
     document.getElementById("wpBaseUrl").value = site.baseUrl || "";
     document.getElementById("wpUser").value = site.user || "";
     document.getElementById("wpAppPassword").value = site.appPassword || "";
@@ -645,7 +690,7 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
 
     const siteResults = [];
 
-    // 1) PUBLICA FULLS
+    // 1) FULLS
     const publishedFullLinks = [];
 
     for (let i = 0; i < fullPacks.length; i++) {
@@ -666,8 +711,7 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
         }
     }
 
-    // 2) PUBLICA TODAS AS RECs
-    // ✅ Agora: distribui as FULLs (1 por REC) quando der; caso contrário repete (round-robin)
+    // 2) RECs
     const recCount = recPacks.length;
 
     for (let r = 0; r < recPacks.length; r++) {
@@ -676,7 +720,6 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
 
         const fullLinksForThisRec = pickFullLinksForRec(publishedFullLinks, r, recCount);
 
-        // ✅ REBUILD do HTML da REC com o(s) link(s) FULL escolhido(s) pra ela
         const recPackForThisSite = {
             ...pack,
             html: buildHtmlFromArticle(pack.json, { fullLinks: fullLinksForThisRec }),
@@ -700,7 +743,7 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
     return siteResults;
 }
 
-// ✅ Publica TODOS: FULLs primeiro e depois RECs (com distribuição automática)
+// ✅ Publica TODOS
 async function publishAllGeneratedArticles() {
     const statusEl = document.getElementById("statusPublish");
     const resultEl = document.getElementById("wpResult");
