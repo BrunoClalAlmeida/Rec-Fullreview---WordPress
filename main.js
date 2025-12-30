@@ -238,7 +238,6 @@ IMPORTANTE (FULLREVIEW):
 - O LABEL deve ser um CTA chamativo e NÃO deve dizer "site oficial".
 `.trim();
 
-
     const response = await fetch("/api/generate-article", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -495,7 +494,7 @@ async function resolveCategoryIdForSite({ baseUrl, authHeader, fallbackId, desir
     }
 }
 
-// ===== Publicar 1 site =====
+// ===== Publicar 1 post =====
 async function publishToWordpress(articlePack, siteLabel = "") {
     if (!articlePack?.json || !articlePack?.html) {
         return {
@@ -599,7 +598,27 @@ async function publishToWordpress(articlePack, siteLabel = "") {
     }
 }
 
-// ✅ NOVO: publica FULLs primeiro (pega links), depois publica TODAS as RECs com os mesmos links (por site)
+/**
+ * ✅ NOVO: decide quais links FULL vão dentro de uma REC
+ * Regras:
+ * - Se fullLinks.length >= recCount: 1 link único por REC (REC i usa FULL i)
+ * - Se fullLinks.length < recCount: round-robin (REC i usa FULL (i % fullLinks.length))
+ * - Se não houver FULLs: retorna []
+ */
+function pickFullLinksForRec(fullLinks, recIndex, recCount) {
+    const links = Array.isArray(fullLinks) ? fullLinks.filter(Boolean) : [];
+    if (links.length === 0) return [];
+
+    // 1 pra 1 (espalhar)
+    if (links.length >= recCount) {
+        return [links[recIndex]]; // REC i usa FULL i
+    }
+
+    // round-robin
+    return [links[recIndex % links.length]];
+}
+
+// ✅ Publica FULLs primeiro (pega links), depois publica TODAS as RECs distribuindo FULLs por REC
 async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCategoryName, statusEl) {
     // aplica credenciais/URL do site atual
     document.getElementById("wpBaseUrl").value = site.baseUrl || "";
@@ -624,7 +643,7 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
 
     document.getElementById("wpCategoryId").value = String(resolvedCatId || 0);
 
-    const siteResults = []; // [{kind,title, ok, link, slug, error...}]
+    const siteResults = [];
 
     // 1) PUBLICA FULLS
     const publishedFullLinks = [];
@@ -634,7 +653,8 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
         const title = pack?.json?.h1 || pack?.json?.topic || `FULLREVIEW ${i + 1}`;
 
         if (statusEl) {
-            statusEl.innerHTML = `Publicando <strong>FULLREVIEW ${i + 1}/${fullPacks.length}</strong> em <strong>${escapeHtml(site.label)}</strong>…` +
+            statusEl.innerHTML =
+                `Publicando <strong>FULLREVIEW ${i + 1}/${fullPacks.length}</strong> em <strong>${escapeHtml(site.label)}</strong>…` +
                 `<br/><span style="font-size:12px;opacity:.85">${escapeHtml(title)}</span>`;
         }
 
@@ -646,22 +666,31 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
         }
     }
 
-    // 2) PUBLICA TODAS as RECs (com links das FULLs publicadas desse site)
-    const fullLinksForAllRecs = publishedFullLinks.slice(0, 3);
+    // 2) PUBLICA TODAS AS RECs
+    // ✅ Agora: distribui as FULLs (1 por REC) quando der; caso contrário repete (round-robin)
+    const recCount = recPacks.length;
 
     for (let r = 0; r < recPacks.length; r++) {
         const pack = recPacks[r];
         const recTitle = pack?.json?.h1 || pack?.json?.topic || `REC ${r + 1}`;
 
-        // ✅ REBUILD do HTML da REC com links das FULL publicadas (serve pra todas as RECs)
+        const fullLinksForThisRec = pickFullLinksForRec(publishedFullLinks, r, recCount);
+
+        // ✅ REBUILD do HTML da REC com o(s) link(s) FULL escolhido(s) pra ela
         const recPackForThisSite = {
             ...pack,
-            html: buildHtmlFromArticle(pack.json, { fullLinks: fullLinksForAllRecs }),
+            html: buildHtmlFromArticle(pack.json, { fullLinks: fullLinksForThisRec }),
         };
 
         if (statusEl) {
-            statusEl.innerHTML = `Publicando <strong>REC ${r + 1}/${recPacks.length}</strong> em <strong>${escapeHtml(site.label)}</strong>…` +
-                `<br/><span style="font-size:12px;opacity:.85">${escapeHtml(recTitle)}</span>`;
+            const info = fullLinksForThisRec.length
+                ? `FULL usado: ${escapeHtml(fullLinksForThisRec[0])}`
+                : `sem FULL (nenhum publicado)`;
+
+            statusEl.innerHTML =
+                `Publicando <strong>REC ${r + 1}/${recPacks.length}</strong> em <strong>${escapeHtml(site.label)}</strong>…` +
+                `<br/><span style="font-size:12px;opacity:.85">${escapeHtml(recTitle)}</span>` +
+                `<br/><span style="font-size:12px;opacity:.7">${info}</span>`;
         }
 
         const rRec = await publishToWordpress(recPackForThisSite, site.label);
@@ -671,9 +700,7 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
     return siteResults;
 }
 
-// ✅ Publica TODAS as RECs + TODAS as FULLs com a regra correta
-// - FULLs: publicam primeiro
-// - RECs: publicam depois usando os links das FULLs (mesmos links para todas as RECs)
+// ✅ Publica TODOS: FULLs primeiro e depois RECs (com distribuição automática)
 async function publishAllGeneratedArticles() {
     const statusEl = document.getElementById("statusPublish");
     const resultEl = document.getElementById("wpResult");
@@ -706,7 +733,7 @@ async function publishAllGeneratedArticles() {
     const primaryCategoryId = parseInt(document.getElementById("wpCategoryId").value || "0", 10);
     const primaryCategoryName = getPrimaryCategoryName();
 
-    const publishedBySite = []; // [{ siteLabel, rows: [...] }]
+    const publishedBySite = [];
 
     try {
         for (let s = 0; s < selectedIds.length; s++) {
@@ -746,7 +773,9 @@ async function publishAllGeneratedArticles() {
         }
 
         statusEl.classList.remove("error");
-        statusEl.innerHTML = `<strong>Sucesso:</strong> finalizado. Todas as RECs foram publicadas usando os links das FULLs publicadas em cada site.`;
+        statusEl.innerHTML =
+            `<strong>Sucesso:</strong> finalizado. ` +
+            `As RECs foram publicadas distribuindo FULLs automaticamente (1 por REC quando possível, senão round-robin).`;
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
