@@ -1,8 +1,48 @@
-//main.js
 // ===== Estado em memória =====
-let recPack = null;      // { json, html, previewHtml, type, totalWords }
-let fullPacks = [];      // array de packs FULL
+let recPacks = [];        // array de packs REC
+let fullPacks = [];       // array de packs FULL
+let selectedRecIndex = -1;
 let selectedFullIndex = -1;
+
+// ===== Util: cria campos REC conforme recCount =====
+function buildRecTopicFields() {
+    const container = document.getElementById("recTopicsContainer");
+    const recCountEl = document.getElementById("recCount");
+    if (!container || !recCountEl) return;
+
+    let n = parseInt(recCountEl.value || "0", 10);
+    if (isNaN(n) || n < 0) n = 0;
+    if (n > 10) n = 10;
+
+    const existing = Array.from(container.querySelectorAll("textarea")).map((t) => t.value || "");
+    container.innerHTML = "";
+
+    for (let i = 0; i < n; i++) {
+        const wrap = document.createElement("div");
+        wrap.className = "full-topic-item";
+
+        const label = document.createElement("label");
+        label.setAttribute("for", `topicRec_${i}`);
+        label.textContent = `Tema REC ${i + 1}`;
+
+        const ta = document.createElement("textarea");
+        ta.id = `topicRec_${i}`;
+        ta.placeholder = `Ex: Tema do REC ${i + 1}`;
+        ta.value = existing[i] || "";
+
+        wrap.appendChild(label);
+        wrap.appendChild(ta);
+        container.appendChild(wrap);
+    }
+}
+
+function getRecTopicsFromFields() {
+    const container = document.getElementById("recTopicsContainer");
+    if (!container) return [];
+    return Array.from(container.querySelectorAll("textarea"))
+        .map((t) => (t.value || "").trim())
+        .filter((t) => t.length > 0);
+}
 
 // ===== Util: cria campos FULL conforme fullCount =====
 function buildFullTopicFields() {
@@ -49,7 +89,7 @@ function syncPublishAllButton() {
     const btnAll = document.getElementById("btnPublishAll");
     if (!btnAll) return;
 
-    const hasRec = !!recPack;
+    const hasRec = Array.isArray(recPacks) && recPacks.length > 0;
     const hasFull = Array.isArray(fullPacks) && fullPacks.length > 0;
 
     btnAll.disabled = !(hasRec || hasFull);
@@ -66,19 +106,34 @@ function escapeHtml(str) {
 }
 
 // ===== Preview render =====
+function getSelectedRecPack() {
+    if (selectedRecIndex < 0 || selectedRecIndex >= recPacks.length) return null;
+    return recPacks[selectedRecIndex];
+}
+
 function renderRecPreview() {
     const previewEl = document.getElementById("htmlPreviewRec");
     const infoEl = document.getElementById("previewInfoRec");
+    const btnPrev = document.getElementById("btnPrevRec");
+    const btnNext = document.getElementById("btnNextRec");
 
-    if (!recPack) {
+    const pack = getSelectedRecPack();
+
+    if (!pack) {
         if (previewEl) previewEl.innerHTML = "<em>Nenhum REC gerado ainda.</em>";
         if (infoEl) infoEl.textContent = "";
+        if (btnPrev) btnPrev.disabled = true;
+        if (btnNext) btnNext.disabled = true;
         syncPublishAllButton();
         return;
     }
 
-    previewEl.innerHTML = recPack.previewHtml || "<em>Nenhum HTML gerado.</em>";
-    infoEl.innerHTML = `<strong>REC:</strong> palavras ~ ${recPack.totalWords || 0}`;
+    previewEl.innerHTML = pack.previewHtml || "<em>Nenhum HTML gerado.</em>";
+    infoEl.innerHTML = `<strong>REC:</strong> ${selectedRecIndex + 1} / ${recPacks.length} (palavras ~ ${pack.totalWords || 0})`;
+
+    if (btnPrev) btnPrev.disabled = selectedRecIndex <= 0;
+    if (btnNext) btnNext.disabled = selectedRecIndex >= recPacks.length - 1;
+
     syncPublishAllButton();
 }
 
@@ -239,7 +294,7 @@ IMPORTANTE (FULLREVIEW):
     if (articleJson.conclusion_html) totalWords += countWordsFromHtml(articleJson.conclusion_html);
     articleJson.word_count_estimate = totalWords;
 
-    // ⚠️ REC: links das FULL só existem depois de publicar, então aqui gera "normal"
+    // ⚠️ REC: links das FULL só entram na publicação (por site)
     const html = buildHtmlFromArticle(articleJson);
     const previewHtml = buildPreviewHtmlFromArticle(articleJson);
 
@@ -253,7 +308,7 @@ async function generateAllArticles() {
 
     const language = document.getElementById("language").value;
 
-    const topicRec = (document.getElementById("topicRec").value || "").trim();
+    const recTopics = getRecTopicsFromFields();
     const fullTopics = getFullTopicsFromFields();
 
     const wordRecRaw = document.getElementById("wordCountRec")?.value || "";
@@ -264,37 +319,41 @@ async function generateAllArticles() {
     let wordFull = parseInt(wordFullRaw, 10);
     if (isNaN(wordFull) || wordFull <= 0) wordFull = 0;
 
-    if (!topicRec && fullTopics.length === 0) {
+    if (recTopics.length === 0 && fullTopics.length === 0) {
         statusEl.classList.add("error");
-        statusEl.innerHTML = "<strong>Erro:</strong> informe o tema do REC e/ou pelo menos 1 tema de FULLREVIEW.";
+        statusEl.innerHTML = "<strong>Erro:</strong> informe pelo menos 1 tema de REC e/ou 1 tema de FULLREVIEW.";
         return;
     }
 
     statusEl.classList.remove("error");
     btn.disabled = true;
 
-    recPack = null;
+    recPacks = [];
     fullPacks = [];
+    selectedRecIndex = -1;
     selectedFullIndex = -1;
     renderAll();
 
     try {
         let done = 0;
-        const total = (topicRec ? 1 : 0) + fullTopics.length;
+        const total = recTopics.length + fullTopics.length;
 
-        // (ordem de geração não é mais crítica, porque o link da FULL vai entrar na REC na publicação)
-        if (topicRec) {
-            statusEl.innerHTML = `Gerando REC… (${done + 1}/${total})`;
-            recPack = await generateOneArticle({
-                topic: topicRec,
+        // RECs
+        for (let i = 0; i < recTopics.length; i++) {
+            statusEl.innerHTML = `Gerando REC ${i + 1}/${recTopics.length}… (${done + 1}/${total})`;
+            const pack = await generateOneArticle({
+                topic: recTopics[i],
                 language,
                 type: "REC",
                 approxWordCount: wordRec,
             });
+            recPacks.push(pack);
             done++;
+            if (selectedRecIndex === -1) selectedRecIndex = 0;
             renderRecPreview();
         }
 
+        // FULLs
         for (let i = 0; i < fullTopics.length; i++) {
             statusEl.innerHTML = `Gerando FULLREVIEW ${i + 1}/${fullTopics.length}… (${done + 1}/${total})`;
             const pack = await generateOneArticle({
@@ -540,95 +599,8 @@ async function publishToWordpress(articlePack, siteLabel = "") {
     }
 }
 
-// ✅ Publicar em TODOS os sites selecionados (1 pack)
-async function publishToAllSelectedSites(articlePack, options = {}) {
-    const { render = true } = options;
-
-    const statusEl = document.getElementById("statusPublish");
-    const resultEl = document.getElementById("wpResult");
-
-    const selectedIds = (typeof window.getSelectedWpSites === "function")
-        ? window.getSelectedWpSites()
-        : [];
-
-    if (!selectedIds || selectedIds.length === 0) {
-        if (render) {
-            statusEl.classList.add("error");
-            statusEl.innerHTML = "<strong>Erro:</strong> selecione pelo menos 1 site para publicar.";
-            if (resultEl) resultEl.innerHTML = "";
-        }
-        return {
-            ok: false,
-            okCount: 0,
-            failCount: 0,
-            results: [],
-            html: "",
-            message: "Nenhum site selecionado."
-        };
-    }
-
-    if (render) {
-        statusEl.classList.remove("error");
-        if (resultEl) resultEl.innerHTML = "";
-    }
-
-    const primaryCategoryId = parseInt(document.getElementById("wpCategoryId").value || "0", 10);
-    const primaryCategoryName = getPrimaryCategoryName();
-
-    const results = [];
-    let okCount = 0;
-    let failCount = 0;
-
-    for (let i = 0; i < selectedIds.length; i++) {
-        const siteId = selectedIds[i];
-        const site = (window.WP_SITES_PRESETS || WP_SITES_PRESETS || []).find((s) => s.id === siteId);
-        if (!site) continue;
-
-        document.getElementById("wpBaseUrl").value = site.baseUrl || "";
-        document.getElementById("wpUser").value = site.user || "";
-        document.getElementById("wpAppPassword").value = site.appPassword || "";
-
-        const user = (site.user || "").trim();
-        const pass = (site.appPassword || "").trim();
-        const authHeader = "Basic " + btoa(user + ":" + pass);
-
-        const fallbackId =
-            (typeof site.defaultCategoryId === "number" && site.defaultCategoryId > 0)
-                ? site.defaultCategoryId
-                : primaryCategoryId;
-
-        const resolvedCatId = await resolveCategoryIdForSite({
-            baseUrl: site.baseUrl || "",
-            authHeader,
-            fallbackId,
-            desiredName: primaryCategoryName
-        });
-
-        document.getElementById("wpCategoryId").value = String(resolvedCatId || 0);
-
-        if (render) {
-            statusEl.innerHTML = `Publicando em: <strong>${site.label}</strong> (${i + 1}/${selectedIds.length})...`;
-        }
-
-        const r = await publishToWordpress(articlePack, site.label);
-        results.push(r);
-
-        if (r.ok) okCount++;
-        else failCount++;
-    }
-
-    return {
-        ok: failCount === 0,
-        okCount,
-        failCount,
-        results,
-        html: "",
-        message: failCount === 0 ? "OK" : "Parcial"
-    };
-}
-
-// ✅ NOVO: publica FULLs primeiro (pega links), depois publica REC com links das FULLs (por site)
-async function publishFullsThenRecForOneSite(site, primaryCategoryId, primaryCategoryName, statusEl) {
+// ✅ NOVO: publica FULLs primeiro (pega links), depois publica TODAS as RECs com os mesmos links (por site)
+async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCategoryName, statusEl) {
     // aplica credenciais/URL do site atual
     document.getElementById("wpBaseUrl").value = site.baseUrl || "";
     document.getElementById("wpUser").value = site.user || "";
@@ -674,36 +646,40 @@ async function publishFullsThenRecForOneSite(site, primaryCategoryId, primaryCat
         }
     }
 
-    // 2) PUBLICA REC (com links das FULLs publicadas desse site)
-    if (recPack) {
-        const recTitle = recPack?.json?.h1 || recPack?.json?.topic || "REC";
-        const fullLinksForRec = publishedFullLinks.slice(0, 3);
+    // 2) PUBLICA TODAS as RECs (com links das FULLs publicadas desse site)
+    const fullLinksForAllRecs = publishedFullLinks.slice(0, 3);
 
-        // ✅ REBUILD do HTML da REC com links das FULL publicadas (aqui é onde corrige 100%)
+    for (let r = 0; r < recPacks.length; r++) {
+        const pack = recPacks[r];
+        const recTitle = pack?.json?.h1 || pack?.json?.topic || `REC ${r + 1}`;
+
+        // ✅ REBUILD do HTML da REC com links das FULL publicadas (serve pra todas as RECs)
         const recPackForThisSite = {
-            ...recPack,
-            html: buildHtmlFromArticle(recPack.json, { fullLinks: fullLinksForRec }),
+            ...pack,
+            html: buildHtmlFromArticle(pack.json, { fullLinks: fullLinksForAllRecs }),
         };
 
         if (statusEl) {
-            statusEl.innerHTML = `Publicando <strong>REC</strong> em <strong>${escapeHtml(site.label)}</strong>…` +
+            statusEl.innerHTML = `Publicando <strong>REC ${r + 1}/${recPacks.length}</strong> em <strong>${escapeHtml(site.label)}</strong>…` +
                 `<br/><span style="font-size:12px;opacity:.85">${escapeHtml(recTitle)}</span>`;
         }
 
         const rRec = await publishToWordpress(recPackForThisSite, site.label);
-        siteResults.push({ kind: "REC", title: recTitle, ...rRec });
+        siteResults.push({ kind: `REC ${r + 1}`, title: recTitle, ...rRec });
     }
 
     return siteResults;
 }
 
-// ✅ Publica REC + TODAS FULL com a regra correta (REC usa links das FULL publicadas; FULL usa link oficial do tema)
+// ✅ Publica TODAS as RECs + TODAS as FULLs com a regra correta
+// - FULLs: publicam primeiro
+// - RECs: publicam depois usando os links das FULLs (mesmos links para todas as RECs)
 async function publishAllGeneratedArticles() {
     const statusEl = document.getElementById("statusPublish");
     const resultEl = document.getElementById("wpResult");
     const btnAll = document.getElementById("btnPublishAll");
 
-    const hasRec = !!recPack;
+    const hasRec = Array.isArray(recPacks) && recPacks.length > 0;
     const hasFull = Array.isArray(fullPacks) && fullPacks.length > 0;
 
     if (!hasRec && !hasFull) {
@@ -727,11 +703,9 @@ async function publishAllGeneratedArticles() {
     if (resultEl) resultEl.innerHTML = "";
     btnAll.disabled = true;
 
-    // categoria escolhida no PRINCIPAL
     const primaryCategoryId = parseInt(document.getElementById("wpCategoryId").value || "0", 10);
     const primaryCategoryName = getPrimaryCategoryName();
 
-    // para o resumo final: por site -> lista de publicações
     const publishedBySite = []; // [{ siteLabel, rows: [...] }]
 
     try {
@@ -740,11 +714,10 @@ async function publishAllGeneratedArticles() {
             const site = (window.WP_SITES_PRESETS || WP_SITES_PRESETS || []).find((x) => x.id === siteId);
             if (!site) continue;
 
-            const rows = await publishFullsThenRecForOneSite(site, primaryCategoryId, primaryCategoryName, statusEl);
+            const rows = await publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCategoryName, statusEl);
             publishedBySite.push({ siteLabel: site.label, rows });
         }
 
-        // ✅ RESUMO FINAL
         const blocks = publishedBySite.map((siteBlock) => {
             const header =
                 `<div style="margin:14px 0 8px">` +
@@ -773,7 +746,7 @@ async function publishAllGeneratedArticles() {
         }
 
         statusEl.classList.remove("error");
-        statusEl.innerHTML = `<strong>Sucesso:</strong> finalizado. A REC foi publicada com links das FULLs publicadas em cada site.`;
+        statusEl.innerHTML = `<strong>Sucesso:</strong> finalizado. Todas as RECs foram publicadas usando os links das FULLs publicadas em cada site.`;
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
@@ -793,8 +766,10 @@ function syncPreloaderTimeField() {
 
 // ===== Listeners =====
 document.addEventListener("DOMContentLoaded", () => {
+    buildRecTopicFields();
     buildFullTopicFields();
 
+    document.getElementById("recCount")?.addEventListener("input", buildRecTopicFields);
     document.getElementById("fullCount")?.addEventListener("input", buildFullTopicFields);
 
     document.getElementById("btnGenerate")?.addEventListener("click", (e) => {
@@ -802,6 +777,20 @@ document.addEventListener("DOMContentLoaded", () => {
         generateAllArticles();
     });
 
+    // ✅ Navegação REC
+    document.getElementById("btnPrevRec")?.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (selectedRecIndex > 0) selectedRecIndex--;
+        renderRecPreview();
+    });
+
+    document.getElementById("btnNextRec")?.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (selectedRecIndex < recPacks.length - 1) selectedRecIndex++;
+        renderRecPreview();
+    });
+
+    // Navegação FULL
     document.getElementById("btnPrevFull")?.addEventListener("click", (e) => {
         e.preventDefault();
         if (selectedFullIndex > 0) selectedFullIndex--;
