@@ -1,48 +1,10 @@
+//main.js
+
 // ===== Estado em memória =====
 let recPacks = [];        // array de packs REC
 let fullPacks = [];       // array de packs FULL
 let selectedRecIndex = -1;
 let selectedFullIndex = -1;
-
-// ===== Util: cria campos REC conforme recCount =====
-function buildRecTopicFields() {
-    const container = document.getElementById("recTopicsContainer");
-    const recCountEl = document.getElementById("recCount");
-    if (!container || !recCountEl) return;
-
-    let n = parseInt(recCountEl.value || "0", 10);
-    if (isNaN(n) || n < 0) n = 0;
-    if (n > 10) n = 10;
-
-    const existing = Array.from(container.querySelectorAll("textarea")).map((t) => t.value || "");
-    container.innerHTML = "";
-
-    for (let i = 0; i < n; i++) {
-        const wrap = document.createElement("div");
-        wrap.className = "full-topic-item";
-
-        const label = document.createElement("label");
-        label.setAttribute("for", `topicRec_${i}`);
-        label.textContent = `Tema REC ${i + 1}`;
-
-        const ta = document.createElement("textarea");
-        ta.id = `topicRec_${i}`;
-        ta.placeholder = `Ex: Tema do REC ${i + 1}`;
-        ta.value = existing[i] || "";
-
-        wrap.appendChild(label);
-        wrap.appendChild(ta);
-        container.appendChild(wrap);
-    }
-}
-
-function getRecTopicsFromFields() {
-    const container = document.getElementById("recTopicsContainer");
-    if (!container) return [];
-    return Array.from(container.querySelectorAll("textarea"))
-        .map((t) => (t.value || "").trim())
-        .filter((t) => t.length > 0);
-}
 
 // ===== Util: cria campos FULL conforme fullCount =====
 function buildFullTopicFields() {
@@ -84,6 +46,47 @@ function getFullTopicsFromFields() {
         .filter((t) => t.length > 0);
 }
 
+// ===== (NOVO) REC: quantidade + campos dinâmicos =====
+// ⚠️ Se você ainda não colocou esses elementos no HTML, isso não quebra nada.
+function buildRecTopicFields() {
+    const container = document.getElementById("recTopicsContainer");
+    const recCountEl = document.getElementById("recCount");
+    if (!container || !recCountEl) return;
+
+    let n = parseInt(recCountEl.value || "0", 10);
+    if (isNaN(n) || n < 0) n = 0;
+    if (n > 10) n = 10;
+
+    const existing = Array.from(container.querySelectorAll("textarea")).map((t) => t.value || "");
+    container.innerHTML = "";
+
+    for (let i = 0; i < n; i++) {
+        const wrap = document.createElement("div");
+        wrap.className = "full-topic-item";
+
+        const label = document.createElement("label");
+        label.setAttribute("for", `topicRec_${i}`);
+        label.textContent = `Tema REC ${i + 1}`;
+
+        const ta = document.createElement("textarea");
+        ta.id = `topicRec_${i}`;
+        ta.placeholder = `Ex: Tema do REC ${i + 1}`;
+        ta.value = existing[i] || "";
+
+        wrap.appendChild(label);
+        wrap.appendChild(ta);
+        container.appendChild(wrap);
+    }
+}
+
+function getRecTopicsFromFields() {
+    const container = document.getElementById("recTopicsContainer");
+    if (!container) return [];
+    return Array.from(container.querySelectorAll("textarea"))
+        .map((t) => (t.value || "").trim())
+        .filter((t) => t.length > 0);
+}
+
 // ===== Botão único: habilita/desabilita =====
 function syncPublishAllButton() {
     const btnAll = document.getElementById("btnPublishAll");
@@ -108,15 +111,9 @@ function escapeHtml(str) {
 // ✅ FIX: garante exatamente 3 CTAs em REC (se a IA mandar 0/1/2, completa)
 function getDefaultRecCtas(language) {
     const lang = (language || "").toLowerCase();
-
-    if (lang.startsWith("en")) {
-        return ["SEE OPTIONS", "CONTINUE", "CHECK NOW"];
-    }
-    if (lang.startsWith("es")) {
-        return ["VER OPCIONES", "CONTINUAR", "COMPROBAR AHORA"];
-    }
-    // pt-BR padrão
-    return ["VER OPÇÕES", "CONTINUAR", "CONFERIR AGORA"];
+    if (lang.startsWith("en")) return ["SEE OPTIONS", "CONTINUE", "CHECK NOW"];
+    if (lang.startsWith("es")) return ["VER OPCIONES", "CONTINUAR", "COMPROBAR AHORA"];
+    return ["VER OPÇÕES", "CONTINUAR", "CONFERIR AGORA"]; // pt-BR
 }
 
 function ensureThreeRecCtas(articleJson) {
@@ -151,6 +148,7 @@ function getSelectedRecPack() {
 function renderRecPreview() {
     const previewEl = document.getElementById("htmlPreviewRec");
     const infoEl = document.getElementById("previewInfoRec");
+
     const btnPrev = document.getElementById("btnPrevRec");
     const btnNext = document.getElementById("btnNextRec");
 
@@ -165,8 +163,8 @@ function renderRecPreview() {
         return;
     }
 
-    previewEl.innerHTML = pack.previewHtml || "<em>Nenhum HTML gerado.</em>";
-    infoEl.innerHTML = `<strong>REC:</strong> ${selectedRecIndex + 1} / ${recPacks.length} (palavras ~ ${pack.totalWords || 0})`;
+    if (previewEl) previewEl.innerHTML = pack.previewHtml || "<em>Nenhum HTML gerado.</em>";
+    if (infoEl) infoEl.innerHTML = `<strong>REC:</strong> ${selectedRecIndex + 1} / ${recPacks.length} (palavras ~ ${pack.totalWords || 0})`;
 
     if (btnPrev) btnPrev.disabled = selectedRecIndex <= 0;
     if (btnNext) btnNext.disabled = selectedRecIndex >= recPacks.length - 1;
@@ -196,8 +194,8 @@ function renderFullPreview() {
         return;
     }
 
-    previewEl.innerHTML = pack.previewHtml || "<em>Nenhum HTML gerado.</em>";
-    infoEl.innerHTML = `<strong>FULL:</strong> ${selectedFullIndex + 1} / ${fullPacks.length} (palavras ~ ${pack.totalWords || 0})`;
+    if (previewEl) previewEl.innerHTML = pack.previewHtml || "<em>Nenhum HTML gerado.</em>";
+    if (infoEl) infoEl.innerHTML = `<strong>FULL:</strong> ${selectedFullIndex + 1} / ${fullPacks.length} (palavras ~ ${pack.totalWords || 0})`;
 
     if (btnPrev) btnPrev.disabled = selectedFullIndex <= 0;
     if (btnNext) btnNext.disabled = selectedFullIndex >= fullPacks.length - 1;
@@ -339,14 +337,24 @@ IMPORTANTE (FULLREVIEW):
     return { json: articleJson, html, previewHtml, type, totalWords };
 }
 
-// ===== Gerar REC + FULL =====
+// ===== Gerar REC(s) + FULL(s) =====
 async function generateAllArticles() {
     const statusEl = document.getElementById("statusGenerate");
     const btn = document.getElementById("btnGenerate");
 
     const language = document.getElementById("language").value;
 
-    const recTopics = getRecTopicsFromFields();
+    // ✅ REC topics:
+    // - Se existir recTopicsContainer (novo), usa ele
+    // - Se não existir, usa o textarea antigo topicRec (fallback)
+    const recTopics = (() => {
+        const fromFields = getRecTopicsFromFields();
+        if (fromFields.length > 0) return fromFields;
+
+        const single = (document.getElementById("topicRec")?.value || "").trim();
+        return single ? [single] : [];
+    })();
+
     const fullTopics = getFullTopicsFromFields();
 
     const wordRecRaw = document.getElementById("wordCountRec")?.value || "";
@@ -413,6 +421,46 @@ async function generateAllArticles() {
         btn.disabled = false;
         syncPublishAllButton();
     }
+}
+
+// ===== ✅ RESTAURADO: Lê as configs do artigo (ERA ISSO QUE ESTAVA FALTANDO) =====
+function readArticleSettingsFromForm() {
+    const preloaderEnableEl = document.getElementById("cfgPreloaderEnable");
+    const preloaderTimeEl = document.getElementById("cfgPreloaderTime");
+
+    const enablePreloader = !!(preloaderEnableEl && preloaderEnableEl.checked);
+
+    let preloaderTime = null;
+    if (enablePreloader && preloaderTimeEl) {
+        const val = parseInt(preloaderTimeEl.value || "0", 10);
+        preloaderTime = isNaN(val) || val <= 0 ? 3500 : val;
+    }
+
+    const enableImage = !!document.getElementById("cfgEnableImage")?.checked;
+    const hideCategory = !!document.getElementById("cfgHideCategory")?.checked;
+    const hideAuthor = !!document.getElementById("cfgHideAuthor")?.checked;
+    const hideDate = !!document.getElementById("cfgHideDate")?.checked;
+    const hideMenu = !!document.getElementById("cfgHideMenu")?.checked;
+    const hideSocial = !!document.getElementById("cfgHideSocial")?.checked;
+    const hideFooter = !!document.getElementById("cfgHideFooter")?.checked;
+    const persistParam = !!document.getElementById("cfgPersistParam")?.checked;
+
+    return {
+        habilitar_preloader: enablePreloader,
+        personalizar_preloader: enablePreloader,
+        tempo_preloader: enablePreloader ? preloaderTime : null,
+
+        habilitar_imagem: enableImage,
+        ocultar_categoria: hideCategory,
+        ocultar_autor: hideAuthor,
+        ocultar_data: hideDate,
+        ocultar_menu: hideMenu,
+        ocultar_social: hideSocial,
+        ocultar_footer: hideFooter,
+        persistir_parametro: persistParam,
+
+        artquiz_associado: null,
+    };
 }
 
 // ===== Carregar categorias (principal) =====
@@ -491,7 +539,7 @@ async function resolveCategoryIdForSite({ baseUrl, authHeader, fallbackId, desir
     }
 }
 
-// ===== Publicar 1 post =====
+// ===== Publicar 1 site =====
 async function publishToWordpress(articlePack, siteLabel = "") {
     if (!articlePack?.json || !articlePack?.html) {
         return {
@@ -614,7 +662,6 @@ function pickThreeFullLinksForRec(fullLinks, recIndex) {
         links[(start + 2) % n],
     ];
 
-    // garante que não venha vazio nunca
     return out.map((x) => x || links[0]).filter(Boolean);
 }
 
@@ -631,7 +678,7 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
     const fallbackId =
         (typeof site.defaultCategoryId === "number" && site.defaultCategoryId > 0)
             ? site.defaultCategoryId
-            : parseInt(document.getElementById("wpCategoryId").value || String(primaryCategoryId || 0), 10);
+            : primaryCategoryId;
 
     const resolvedCatId = await resolveCategoryIdForSite({
         baseUrl: site.baseUrl || "",
@@ -644,7 +691,7 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
 
     const siteResults = [];
 
-    // 1) FULLS
+    // 1) PUBLICA FULLS
     const publishedFullLinks = [];
 
     for (let i = 0; i < fullPacks.length; i++) {
@@ -665,7 +712,7 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
         }
     }
 
-    // 2) RECs (cada REC recebe 3 links)
+    // 2) PUBLICA RECs (cada REC recebe 3 links)
     for (let r = 0; r < recPacks.length; r++) {
         const pack = recPacks[r];
         const recTitle = pack?.json?.h1 || pack?.json?.topic || `REC ${r + 1}`;
@@ -678,14 +725,9 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
         };
 
         if (statusEl) {
-            const info = fullLinksForThisRec.length
-                ? `FULLs usados: ${fullLinksForThisRec.map((x) => escapeHtml(x)).join(" | ")}`
-                : `sem FULL (nenhum publicado)`;
-
             statusEl.innerHTML =
                 `Publicando <strong>REC ${r + 1}/${recPacks.length}</strong> em <strong>${escapeHtml(site.label)}</strong>…` +
-                `<br/><span style="font-size:12px;opacity:.85">${escapeHtml(recTitle)}</span>` +
-                `<br/><span style="font-size:12px;opacity:.7">${info}</span>`;
+                `<br/><span style="font-size:12px;opacity:.85">${escapeHtml(recTitle)}</span>`;
         }
 
         const rRec = await publishToWordpress(recPackForThisSite, site.label);
@@ -695,7 +737,7 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
     return siteResults;
 }
 
-// ✅ Publica TODOS
+// ✅ Publica REC + TODAS FULL com a regra correta (REC usa links das FULL publicadas; FULL usa link oficial do tema)
 async function publishAllGeneratedArticles() {
     const statusEl = document.getElementById("statusPublish");
     const resultEl = document.getElementById("wpResult");
@@ -770,7 +812,7 @@ async function publishAllGeneratedArticles() {
         statusEl.classList.remove("error");
         statusEl.innerHTML =
             `<strong>Sucesso:</strong> finalizado. ` +
-            `Agora cada REC recebe 3 links (1 por CTA), rotacionando entre as FULLs publicadas.`;
+            `Cada REC foi publicada com 3 CTAs linkados (rotacionando entre as FULLs publicadas).`;
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
@@ -801,7 +843,7 @@ document.addEventListener("DOMContentLoaded", () => {
         generateAllArticles();
     });
 
-    // ✅ Navegação REC
+    // Navegação REC (se existir no HTML)
     document.getElementById("btnPrevRec")?.addEventListener("click", (e) => {
         e.preventDefault();
         if (selectedRecIndex > 0) selectedRecIndex--;
