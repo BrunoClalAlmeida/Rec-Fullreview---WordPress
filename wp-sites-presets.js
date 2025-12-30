@@ -110,6 +110,16 @@ const WP_SITES_PRESETS = [
         defaultCategoryId: 0,
         defaultStatus: "draft"
     },
+    {
+        id: "theguidegames",
+        label: "The Guide Games",
+        baseUrl: "https://theguidegames.com",
+        user: "adminwp2",
+        appPassword: "F6up oSDp nvJz JCRO wsfr ct3h",
+        defaultCategoryId: 0,
+        defaultStatus: "draft"
+    },
+
 ];
 
 (function () {
