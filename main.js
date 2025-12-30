@@ -129,23 +129,16 @@ function ensureThreeRecCtas(articleJson) {
 
     const defaults = getDefaultRecCtas(articleJson.language);
 
-    // completa até 3
     for (let i = 0; i < defaults.length && arr.length < 3; i++) {
-        // evita duplicar exatamente igual
         if (!arr.some((a) => a.toLowerCase() === defaults[i].toLowerCase())) {
             arr.push(defaults[i]);
-        } else {
-            // se já tem igual, tenta o próximo; se todos repetirem, cai no fallback abaixo
-            continue;
         }
     }
 
-    // se ainda faltar (caso raro de repetição total), duplica o último ou usa defaults
     while (arr.length < 3) {
         arr.push(defaults[arr.length] || defaults[defaults.length - 1] || "CONTINUAR");
     }
 
-    // corta para 3
     articleJson.ctas = arr.slice(0, 3);
 }
 
@@ -318,12 +311,10 @@ IMPORTANTE (FULLREVIEW):
     articleJson.word_count_target = approxWordCount;
     if (!articleJson.h1 || !articleJson.h1.trim()) articleJson.h1 = topic;
 
-    // ✅ FULL: garante label chamativo (o LINK oficial vem do JSON)
     if ((type || "").toUpperCase() === "FULLREVIEW") {
         articleJson.content_block_cta_label = getAttractiveFullCtaLabel(articleJson);
     }
 
-    // ✅ FIX: REC sempre com 3 CTAs
     if ((type || "").toUpperCase() === "REC") {
         ensureThreeRecCtas(articleJson);
     }
@@ -342,7 +333,6 @@ IMPORTANTE (FULLREVIEW):
     if (articleJson.conclusion_html) totalWords += countWordsFromHtml(articleJson.conclusion_html);
     articleJson.word_count_estimate = totalWords;
 
-    // ⚠️ REC: links das FULL só entram na publicação (por site)
     const html = buildHtmlFromArticle(articleJson);
     const previewHtml = buildPreviewHtmlFromArticle(articleJson);
 
@@ -386,7 +376,6 @@ async function generateAllArticles() {
         let done = 0;
         const total = recTopics.length + fullTopics.length;
 
-        // RECs
         for (let i = 0; i < recTopics.length; i++) {
             statusEl.innerHTML = `Gerando REC ${i + 1}/${recTopics.length}… (${done + 1}/${total})`;
             const pack = await generateOneArticle({
@@ -401,7 +390,6 @@ async function generateAllArticles() {
             renderRecPreview();
         }
 
-        // FULLs
         for (let i = 0; i < fullTopics.length; i++) {
             statusEl.innerHTML = `Gerando FULLREVIEW ${i + 1}/${fullTopics.length}… (${done + 1}/${total})`;
             const pack = await generateOneArticle({
@@ -425,46 +413,6 @@ async function generateAllArticles() {
         btn.disabled = false;
         syncPublishAllButton();
     }
-}
-
-// ===== Lê as configs do artigo =====
-function readArticleSettingsFromForm() {
-    const preloaderEnableEl = document.getElementById("cfgPreloaderEnable");
-    const preloaderTimeEl = document.getElementById("cfgPreloaderTime");
-
-    const enablePreloader = !!(preloaderEnableEl && preloaderEnableEl.checked);
-
-    let preloaderTime = null;
-    if (enablePreloader && preloaderTimeEl) {
-        const val = parseInt(preloaderTimeEl.value || "0", 10);
-        preloaderTime = isNaN(val) || val <= 0 ? 3500 : val;
-    }
-
-    const enableImage = !!document.getElementById("cfgEnableImage")?.checked;
-    const hideCategory = !!document.getElementById("cfgHideCategory")?.checked;
-    const hideAuthor = !!document.getElementById("cfgHideAuthor")?.checked;
-    const hideDate = !!document.getElementById("cfgHideDate")?.checked;
-    const hideMenu = !!document.getElementById("cfgHideMenu")?.checked;
-    const hideSocial = !!document.getElementById("cfgHideSocial")?.checked;
-    const hideFooter = !!document.getElementById("cfgHideFooter")?.checked;
-    const persistParam = !!document.getElementById("cfgPersistParam")?.checked;
-
-    return {
-        habilitar_preloader: enablePreloader,
-        personalizar_preloader: enablePreloader,
-        tempo_preloader: enablePreloader ? preloaderTime : null,
-
-        habilitar_imagem: enableImage,
-        ocultar_categoria: hideCategory,
-        ocultar_autor: hideAuthor,
-        ocultar_data: hideDate,
-        ocultar_menu: hideMenu,
-        ocultar_social: hideSocial,
-        ocultar_footer: hideFooter,
-        persistir_parametro: persistParam,
-
-        artquiz_associado: null,
-    };
 }
 
 // ===== Carregar categorias (principal) =====
@@ -648,23 +596,29 @@ async function publishToWordpress(articlePack, siteLabel = "") {
 }
 
 /**
- * ✅ Decide quais links FULL vão dentro de uma REC
- * - Se fullLinks.length >= recCount: 1 link único por REC (REC i usa FULL i)
- * - Se fullLinks.length < recCount: round-robin (REC i usa FULL (i % fullLinks.length))
- * - Se não houver FULLs: retorna []
+ * ✅ SEMPRE retorna 3 links para os 3 botões do CTA-list
+ * - Se houver 1 FULL: [L0, L0, L0]
+ * - Se houver 2 FULL: [L0, L1, L0] (rotaciona)
+ * - Se houver 3+ FULL: pega 3 consecutivos com wrap, começando em recIndex
  */
-function pickFullLinksForRec(fullLinks, recIndex, recCount) {
-    const links = Array.isArray(fullLinks) ? fullLinks.filter(Boolean) : [];
+function pickThreeFullLinksForRec(fullLinks, recIndex) {
+    const links = Array.isArray(fullLinks) ? fullLinks.map((x) => (x || "").trim()).filter(Boolean) : [];
     if (links.length === 0) return [];
 
-    if (links.length >= recCount) {
-        return [links[recIndex]];
-    }
+    const n = links.length;
+    const start = ((recIndex || 0) % n + n) % n;
 
-    return [links[recIndex % links.length]];
+    const out = [
+        links[start],
+        links[(start + 1) % n],
+        links[(start + 2) % n],
+    ];
+
+    // garante que não venha vazio nunca
+    return out.map((x) => x || links[0]).filter(Boolean);
 }
 
-// ✅ Publica FULLs primeiro, depois RECs distribuindo FULLs por REC
+// ✅ Publica FULLs primeiro, depois RECs distribuindo FULLs por REC (3 links por REC)
 async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCategoryName, statusEl) {
     document.getElementById("wpBaseUrl").value = site.baseUrl || "";
     document.getElementById("wpUser").value = site.user || "";
@@ -677,7 +631,7 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
     const fallbackId =
         (typeof site.defaultCategoryId === "number" && site.defaultCategoryId > 0)
             ? site.defaultCategoryId
-            : primaryCategoryId;
+            : parseInt(document.getElementById("wpCategoryId").value || String(primaryCategoryId || 0), 10);
 
     const resolvedCatId = await resolveCategoryIdForSite({
         baseUrl: site.baseUrl || "",
@@ -711,14 +665,12 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
         }
     }
 
-    // 2) RECs
-    const recCount = recPacks.length;
-
+    // 2) RECs (cada REC recebe 3 links)
     for (let r = 0; r < recPacks.length; r++) {
         const pack = recPacks[r];
         const recTitle = pack?.json?.h1 || pack?.json?.topic || `REC ${r + 1}`;
 
-        const fullLinksForThisRec = pickFullLinksForRec(publishedFullLinks, r, recCount);
+        const fullLinksForThisRec = pickThreeFullLinksForRec(publishedFullLinks, r);
 
         const recPackForThisSite = {
             ...pack,
@@ -727,7 +679,7 @@ async function publishFullsThenRecsForOneSite(site, primaryCategoryId, primaryCa
 
         if (statusEl) {
             const info = fullLinksForThisRec.length
-                ? `FULL usado: ${escapeHtml(fullLinksForThisRec[0])}`
+                ? `FULLs usados: ${fullLinksForThisRec.map((x) => escapeHtml(x)).join(" | ")}`
                 : `sem FULL (nenhum publicado)`;
 
             statusEl.innerHTML =
@@ -818,7 +770,7 @@ async function publishAllGeneratedArticles() {
         statusEl.classList.remove("error");
         statusEl.innerHTML =
             `<strong>Sucesso:</strong> finalizado. ` +
-            `As RECs foram publicadas distribuindo FULLs automaticamente (1 por REC quando possível, senão round-robin).`;
+            `Agora cada REC recebe 3 links (1 por CTA), rotacionando entre as FULLs publicadas.`;
     } catch (err) {
         console.error(err);
         statusEl.classList.add("error");
