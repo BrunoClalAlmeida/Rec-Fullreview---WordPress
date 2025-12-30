@@ -61,9 +61,20 @@
                     <p class="hint">Ex.: 1000</p>
                 </div>
 
+                <!-- ✅ NOVO: Quantidade de REC -->
+                <div class="col-4">
+                    <label for="recCount">Quantidade de REC</label>
+                    <input type="number" id="recCount" min="0" max="10" step="1" value="0" />
+                    <p class="hint">Ex.: 5</p>
+                </div>
+
+                <!-- ✅ NOVO: Temas do REC (dinâmico) -->
                 <div class="col-12">
-                    <label for="topicRec">Tema do REC</label>
-                    <textarea id="topicRec" placeholder="Ex: Como Ganhar Robux no Roblox de Forma Segura"></textarea>
+                    <label>Temas do REC</label>
+                    <div id="recTopicsContainer" class="topics-box"></div>
+                    <p class="hint">
+                        O sistema cria automaticamente os campos de tema conforme a “Quantidade de REC”.
+                    </p>
                 </div>
 
                 <div class="col-4">
@@ -97,9 +108,14 @@
                 <!-- REC esquerda -->
                 <div class="col-6">
                     <label>Preview REC</label>
+
+                    <!-- ✅ NOVO: navegação de REC (igual FULL) -->
                     <div class="actions-row preview-actions">
+                        <button id="btnPrevRec" class="secondary" disabled>⬅️ Anterior</button>
+                        <button id="btnNextRec" class="secondary" disabled>Próximo ➡️</button>
                         <div id="previewInfoRec" class="status"></div>
                     </div>
+
                     <div id="htmlPreviewRec" class="preview">
                         <em>Nenhum REC gerado ainda.</em>
                     </div>
